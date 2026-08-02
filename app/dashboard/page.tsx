@@ -125,6 +125,13 @@ function ReportSkeleton({ type }: { type: 'phone' | 'vehicle' }) {
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'phone' | 'vehicle' | 'ai' | 'reports' | 'settings'>('phone');
 
+  // Automatically clean up access token hash from URL bar after OAuth login
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
   // Phone search state
   const [phoneInput, setPhoneInput] = useState('');
   const [phoneScoreThreshold, setPhoneScoreThreshold] = useState(85);
