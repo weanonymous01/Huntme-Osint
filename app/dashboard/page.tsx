@@ -344,10 +344,10 @@ export default function DashboardPage() {
     loadProfile();
   }, []);
 
-  // Deduct 5 credits per search and refresh profile if credits > 0
+  // Deduct 5 credits per search and refresh profile if credits >= 5
   const deductCredit = async () => {
     if (!profile) return;
-    if (profile.api_credits <= 0) return; // Free trial search allowed, no negative credits
+    if (profile.api_credits < 5) return; // Free trial search allowed, no negative credits
     const newCredits = Math.max(0, profile.api_credits - 5);
     await supabase
       .from('profiles')
@@ -475,7 +475,7 @@ export default function DashboardPage() {
     { id: 'settings' as const, label: 'Settings', icon: Settings },
   ];
 
-  const isLocked = !profileLoading && (profile?.api_credits ?? 0) <= 0;
+  const isLocked = !profileLoading && (profile?.api_credits ?? 0) < 5;
 
   const handlePhoneSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -821,15 +821,21 @@ export default function DashboardPage() {
               {/* RESULTS */}
               {phoneLoading && <ReportSkeleton type="phone" />}
 
-              {phoneError === "FREE_SEARCH_LIMIT_REACHED" ? (
+              {phoneError === "FREE_SEARCH_LIMIT_REACHED" || phoneError === "INSUFFICIENT_CREDITS" ? (
                 <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-8 space-y-4 text-center animate-in fade-in duration-300 shadow-xl">
                   <div className="size-12 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 mx-auto">
                     <Lock className="size-6" />
                   </div>
                   <div className="space-y-2 max-w-md mx-auto">
-                    <h3 className="text-lg font-bold text-white">Free Search Limit Reached (1/1 Used)</h3>
+                    <h3 className="text-lg font-bold text-white">
+                      {(profile?.api_credits ?? 0) > 0 
+                        ? `Insufficient Credits (${profile?.api_credits} / 5 Credits)`
+                        : 'Free Search Limit Reached (1/1 Used)'}
+                    </h3>
                     <p className="text-xs text-zinc-300 leading-relaxed">
-                      You have used your 1 free preview search. Upgrade your account to unlock unlimited searches, full unmasked identity data, and complete AI reports.
+                      {(profile?.api_credits ?? 0) > 0
+                        ? `Each Phone OSINT Lookup requires 5 credits. You currently have ${profile?.api_credits} credits remaining. Upgrade your plan or top up credits to run full investigations.`
+                        : 'You have used your 1 free preview search. Upgrade your account to unlock unlimited searches, full unmasked identity data, and complete AI reports.'}
                     </p>
                   </div>
                   <div className="pt-2">
