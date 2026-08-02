@@ -358,6 +358,7 @@ export default function DashboardPage() {
   const [savedReports, setSavedReports] = useState<any[]>([]);
   const [reportsLoading, setReportsLoading] = useState<boolean>(false);
   const [selectedReport, setSelectedReport] = useState<any | null>(null);
+  const isSavingRef = React.useRef<boolean>(false);
 
   const fetchSavedReports = async (userId: string) => {
     setReportsLoading(true);
@@ -366,7 +367,17 @@ export default function DashboardPage() {
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-    if (data) setSavedReports(data);
+
+    if (data) {
+      // Deduplicate near-identical entries (same phone_number within 10 sec)
+      const unique = data.filter((item, index, self) =>
+        index === self.findIndex((t) =>
+          t.phone_number === item.phone_number &&
+          Math.abs(new Date(t.created_at).getTime() - new Date(item.created_at).getTime()) < 10000
+        )
+      );
+      setSavedReports(unique);
+    }
     setReportsLoading(false);
   };
 
@@ -377,18 +388,25 @@ export default function DashboardPage() {
     }
   }, [activeTab, profile?.id]);
 
-  // Save phone search to Supabase
+  // Save phone search to Supabase (guarded against double execution)
   const savePhoneSearch = async (result: PhoneResult, aiReportText: string | null) => {
-    if (!profile) return;
-    await supabase.from('phone_searches').insert({
-      user_id: profile.id,
-      phone_number: result.mobile,
-      carrier: result.circle || null,
-      circle: result.circle || null,
-      status: 'Completed',
-      telemetry_json: { result, aiReport: aiReportText },
-    });
-    fetchSavedReports(profile.id);
+    if (!profile || isSavingRef.current) return;
+    isSavingRef.current = true;
+    try {
+      await supabase.from('phone_searches').insert({
+        user_id: profile.id,
+        phone_number: result.mobile,
+        carrier: result.circle || null,
+        circle: result.circle || null,
+        status: 'Completed',
+        telemetry_json: { result, aiReport: aiReportText },
+      });
+      await fetchSavedReports(profile.id);
+    } finally {
+      setTimeout(() => {
+        isSavingRef.current = false;
+      }, 3000);
+    }
   };
 
   // Automatically clean up access token hash from URL bar after OAuth login
