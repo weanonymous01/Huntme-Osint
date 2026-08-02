@@ -14,7 +14,8 @@ import {
   Phone,
   Signal,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles
 } from 'lucide-react';
 
 type PhoneResult = {
@@ -27,6 +28,38 @@ type PhoneResult = {
   idNumber: string | null;
   email: string | null;
 };
+
+// Render AI report markdown sections with styled headings
+function AIReportSection({ text }: { text: string }) {
+  const lines = text.split('\n');
+  return (
+    <div className="space-y-4">
+      {lines.map((line, i) => {
+        if (line.startsWith('## ')) {
+          return (
+            <h3 key={i} className="text-sm font-bold text-white pt-2 border-t border-zinc-800/80 flex items-center gap-2">
+              <Sparkles className="size-3 text-purple-400" />
+              {line.replace('## ', '')}
+            </h3>
+          );
+        }
+        if (line.startsWith('- ')) {
+          return (
+            <p key={i} className="text-xs text-zinc-300 leading-relaxed pl-3 border-l-2 border-zinc-700">
+              {line.replace('- ', '')}
+            </p>
+          );
+        }
+        if (line.trim() === '') return null;
+        return (
+          <p key={i} className="text-xs text-zinc-300 leading-relaxed">
+            {line}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
 
 // Reusable Skeleton Report Component
 function ReportSkeleton({ type }: { type: 'phone' | 'vehicle' }) {
@@ -156,6 +189,34 @@ export default function DashboardPage() {
   // Vehicle search state
   const [vehicleInput, setVehicleInput] = useState('');
   const [vehicleLoading, setVehicleLoading] = useState(false);
+
+  // AI report state
+  const [aiReport, setAiReport] = useState<string | null>(null);
+  const [aiReportLoading, setAiReportLoading] = useState(false);
+  const [aiReportError, setAiReportError] = useState<string | null>(null);
+
+  const handleGenerateReport = async (result: PhoneResult) => {
+    setAiReportLoading(true);
+    setAiReport(null);
+    setAiReportError(null);
+    try {
+      const res = await fetch('/api/generate-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneData: result }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAiReport(data.report);
+      } else {
+        setAiReportError(data.message || 'Failed to generate report.');
+      }
+    } catch {
+      setAiReportError('Network error. Please try again.');
+    } finally {
+      setAiReportLoading(false);
+    }
+  };
 
   const navItems = [
     { id: 'phone' as const, label: 'Phone Intelligence', icon: PhoneCall },
@@ -424,8 +485,63 @@ export default function DashboardPage() {
                           <p className="text-sm text-zinc-200 leading-relaxed">{r.address}</p>
                         </div>
                       )}
+
+                      {/* AI Report Generate Button — appears at bottom of each result card */}
+                      <div className="pt-4 border-t border-zinc-800/80">
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateReport(r)}
+                          disabled={aiReportLoading}
+                          className="flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 hover:border-purple-500/50 text-purple-300 hover:text-purple-200 font-semibold text-xs px-5 py-2.5 rounded-xl transition-all disabled:opacity-50"
+                        >
+                          {aiReportLoading ? (
+                            <><RefreshCw className="size-3.5 animate-spin" /><span>Generating AI Report...</span></>
+                          ) : (
+                            <><Sparkles className="size-3.5" /><span>Generate AI Investigation Report</span></>
+                          )}
+                        </button>
+                      </div>
                     </div>
                   ))}
+
+                  {/* AI Report Error */}
+                  {aiReportError && (
+                    <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-5 flex items-center gap-3">
+                      <AlertCircle className="size-4 text-rose-400 shrink-0" />
+                      <p className="text-xs text-rose-300">{aiReportError}</p>
+                    </div>
+                  )}
+
+                  {/* AI Loading Skeleton */}
+                  {aiReportLoading && (
+                    <div className="rounded-2xl border border-purple-500/20 bg-[#0d0d10] p-6 space-y-4 animate-pulse">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="size-4 text-purple-400" />
+                        <span className="text-sm font-bold text-purple-300">Generating AI Intelligence Report...</span>
+                      </div>
+                      {[1,2,3,4,5].map(i => (
+                        <div key={i} className="space-y-2">
+                          <div className="h-3 w-40 bg-zinc-800 rounded" />
+                          <div className="h-2.5 w-full bg-zinc-800/60 rounded" />
+                          <div className="h-2.5 w-4/5 bg-zinc-800/40 rounded" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* AI Report Card */}
+                  {aiReport && !aiReportLoading && (
+                    <div className="rounded-2xl border border-purple-500/20 bg-[#0d0d10] p-6 space-y-5 shadow-2xl animate-in fade-in duration-500">
+                      <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="size-4 text-purple-400" />
+                          <h3 className="text-sm font-bold text-white">AI Intelligence Report</h3>
+                        </div>
+                        <span className="text-[11px] text-purple-400 font-mono bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">NVIDIA NIM · Llama 3.1</span>
+                      </div>
+                      <AIReportSection text={aiReport} />
+                    </div>
+                  )}
                 </div>
               )}
 
