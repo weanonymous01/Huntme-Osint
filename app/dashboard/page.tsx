@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import {
   PhoneCall,
   Car,
@@ -28,6 +29,21 @@ type PhoneResult = {
   idNumber: string | null;
   email: string | null;
 };
+
+type UserProfile = {
+  id: string;
+  email: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  plan_type: string;
+  api_credits: number;
+  max_credits: number;
+};
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 // Render AI report markdown sections with styled headings and dork blocks
 function AIReportSection({ text }: { text: string }) {
@@ -246,8 +262,52 @@ function ReportSkeleton({ type }: { type: 'phone' | 'vehicle' }) {
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<'phone' | 'vehicle' | 'ai' | 'reports' | 'settings'>('phone');
 
+  // Real user profile from Supabase
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  // Load user session + profile on mount
+  useEffect(() => {
+    const loadProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) { setProfileLoading(false); return; }
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single();
+      if (data) setProfile(data);
+      setProfileLoading(false);
+    };
+    loadProfile();
+  }, []);
+
+  // Deduct 1 credit and refresh profile
+  const deductCredit = async () => {
+    if (!profile) return;
+    const newCredits = Math.max(0, profile.api_credits - 1);
+    await supabase
+      .from('profiles')
+      .update({ api_credits: newCredits })
+      .eq('id', profile.id);
+    setProfile(prev => prev ? { ...prev, api_credits: newCredits } : prev);
+  };
+
+  // Save phone search to Supabase
+  const savePhoneSearch = async (result: PhoneResult, aiReportText: string | null) => {
+    if (!profile) return;
+    await supabase.from('phone_searches').insert({
+      user_id: profile.id,
+      phone_number: result.mobile,
+      carrier: result.circle || null,
+      circle: result.circle || null,
+      status: 'Completed',
+      telemetry_json: { result, aiReport: aiReportText },
+    });
+  };
+
   // Automatically clean up access token hash from URL bar after OAuth login
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
@@ -268,7 +328,7 @@ export default function DashboardPage() {
   const [aiReportLoading, setAiReportLoading] = useState(false);
   const [aiReportError, setAiReportError] = useState<string | null>(null);
 
-  const handleGenerateReport = async (result: PhoneResult) => {
+  const handleGenerateReport = async (result: PhoneResult, onComplete?: (report: string) => void) => {
     setAiReportLoading(true);
     setAiReport(null);
     setAiReportError(null);
@@ -281,6 +341,7 @@ export default function DashboardPage() {
       const data = await res.json();
       if (data.success) {
         setAiReport(data.report);
+        if (onComplete) onComplete(data.report);
       } else {
         setAiReportError(data.message || 'Failed to generate report.');
       }
@@ -319,8 +380,12 @@ export default function DashboardPage() {
       const data = await res.json();
       if (data.success) {
         setPhoneResults(data.results);
+        // Deduct 1 credit per successful search
+        await deductCredit();
         // Auto-generate AI report immediately using the first result
-        handleGenerateReport(data.results[0]);
+        handleGenerateReport(data.results[0], (report) => {
+          savePhoneSearch(data.results[0], report);
+        });
       } else {
         setPhoneError(data.message || 'No records found.');
       }
@@ -378,21 +443,40 @@ export default function DashboardPage() {
 
         {/* Sidebar Footer Info */}
         <div className="space-y-4 pt-6 border-t border-zinc-800/80">
-          <div className="px-2">
-            <p className="text-xs font-semibold text-white">AI Engine</p>
-            <p className="text-[11px] text-zinc-500 truncate">ai.engine@huntme.app</p>
+          <div className="px-2 space-y-0.5">
+            {/* Real user name */}
+            <p className="text-xs font-semibold text-white truncate">
+              {profileLoading ? '...' : (profile?.full_name || profile?.email?.split('@')[0] || 'User')}
+            </p>
+            {/* Real email */}
+            <p className="text-[11px] text-zinc-500 truncate">
+              {profileLoading ? '...' : (profile?.email || '')}
+            </p>
           </div>
 
-          {/* API Credits Box */}
+          {/* Real API Credits Box */}
           <div className="rounded-xl border border-zinc-800/90 bg-[#121214] p-3.5 space-y-1.5">
             <div className="flex items-center justify-between text-xs text-zinc-400 font-medium">
               <span>API Credits</span>
+              {profile && (
+                <span className="text-[10px] text-zinc-500 font-mono capitalize">{profile.plan_type}</span>
+              )}
             </div>
             <p className="text-lg font-bold text-white tracking-tight">
-              84,500 <span className="text-xs font-normal text-zinc-500">/ 100,000</span>
+              {profileLoading ? (
+                <span className="text-zinc-600">loading...</span>
+              ) : (
+                <>
+                  {(profile?.api_credits ?? 0).toLocaleString()}
+                  <span className="text-xs font-normal text-zinc-500"> / {(profile?.max_credits ?? 100).toLocaleString()}</span>
+                </>
+              )}
             </p>
             <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden mt-1">
-              <div className="bg-white h-full rounded-full w-[84.5%]" />
+              <div
+                className="bg-white h-full rounded-full transition-all duration-500"
+                style={{ width: `${profile ? Math.round((profile.api_credits / profile.max_credits) * 100) : 0}%` }}
+              />
             </div>
           </div>
 
@@ -426,9 +510,13 @@ export default function DashboardPage() {
               <span>API Status: <strong className="text-white">Operational</strong></span>
             </div>
 
-            {/* Profile Avatar */}
-            <div className="size-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs font-bold text-white cursor-pointer hover:bg-zinc-700 transition-colors">
-              AI
+            {/* Real Profile Avatar */}
+            <div className="size-8 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden flex items-center justify-center text-xs font-bold text-white cursor-pointer hover:ring-2 hover:ring-zinc-500 transition-all">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              ) : (
+                <span>{profile?.full_name?.charAt(0)?.toUpperCase() || profile?.email?.charAt(0)?.toUpperCase() || 'U'}</span>
+              )}
             </div>
           </div>
         </header>
