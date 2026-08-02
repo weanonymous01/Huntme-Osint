@@ -7,6 +7,11 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Huntme | AI-Powered OSINT Intelligence Platform",
   description: "Enterprise-grade OSINT platform for phone telemetry, vehicle registration lookups, and AI-powered investigation timelines.",
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/favicon.ico",
+    apple: "/icon.png",
+  },
 };
 
 export default function RootLayout({
