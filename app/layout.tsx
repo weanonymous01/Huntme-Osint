@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Intelligence Made Simple",
-  description: "Search public sources faster with AI-powered OSINT built for modern investigations.",
+  title: "Huntme | AI-Powered OSINT Intelligence Platform",
+  description: "Enterprise-grade OSINT platform for phone telemetry, vehicle registration lookups, and AI-powered investigation timelines.",
 };
 
 export default function RootLayout({
