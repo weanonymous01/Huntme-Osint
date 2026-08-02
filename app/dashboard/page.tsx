@@ -304,6 +304,10 @@ export default function DashboardPage() {
     setPhoneLoading(true);
     setPhoneError(null);
     setPhoneResults(null);
+    // Reset AI report on every new search
+    setAiReport(null);
+    setAiReportError(null);
+    setAiReportLoading(false);
 
     try {
       const res = await fetch('/api/phone-lookup', {
@@ -314,6 +318,8 @@ export default function DashboardPage() {
       const data = await res.json();
       if (data.success) {
         setPhoneResults(data.results);
+        // Auto-generate AI report immediately using the first result
+        handleGenerateReport(data.results[0]);
       } else {
         setPhoneError(data.message || 'No records found.');
       }
@@ -557,22 +563,6 @@ export default function DashboardPage() {
                           <p className="text-sm text-zinc-200 leading-relaxed">{r.address}</p>
                         </div>
                       )}
-
-                      {/* AI Report Generate Button — appears at bottom of each result card */}
-                      <div className="pt-4 border-t border-zinc-800/80">
-                        <button
-                          type="button"
-                          onClick={() => handleGenerateReport(r)}
-                          disabled={aiReportLoading}
-                          className="flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 hover:border-purple-500/50 text-purple-300 hover:text-purple-200 font-semibold text-xs px-5 py-2.5 rounded-xl transition-all disabled:opacity-50"
-                        >
-                          {aiReportLoading ? (
-                            <><RefreshCw className="size-3.5 animate-spin" /><span>Generating AI Report...</span></>
-                          ) : (
-                            <><Sparkles className="size-3.5" /><span>Generate AI Investigation Report</span></>
-                          )}
-                        </button>
-                      </div>
                     </div>
                   ))}
 
