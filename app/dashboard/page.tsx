@@ -22,7 +22,9 @@ import {
   Eye,
   ChevronRight,
   Copy,
-  Check
+  Check,
+  Menu,
+  X
 } from 'lucide-react';
 
 function maskWord(w: string): string {
@@ -416,6 +418,9 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // Mobile navigation drawer state
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
+
   // Phone search state
   const [phoneInput, setPhoneInput] = useState('');
   const [phoneLoading, setPhoneLoading] = useState(false);
@@ -636,9 +641,19 @@ export default function DashboardPage() {
       {/* Main Content Area */}
       <main className="grow flex flex-col min-w-0 bg-[#070708]">
         {/* Top Header Bar */}
-        <header className="h-16 border-b border-zinc-800/80 bg-[#0a0a0c]/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-30">
-          <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold text-white tracking-tight">
+        <header className="h-16 border-b border-zinc-800/80 bg-[#0a0a0c]/90 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-3">
+            {/* Mobile Hamburger Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 -ml-1 rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800/80 md:hidden transition-colors"
+              aria-label="Toggle Navigation Menu"
+            >
+              {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
+
+            <h1 className="text-base sm:text-xl font-bold text-white tracking-tight truncate">
               {activeTab === 'phone' && 'Phone Intelligence'}
               {activeTab === 'vehicle' && 'Vehicle Intelligence'}
               {activeTab === 'ai' && 'AI Assistant'}
@@ -647,15 +662,23 @@ export default function DashboardPage() {
             </h1>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2.5 sm:gap-4">
             {/* API Status Badge */}
             <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-zinc-400 bg-[#121215] border border-zinc-800/90 px-3 py-1.5 rounded-lg">
               <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
               <span>API Status: <strong className="text-white">Operational</strong></span>
             </div>
 
+            {/* Mobile Credits Badge */}
+            <div className="md:hidden text-[11px] font-mono font-semibold text-zinc-300 bg-zinc-800/80 border border-zinc-700/60 px-2.5 py-1 rounded-full">
+              {(profile?.api_credits ?? 0)} Cr
+            </div>
+
             {/* Real Profile Avatar */}
-            <div className="size-8 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden flex items-center justify-center text-xs font-bold text-white cursor-pointer hover:ring-2 hover:ring-zinc-500 transition-all">
+            <div
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="size-8 rounded-full bg-zinc-800 border border-zinc-700 overflow-hidden flex items-center justify-center text-xs font-bold text-white cursor-pointer hover:ring-2 hover:ring-zinc-500 transition-all shrink-0"
+            >
               {profile?.avatar_url ? (
                 <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               ) : (
@@ -665,8 +688,72 @@ export default function DashboardPage() {
           </div>
         </header>
 
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-b border-zinc-800/90 bg-[#0d0d10] p-4 space-y-5 animate-in slide-in-from-top duration-200 z-30 sticky top-16 shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 px-1">
+              <div>
+                <p className="text-sm font-bold text-white">Huntme OSINT</p>
+                <p className="text-[11px] text-zinc-500">{profile?.email || 'AI OSINT Suite'}</p>
+              </div>
+              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full capitalize font-mono">
+                {profile?.plan_type || 'free'}
+              </span>
+            </div>
+
+            {/* Mobile Tab Links */}
+            <nav className="grid grid-cols-1 gap-1">
+              {navItems.map((item) => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`w-full text-left flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      isActive
+                        ? 'bg-[#1c1c1f] text-white shadow-sm font-semibold border border-zinc-700/60'
+                        : 'text-zinc-400 hover:text-white hover:bg-zinc-900/60'
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+
+            {/* Mobile Credits Card */}
+            <div className="rounded-xl border border-zinc-800/90 bg-[#121214] p-3.5 space-y-2">
+              <div className="flex items-center justify-between text-xs text-zinc-400 font-medium">
+                <span>API Credits</span>
+                <span className="text-white font-mono font-bold">{(profile?.api_credits ?? 0)} / {(profile?.max_credits ?? 100)}</span>
+              </div>
+              <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+                <div
+                  className="bg-white h-full rounded-full transition-all duration-500"
+                  style={{ width: `${profile ? Math.round((profile.api_credits / profile.max_credits) * 100) : 0}%` }}
+                />
+              </div>
+              {isLocked && (
+                <div className="flex items-center justify-between pt-1 text-xs">
+                  <span className="text-amber-400 font-medium flex items-center gap-1">
+                    <Lock className="size-3" />
+                    {freeSearchCount === 0 ? '1 Free Search Left' : '0 Free Left'}
+                  </span>
+                  <a href="/pricing" className="text-amber-400 underline font-semibold">
+                    Upgrade Plan
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Dashboard Main View Container */}
-        <div className="p-6 md:p-8 space-y-8 max-w-6xl mx-auto w-full">
+        <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-6xl mx-auto w-full">
 
           {/* ========================================================================= */}
           {/* PHONE INTELLIGENCE TAB VIEW */}
