@@ -556,6 +556,15 @@ export default function DashboardPage() {
                 style={{ width: `${profile ? Math.round((profile.api_credits / profile.max_credits) * 100) : 0}%` }}
               />
             </div>
+            {isLocked && (
+              <div className="pt-1 flex items-center justify-between text-[11px]">
+                <span className="text-amber-400 font-medium flex items-center gap-1">
+                  <Lock className="size-3" />
+                  Free Trial
+                </span>
+                <span className="text-zinc-400 font-mono">{freeSearchCount === 0 ? '1 Free Search' : '0 Left'}</span>
+              </div>
+            )}
           </div>
 
           <a
@@ -612,9 +621,16 @@ export default function DashboardPage() {
               <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 sm:p-8 space-y-6 shadow-2xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <h2 className="text-lg font-bold text-white">
-                      Phone Number OSINT Lookup
-                    </h2>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-lg font-bold text-white">
+                        Phone Number OSINT Lookup
+                      </h2>
+                      {isLocked && (
+                        <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${freeSearchCount === 0 ? 'text-amber-300 bg-amber-500/10 border-amber-500/30' : 'text-rose-300 bg-rose-500/10 border-rose-500/30'}`}>
+                          {freeSearchCount === 0 ? '1 Free Search Available' : '0 Free Searches Left'}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-zinc-400">
                       Query mobile telemetry, carrier records, owner identity, and data breach indexes.
                     </p>
@@ -651,6 +667,13 @@ export default function DashboardPage() {
                       )}
                     </button>
                   </div>
+
+                  {isLocked && freeSearchCount === 0 && (
+                    <div className="flex items-center gap-2 text-xs text-amber-300/90 bg-amber-500/10 border border-amber-500/20 px-3.5 py-2 rounded-xl">
+                      <Lock className="size-3.5 text-amber-400 shrink-0" />
+                      <span>You have <strong>1 free preview search</strong> available. Results will be partially masked.</span>
+                    </div>
+                  )}
                 </form>
               </div>
 
