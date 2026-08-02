@@ -7,11 +7,26 @@ import {
   BrainCircuit,
   FileText,
   Settings,
-  BookOpen,
   Search,
-  Sliders,
-  RefreshCw
+  RefreshCw,
+  User,
+  MapPin,
+  Phone,
+  Signal,
+  AlertCircle,
+  CheckCircle2
 } from 'lucide-react';
+
+type PhoneResult = {
+  name: string;
+  mobile: string;
+  alternativeMobile: string | null;
+  fatherName: string | null;
+  address: string | null;
+  circle: string | null;
+  idNumber: string | null;
+  email: string | null;
+};
 
 // Reusable Skeleton Report Component
 function ReportSkeleton({ type }: { type: 'phone' | 'vehicle' }) {
@@ -134,12 +149,12 @@ export default function DashboardPage() {
 
   // Phone search state
   const [phoneInput, setPhoneInput] = useState('');
-  const [phoneScoreThreshold, setPhoneScoreThreshold] = useState(85);
   const [phoneLoading, setPhoneLoading] = useState(false);
+  const [phoneResults, setPhoneResults] = useState<PhoneResult[] | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
 
   // Vehicle search state
   const [vehicleInput, setVehicleInput] = useState('');
-  const [vehicleScoreThreshold, setVehicleScoreThreshold] = useState(90);
   const [vehicleLoading, setVehicleLoading] = useState(false);
 
   const navItems = [
@@ -150,12 +165,30 @@ export default function DashboardPage() {
     { id: 'settings' as const, label: 'Settings', icon: Settings },
   ];
 
-  const handlePhoneSearch = (e: React.FormEvent) => {
+  const handlePhoneSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!phoneInput.trim()) return;
     setPhoneLoading(true);
-    setTimeout(() => {
+    setPhoneError(null);
+    setPhoneResults(null);
+
+    try {
+      const res = await fetch('/api/phone-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: phoneInput.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPhoneResults(data.results);
+      } else {
+        setPhoneError(data.message || 'No records found.');
+      }
+    } catch (err) {
+      setPhoneError('Network error. Please try again.');
+    } finally {
       setPhoneLoading(false);
-    }, 800);
+    }
   };
 
   const handleVehicleSearch = (e: React.FormEvent) => {
@@ -315,8 +348,91 @@ export default function DashboardPage() {
                 </form>
               </div>
 
-              {/* SKELETON REPORT DOWN BELOW */}
-              <ReportSkeleton type="phone" />
+              {/* RESULTS */}
+              {phoneLoading && <ReportSkeleton type="phone" />}
+
+              {phoneError && (
+                <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 flex items-center gap-3">
+                  <AlertCircle className="size-5 text-rose-400 shrink-0" />
+                  <p className="text-sm text-rose-300">{phoneError}</p>
+                </div>
+              )}
+
+              {phoneResults && phoneResults.length > 0 && (
+                <div className="space-y-4 animate-in fade-in duration-300">
+                  {/* Success header */}
+                  <div className="flex items-center gap-2 text-xs text-emerald-400 font-medium">
+                    <CheckCircle2 className="size-4" />
+                    <span>{phoneResults.length} record{phoneResults.length > 1 ? 's' : ''} found for <span className="font-mono text-white">{phoneInput}</span></span>
+                  </div>
+
+                  {phoneResults.map((r, idx) => (
+                    <div key={idx} className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 space-y-5 shadow-2xl">
+                      {/* Identity Header */}
+                      <div className="flex items-start justify-between gap-4 border-b border-zinc-800/80 pb-5">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <User className="size-4 text-zinc-400" />
+                            <h3 className="text-lg font-bold text-white">{r.name}</h3>
+                          </div>
+                          {r.fatherName && (
+                            <p className="text-xs text-zinc-500">S/O: <span className="text-zinc-300">{r.fatherName}</span></p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full shrink-0">
+                          <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          Verified Record
+                        </div>
+                      </div>
+
+                      {/* Info Grid */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Phone className="size-3" />Primary Mobile</p>
+                          <p className="text-sm font-mono text-white">{r.mobile}</p>
+                        </div>
+                        {r.alternativeMobile && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Phone className="size-3" />Alternative Mobile</p>
+                            <p className="text-sm font-mono text-white">{r.alternativeMobile}</p>
+                          </div>
+                        )}
+                        {r.circle && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Carrier / Circle</p>
+                            <p className="text-sm text-white">{r.circle}</p>
+                          </div>
+                        )}
+                        {r.email && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium">Email</p>
+                            <p className="text-sm text-white">{r.email}</p>
+                          </div>
+                        )}
+                        {r.idNumber && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium">ID Number</p>
+                            <p className="text-sm font-mono text-white">{r.idNumber}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Address */}
+                      {r.address && (
+                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered Address</p>
+                          <p className="text-sm text-zinc-200 leading-relaxed">{r.address}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Show skeleton only if no search has been made yet */}
+              {!phoneLoading && !phoneResults && !phoneError && (
+                <ReportSkeleton type="phone" />
+              )}
             </div>
           )}
 
