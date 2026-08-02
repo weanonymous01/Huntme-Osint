@@ -45,13 +45,19 @@ export default function SignupPage() {
           data: {
             full_name: name,
           },
+          emailRedirectTo: `${window.location.origin}/dashboard`,
         },
       });
 
+      setLoading(false);
+
       if (error) {
         setErrorMessage(error.message);
-        setLoading(false);
-      } else {
+      } else if (data?.user && !data?.session) {
+        // Confirmation email sent — user must click the email link first
+        setSuccessMessage(`Confirmation link sent to ${email}! Please check your inbox and click the link to confirm your account.`);
+      } else if (data?.session) {
+        // Email confirmation is disabled or auto-confirmed
         setSuccessMessage('Account created successfully! Redirecting to Dashboard...');
         setTimeout(() => {
           router.push('/dashboard');
