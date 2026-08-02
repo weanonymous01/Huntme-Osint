@@ -288,6 +288,9 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
+  // Free search tracking for 0-credit preview users
+  const [freeSearchCount, setFreeSearchCount] = useState<number>(0);
+
   // Load user session + profile on mount
   useEffect(() => {
     const loadProfile = async () => {
@@ -301,6 +304,11 @@ export default function DashboardPage() {
         .single();
 
       const isOwner = session.user.email === 'adarshverma3655@gmail.com';
+
+      if (typeof window !== 'undefined') {
+        const storedCount = parseInt(localStorage.getItem(`huntme_free_searches_${session.user.id}`) || '0', 10);
+        setFreeSearchCount(storedCount);
+      }
 
       // If profile missing or newly created user, upsert with 0 credits for free users
       if (!data || error) {
@@ -413,6 +421,15 @@ export default function DashboardPage() {
   const handlePhoneSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!phoneInput.trim()) return;
+
+    // Hard block if 0-credit user has already performed their 1 free search
+    if (isLocked && freeSearchCount >= 1) {
+      setPhoneResults(null);
+      setAiReport(null);
+      setPhoneError("FREE_SEARCH_LIMIT_REACHED");
+      return;
+    }
+
     setPhoneLoading(true);
     setPhoneError(null);
     setPhoneResults(null);
@@ -430,8 +447,19 @@ export default function DashboardPage() {
       const data = await res.json();
       if (data.success) {
         setPhoneResults(data.results);
-        // Deduct 1 credit per successful search
-        await deductCredit();
+        
+        // Record the 1 free search used if in preview mode
+        if (isLocked) {
+          const nextCount = freeSearchCount + 1;
+          setFreeSearchCount(nextCount);
+          if (typeof window !== 'undefined' && profile?.id) {
+            localStorage.setItem(`huntme_free_searches_${profile.id}`, nextCount.toString());
+          }
+        } else {
+          // Deduct 1 credit per successful search for paid users
+          await deductCredit();
+        }
+
         // Auto-generate AI report immediately using the first result
         handleGenerateReport(data.results[0], (report) => {
           savePhoneSearch(data.results[0], report);
@@ -629,12 +657,33 @@ export default function DashboardPage() {
               {/* RESULTS */}
               {phoneLoading && <ReportSkeleton type="phone" />}
 
-              {phoneError && (
+              {phoneError === "FREE_SEARCH_LIMIT_REACHED" ? (
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-8 space-y-4 text-center animate-in fade-in duration-300 shadow-xl">
+                  <div className="size-12 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 mx-auto">
+                    <Lock className="size-6" />
+                  </div>
+                  <div className="space-y-2 max-w-md mx-auto">
+                    <h3 className="text-lg font-bold text-white">Free Search Limit Reached (1/1 Used)</h3>
+                    <p className="text-xs text-zinc-300 leading-relaxed">
+                      You have used your 1 free preview search. Upgrade your account to unlock unlimited searches, full unmasked identity data, and complete AI reports.
+                    </p>
+                  </div>
+                  <div className="pt-2">
+                    <a
+                      href="/pricing"
+                      className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-black font-bold px-6 py-3 rounded-xl text-xs transition-all shadow-lg"
+                    >
+                      <Lock className="size-4" />
+                      <span>Upgrade Plan for Unlimited Searches</span>
+                    </a>
+                  </div>
+                </div>
+              ) : phoneError ? (
                 <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 flex items-center gap-3">
                   <AlertCircle className="size-5 text-rose-400 shrink-0" />
                   <p className="text-sm text-rose-300">{phoneError}</p>
                 </div>
-              )}
+              ) : null}
 
               {phoneResults && phoneResults.length > 0 && (
                 <div className="space-y-4 animate-in fade-in duration-300">
