@@ -17,7 +17,10 @@ import {
   AlertCircle,
   CheckCircle2,
   Sparkles,
-  Lock
+  Lock,
+  Calendar,
+  Eye,
+  ChevronRight
 } from 'lucide-react';
 
 function maskWord(w: string): string {
@@ -349,6 +352,29 @@ export default function DashboardPage() {
     setProfile(prev => prev ? { ...prev, api_credits: newCredits } : prev);
   };
 
+  // Saved Reports state
+  const [savedReports, setSavedReports] = useState<any[]>([]);
+  const [reportsLoading, setReportsLoading] = useState<boolean>(false);
+  const [selectedReport, setSelectedReport] = useState<any | null>(null);
+
+  const fetchSavedReports = async (userId: string) => {
+    setReportsLoading(true);
+    const { data } = await supabase
+      .from('phone_searches')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (data) setSavedReports(data);
+    setReportsLoading(false);
+  };
+
+  // Fetch reports when switching to reports tab or profile loads
+  useEffect(() => {
+    if (profile?.id && activeTab === 'reports') {
+      fetchSavedReports(profile.id);
+    }
+  }, [activeTab, profile?.id]);
+
   // Save phone search to Supabase
   const savePhoneSearch = async (result: PhoneResult, aiReportText: string | null) => {
     if (!profile) return;
@@ -360,6 +386,7 @@ export default function DashboardPage() {
       status: 'Completed',
       telemetry_json: { result, aiReport: aiReportText },
     });
+    fetchSavedReports(profile.id);
   };
 
   // Automatically clean up access token hash from URL bar after OAuth login
@@ -984,28 +1011,201 @@ export default function DashboardPage() {
           )}
 
           {activeTab === 'reports' && (
-            <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-8 space-y-6 animate-in fade-in duration-300">
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-white">
-                  Investigation Reports
-                </h2>
-                <p className="text-xs text-zinc-400">
-                  View and export all generated OSINT investigation reports.
-                </p>
-              </div>
+            <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 sm:p-8 space-y-6 animate-in fade-in duration-300">
+              {selectedReport ? (
+                <div className="space-y-6 animate-in fade-in duration-300">
+                  <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+                    <button
+                      onClick={() => setSelectedReport(null)}
+                      className="flex items-center gap-2 text-xs font-semibold text-zinc-300 hover:text-white bg-[#141418] hover:bg-zinc-800 border border-zinc-700/80 px-4 py-2 rounded-xl transition-colors"
+                    >
+                      <span>← Back to All Reports</span>
+                    </button>
+                    <span className="text-xs text-zinc-500 font-mono">
+                      {new Date(selectedReport.created_at).toLocaleString()}
+                    </span>
+                  </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="rounded-xl border border-zinc-800 bg-[#121215] p-5 space-y-3">
-                  <div className="h-4 w-28 bg-zinc-800 rounded animate-pulse" />
-                  <div className="h-5 w-48 bg-zinc-700 rounded animate-pulse" />
-                  <div className="h-3 w-36 bg-zinc-800/60 rounded animate-pulse" />
+                  {/* Saved Record Card */}
+                  {selectedReport.telemetry_json?.result && (
+                    <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 space-y-5 shadow-2xl">
+                      <div className="flex items-start justify-between gap-4 border-b border-zinc-800/80 pb-5">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <User className="size-4 text-zinc-400" />
+                            <h3 className={`text-lg font-bold text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                              {isLocked ? maskText(selectedReport.telemetry_json.result.name) : selectedReport.telemetry_json.result.name}
+                            </h3>
+                          </div>
+                          {selectedReport.telemetry_json.result.fatherName && (
+                            <p className="text-xs text-zinc-500">S/O: <span className={`text-zinc-300 ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>{isLocked ? maskText(selectedReport.telemetry_json.result.fatherName) : selectedReport.telemetry_json.result.fatherName}</span></p>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                          <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          Verified Record
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Phone className="size-3" />Primary Mobile</p>
+                          <p className={`text-sm font-mono text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                            {isLocked ? maskNumber(selectedReport.telemetry_json.result.mobile) : selectedReport.telemetry_json.result.mobile}
+                          </p>
+                        </div>
+                        {selectedReport.telemetry_json.result.alternativeMobile && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Phone className="size-3" />Alternative Mobile</p>
+                            <p className={`text-sm font-mono text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                              {isLocked ? maskNumber(selectedReport.telemetry_json.result.alternativeMobile) : selectedReport.telemetry_json.result.alternativeMobile}
+                            </p>
+                          </div>
+                        )}
+                        {selectedReport.telemetry_json.result.circle && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Carrier / Circle</p>
+                            <p className="text-sm text-white">{selectedReport.telemetry_json.result.circle}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {selectedReport.telemetry_json.result.address && (
+                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered Address</p>
+                          <p className={`text-sm text-zinc-200 leading-relaxed ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                            {isLocked ? maskText(selectedReport.telemetry_json.result.address) : selectedReport.telemetry_json.result.address}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Saved AI Intelligence Report */}
+                  {selectedReport.telemetry_json?.aiReport && (
+                    <div className="relative rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl overflow-hidden">
+                      <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+                        <h3 className="text-sm font-bold text-white">AI Intelligence Report</h3>
+                        <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">NVIDIA NIM · Llama 3.1</span>
+                      </div>
+                      <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
+                        <AIReportSection text={selectedReport.telemetry_json.aiReport} />
+                      </div>
+                      {isLocked && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d10] via-[#0d0d10]/95 to-[#0d0d10]/60 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10">
+                          <div className="size-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                            <Lock className="size-5" />
+                          </div>
+                          <div className="space-y-1 max-w-sm">
+                            <h4 className="text-sm font-bold text-white">AI Intelligence Analysis Locked</h4>
+                            <p className="text-xs text-zinc-400">
+                              Upgrade to a paid plan to unlock complete OSINT framework analysis, Google Dorks, social platform presence, and risk scores.
+                            </p>
+                          </div>
+                          <a
+                            href="/pricing"
+                            className="bg-amber-400 hover:bg-amber-300 text-black font-bold px-5 py-2.5 rounded-xl text-xs transition-colors flex items-center gap-2 shadow-lg"
+                          >
+                            <Lock className="size-3.5" />
+                            <span>Unlock Full Intelligence Report</span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <div className="rounded-xl border border-zinc-800 bg-[#121215] p-5 space-y-3">
-                  <div className="h-4 w-28 bg-zinc-800 rounded animate-pulse" />
-                  <div className="h-5 w-48 bg-zinc-700 rounded animate-pulse" />
-                  <div className="h-3 w-36 bg-zinc-800/60 rounded animate-pulse" />
+              ) : (
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <h2 className="text-xl font-bold text-white">
+                      Investigation Reports
+                    </h2>
+                    <p className="text-xs text-zinc-400">
+                      View and inspect all generated OSINT investigation reports.
+                    </p>
+                  </div>
+
+                  {reportsLoading ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {[1,2].map(i => (
+                        <div key={i} className="rounded-xl border border-zinc-800 bg-[#121215] p-5 space-y-3 animate-pulse">
+                          <div className="h-4 w-28 bg-zinc-800 rounded" />
+                          <div className="h-5 w-48 bg-zinc-700 rounded" />
+                          <div className="h-3 w-36 bg-zinc-800/60 rounded" />
+                        </div>
+                      ))}
+                    </div>
+                  ) : savedReports.length === 0 ? (
+                    <div className="rounded-2xl border border-zinc-800/80 bg-[#121216] p-10 text-center space-y-4">
+                      <div className="size-12 rounded-full bg-zinc-800/80 border border-zinc-700/80 flex items-center justify-center text-zinc-400 mx-auto">
+                        <FileText className="size-6" />
+                      </div>
+                      <div className="space-y-1 max-w-sm mx-auto">
+                        <h3 className="text-sm font-bold text-white">No Reports Generated Yet</h3>
+                        <p className="text-xs text-zinc-400 leading-relaxed">
+                          You haven't run any OSINT investigations yet. Go to Phone Intelligence and perform a lookup to auto-create reports.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('phone')}
+                        className="bg-white hover:bg-zinc-200 text-black font-semibold px-4 py-2 rounded-xl text-xs transition-colors"
+                      >
+                        Go to Phone Intelligence
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {savedReports.map((item) => {
+                        const res = item.telemetry_json?.result;
+                        const rawName = res?.name || 'Subject Report';
+                        const targetName = isLocked ? maskText(rawName) : rawName;
+                        const targetPhone = item.phone_number ? (isLocked ? maskNumber(item.phone_number) : item.phone_number) : '';
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => setSelectedReport(item)}
+                            className="rounded-2xl border border-zinc-800/90 hover:border-zinc-700 bg-[#121216] hover:bg-[#16161c] p-5 space-y-4 shadow-xl transition-all cursor-pointer group"
+                          >
+                            <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+                              <div className="flex items-center gap-2">
+                                <User className="size-4 text-zinc-400 group-hover:text-white transition-colors" />
+                                <h3 className={`text-sm font-bold text-white ${isLocked ? 'blur-[1px]' : ''}`}>{targetName}</h3>
+                              </div>
+                              <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                                Completed
+                              </span>
+                            </div>
+
+                            <div className="space-y-1.5 text-xs">
+                              <div className="flex items-center justify-between text-zinc-400">
+                                <span className="flex items-center gap-1.5"><Phone className="size-3 text-zinc-500" /> Target Phone:</span>
+                                <span className={`font-mono text-white ${isLocked ? 'blur-[1px]' : ''}`}>{targetPhone}</span>
+                              </div>
+                              {item.circle && (
+                                <div className="flex items-center justify-between text-zinc-400">
+                                  <span className="flex items-center gap-1.5"><Signal className="size-3 text-zinc-500" /> Carrier / Circle:</span>
+                                  <span className="text-zinc-300">{item.circle}</span>
+                                </div>
+                              )}
+                              <div className="flex items-center justify-between text-zinc-400 pt-1">
+                                <span className="flex items-center gap-1.5 text-[11px] text-zinc-500"><Calendar className="size-3" /> Search Date:</span>
+                                <span className="text-[11px] font-mono text-zinc-500">
+                                  {new Date(item.created_at).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="pt-2 flex items-center justify-between border-t border-zinc-800/60 text-xs font-semibold text-zinc-300 group-hover:text-white transition-colors">
+                              <span className="flex items-center gap-1.5"><Eye className="size-3.5 text-zinc-400" /> View Full Intelligence Report</span>
+                              <ChevronRight className="size-4 text-zinc-500 group-hover:translate-x-1 transition-transform" />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
             </div>
           )}
 
