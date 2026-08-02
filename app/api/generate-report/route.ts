@@ -38,7 +38,10 @@ VERIFIED RECORD DATA:
 - Full Name: ${phoneData.name}
 - Father's Name / S/O: ${phoneData.fatherName || 'Not available'}
 - Primary Mobile: ${phoneData.mobile}
-- Alternative Mobile: ${phoneData.alternativeMobile || 'Not available'}
+- Alternative Mobile: ${phoneData.alternativeMobile || 'Not available'}${phoneData.alternativeMobile ? `\n\n⚠️ DUAL NUMBER ALERT: Both numbers must be independently analyzed. Treat each as a separate OSINT target:
+  - Primary Target: ${phoneData.mobile}
+  - Secondary Target: ${phoneData.alternativeMobile}
+  Apply PhoneInfoga prefix analysis, carrier detection, dork generation, and social platform assessment separately for BOTH numbers. Cross-correlate them to determine relationship (same owner, family member, business number, etc.)` : ''}
 - Carrier / Telecom Circle: ${phoneData.circle || 'Not available'}
 - Registered Address: ${phoneData.address || 'Not available'}
 - Government ID Number: ${phoneData.idNumber || 'Not available'}
@@ -51,44 +54,50 @@ Produce a structured intelligence report with the following sections. Be specifi
 ## 1. Subject Identity Profile
 Summarize who this subject is. Full name analysis (naming conventions, regional origin of name), family context from father's name, and overall identity confidence level.
 
-## 2. Telecom & Carrier Intelligence
-Analyze the phone number prefix to determine:
+## 2. Telecom & Carrier Intelligence — Primary Number (${phoneData.mobile})
+Analyze the primary phone number prefix:
 - Inferred telecom operator and circle (BSNL/Airtel/Jio/Vi/etc.)
 - Line type: Mobile / Landline / VoIP
 - Geographic origin from number block
-- Dual-number analysis (primary vs alternative) — what does having two numbers suggest?
-- SIM registration age indicators if any
+- SIM registration age indicators if any${phoneData.alternativeMobile ? `
 
-## 3. Geographic & Address Intelligence
+## 3. Telecom & Carrier Intelligence — Alternative Number (${phoneData.alternativeMobile})
+Analyze the alternative number prefix independently:
+- Inferred telecom operator and circle
+- Line type and carrier
+- Compare carrier/circle with primary number — same or different operator?
+- Dual-number relationship analysis: Are these from the same person? Same household? Business line?` : ''}
+
+## ${phoneData.alternativeMobile ? '4' : '3'}. Geographic & Address Intelligence
 Deep analysis of the registered address:
 - District, Tehsil, State, PIN code breakdown
 - Rural vs urban classification
 - Nearest major city and distance estimate
 - Geospatial risk or significance flags
 
-## 4. Google Dork Reconnaissance Queries
-Generate 8-10 specific, ready-to-run Google Dork queries for this subject. Format as a numbered list of exact search strings:
-Example format: \`"${phoneData.mobile}" site:facebook.com\`
-Include dorks targeting: Facebook, Instagram, Truecaller-indexed pages, paste sites (Pastebin, Ghostbin), classified ads (OLX, Quikr), LinkedIn, WhatsApp-linked directories, and leaked database indexes.
+## ${phoneData.alternativeMobile ? '5' : '4'}. Google Dork Reconnaissance Queries
+Generate 8-10 specific, ready-to-run Google Dork queries. ${phoneData.alternativeMobile ? 'Include dorks for BOTH numbers.' : ''} Format as a numbered list:
+Example: \`"${phoneData.mobile}" site:facebook.com\`${phoneData.alternativeMobile ? `\nAlso include: \`"${phoneData.alternativeMobile}" site:truecaller.com\`` : ''}
+Include dorks targeting: Facebook, Instagram, Truecaller-indexed pages, paste sites (Pastebin, Ghostbin), classified ads (OLX, Quikr), LinkedIn, WhatsApp directories, and leaked database indexes.
 
-## 5. Social Platform Presence Assessment
-For each major platform, assess the likelihood that this subject has an account based on their demographic profile, region, and data patterns. Rate each: HIGH / MEDIUM / LOW probability.
+## ${phoneData.alternativeMobile ? '6' : '5'}. Social Platform Presence Assessment
+For each major platform, assess the likelihood that this subject has an account. Rate each: HIGH / MEDIUM / LOW probability.
 Platforms: WhatsApp, Facebook, Instagram, Truecaller, JustDial, OLX, LinkedIn, Telegram
 
-## 6. Identity Cross-Correlation
-Cross-correlate all data points (name + father's name + address + mobile + alt mobile + ID number) to:
-- Infer likely email address patterns (e.g. name variations on Gmail/Yahoo)
-- Identify if dual numbers suggest business or family usage
-- Note any data inconsistencies or anomalies
+## ${phoneData.alternativeMobile ? '7' : '6'}. Identity Cross-Correlation
+Cross-correlate all data points (name + father's name + address + mobile + alt mobile + ID number):
+- Infer likely email address patterns
+- ${phoneData.alternativeMobile ? 'Analyze dual-number usage — business vs personal, or shared family number' : 'Note any data inconsistencies or anomalies'}
+- Flag any anomalies
 
-## 7. Risk & Threat Assessment
+## ${phoneData.alternativeMobile ? '8' : '7'}. Risk & Threat Assessment
 - Overall data confidence score: X/10
 - Fraud / spoofing risk: LOW / MEDIUM / HIGH (with reasoning)
 - Subject sensitivity level: CIVILIAN / NOTABLE / HIGH-RISK
 - Data completeness rating
 
-## 8. Recommended Investigative Next Steps
-List 5 specific, actionable follow-up steps an investigator should take, ordered by priority. Be precise — name specific tools, platforms, or techniques.`;
+## ${phoneData.alternativeMobile ? '9' : '8'}. Recommended Investigative Next Steps
+List 5 specific, actionable follow-up steps ordered by priority. Be precise — name specific tools, platforms, or techniques.`;
 
     const response = await fetch(NVIDIA_API_URL, {
       method: 'POST',

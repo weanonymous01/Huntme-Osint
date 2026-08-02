@@ -34,7 +34,7 @@ function AIReportSection({ text }: { text: string }) {
   const lines = text.split('\n');
 
   const renderInline = (content: string) => {
-    // Handle bold **text** and inline `code`
+    // Handle bold **text** and inline `code` — strip ** markers, render plain
     const parts = content.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
     return parts.map((part, j) => {
       if (part.startsWith('`') && part.endsWith('`')) {
@@ -45,9 +45,11 @@ function AIReportSection({ text }: { text: string }) {
         );
       }
       if (part.startsWith('**') && part.endsWith('**')) {
+        // Render bold without stars — just plain white text
         return <strong key={j} className="text-white font-semibold">{part.slice(2, -2)}</strong>;
       }
-      return part;
+      // Strip any stray single * characters
+      return part.replace(/\*/g, '');
     });
   };
 
@@ -58,8 +60,7 @@ function AIReportSection({ text }: { text: string }) {
         if (/^## /.test(line)) {
           const title = line.replace(/^## \d+\.\s*/, '').replace(/^## /, '');
           return (
-            <h3 key={i} className="text-[13px] font-bold text-white pt-4 pb-1 border-t border-zinc-800/80 flex items-center gap-2 first:pt-0 first:border-t-0">
-              <Sparkles className="size-3 text-purple-400 shrink-0" />
+            <h3 key={i} className="text-[13px] font-bold text-white pt-4 pb-1 border-t border-zinc-800/80 first:pt-0 first:border-t-0">
               {title}
             </h3>
           );
@@ -68,7 +69,7 @@ function AIReportSection({ text }: { text: string }) {
         if (/^[-•] /.test(line)) {
           return (
             <div key={i} className="flex gap-2 pl-1">
-              <span className="text-purple-400 mt-0.5 shrink-0 text-xs">›</span>
+              <span className="text-zinc-500 mt-0.5 shrink-0 text-xs">›</span>
               <p className="text-xs text-zinc-300 leading-relaxed">{renderInline(line.replace(/^[-•] /, ''))}</p>
             </div>
           );
@@ -81,7 +82,7 @@ function AIReportSection({ text }: { text: string }) {
           if (/site:|intext:|filetype:|intitle:|OR /.test(content)) {
             return (
               <div key={i} className="flex items-start gap-2 pl-1">
-                <span className="text-[10px] font-mono text-purple-400 bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 rounded shrink-0 mt-0.5">{num}</span>
+                <span className="text-[10px] font-mono text-zinc-400 bg-zinc-800 border border-zinc-700 px-1.5 py-0.5 rounded shrink-0 mt-0.5">{num}</span>
                 <code className="font-mono text-[11px] bg-zinc-900 text-emerald-300 px-2 py-1 rounded border border-zinc-700/80 break-all leading-relaxed flex-1">
                   {content.replace(/`/g, '')}
                 </code>
@@ -122,7 +123,7 @@ function AIReportSection({ text }: { text: string }) {
         }
         // Empty line
         if (line.trim() === '') return null;
-        // Regular paragraph
+        // Regular paragraph — strip stray * chars
         return (
           <p key={i} className="text-xs text-zinc-300 leading-relaxed pl-1">
             {renderInline(line)}
@@ -576,10 +577,10 @@ export default function DashboardPage() {
 
                   {/* AI Loading Skeleton */}
                   {aiReportLoading && (
-                    <div className="rounded-2xl border border-purple-500/20 bg-[#0d0d10] p-6 space-y-4 animate-pulse">
+                    <div className="rounded-2xl border border-zinc-700/40 bg-[#0d0d10] p-6 space-y-4 animate-pulse">
                       <div className="flex items-center gap-2">
-                        <Sparkles className="size-4 text-purple-400" />
-                        <span className="text-sm font-bold text-purple-300">Generating AI Intelligence Report...</span>
+                        <RefreshCw className="size-4 text-zinc-400 animate-spin" />
+                        <span className="text-sm font-bold text-white">Generating AI Intelligence Report...</span>
                       </div>
                       {[1,2,3,4,5].map(i => (
                         <div key={i} className="space-y-2">
@@ -593,13 +594,10 @@ export default function DashboardPage() {
 
                   {/* AI Report Card */}
                   {aiReport && !aiReportLoading && (
-                    <div className="rounded-2xl border border-purple-500/20 bg-[#0d0d10] p-6 space-y-5 shadow-2xl animate-in fade-in duration-500">
+                    <div className="rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl animate-in fade-in duration-500">
                       <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
-                        <div className="flex items-center gap-2">
-                          <Sparkles className="size-4 text-purple-400" />
-                          <h3 className="text-sm font-bold text-white">AI Intelligence Report</h3>
-                        </div>
-                        <span className="text-[11px] text-purple-400 font-mono bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">NVIDIA NIM · Llama 3.1</span>
+                        <h3 className="text-sm font-bold text-white">AI Intelligence Report</h3>
+                        <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">NVIDIA NIM · Llama 3.1</span>
                       </div>
                       <AIReportSection text={aiReport} />
                     </div>
