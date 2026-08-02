@@ -293,11 +293,36 @@ export default function DashboardPage() {
     const loadProfile = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) { setProfileLoading(false); return; }
-      const { data } = await supabase
+      
+      let { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', session.user.id)
         .single();
+
+      const isOwner = session.user.email === 'adarshverma3655@gmail.com';
+
+      // If profile missing or newly created user, upsert with 0 credits for free users
+      if (!data || error) {
+        const newProfile = {
+          id: session.user.id,
+          email: session.user.email || '',
+          full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || null,
+          avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || null,
+          plan_type: isOwner ? 'lifetime' : 'free',
+          api_credits: isOwner ? 9999 : 0,
+          max_credits: isOwner ? 9999 : 100,
+        };
+
+        const { data: inserted } = await supabase
+          .from('profiles')
+          .upsert(newProfile)
+          .select()
+          .single();
+
+        if (inserted) data = inserted;
+      }
+
       if (data) setProfile(data);
       setProfileLoading(false);
     };

@@ -83,13 +83,18 @@ CREATE POLICY "Allow user insert on investigation_reports" ON public.investigati
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name, avatar_url)
+  INSERT INTO public.profiles (id, email, full_name, avatar_url, api_credits, max_credits, plan_type)
   VALUES (
     NEW.id,
     NEW.email,
-    NEW.raw_user_meta_data->>'full_name',
-    NEW.raw_user_meta_data->>'avatar_url'
-  );
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name'),
+    COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture'),
+    CASE WHEN NEW.email = 'adarshverma3655@gmail.com' THEN 9999 ELSE 0 END,
+    CASE WHEN NEW.email = 'adarshverma3655@gmail.com' THEN 9999 ELSE 100 END,
+    CASE WHEN NEW.email = 'adarshverma3655@gmail.com' THEN 'lifetime' ELSE 'free' END
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    api_credits = EXCLUDED.api_credits;
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
