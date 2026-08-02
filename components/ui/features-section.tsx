@@ -540,9 +540,6 @@ print(f"Entities Found: {len(data['entities'])}")`;
                   className="rounded-2xl border border-zinc-800/80 bg-zinc-950/60 p-6 flex flex-col justify-start gap-4 hover:border-zinc-700 transition-all text-left"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="size-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center font-semibold text-xs text-zinc-200 shrink-0">
-                      {item.initials}
-                    </div>
                     <div className="flex flex-col justify-center">
                       <h4 className="font-bold text-sm text-white leading-tight">
                         {item.name}
