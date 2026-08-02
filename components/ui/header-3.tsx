@@ -122,11 +122,6 @@ export function Header() {
 									Pricing
 								</a>
 							</NavigationMenuLink>
-							<NavigationMenuLink className="px-4" asChild>
-								<a href="/dashboard" className="hover:bg-accent rounded-md p-2">
-									Dashboard
-								</a>
-							</NavigationMenuLink>
 						</NavigationMenuList>
 					</NavigationMenu>
 				</div>
