@@ -337,11 +337,11 @@ export default function DashboardPage() {
     loadProfile();
   }, []);
 
-  // Deduct 1 credit and refresh profile if credits > 0
+  // Deduct 5 credits per search and refresh profile if credits > 0
   const deductCredit = async () => {
     if (!profile) return;
     if (profile.api_credits <= 0) return; // Free trial search allowed, no negative credits
-    const newCredits = Math.max(0, profile.api_credits - 1);
+    const newCredits = Math.max(0, profile.api_credits - 5);
     await supabase
       .from('profiles')
       .update({ api_credits: newCredits })
