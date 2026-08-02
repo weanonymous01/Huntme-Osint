@@ -522,6 +522,44 @@ print(f"Entities Found: {len(data['entities'])}")`;
             </div>
           </div>
 
+          {/* Section 5: Testimonials Grid ("Read what people are saying") */}
+          <div className="pt-8 space-y-10">
+            <div className="text-center space-y-2 max-w-3xl mx-auto">
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
+                Trusted by Investigators Across India
+              </h2>
+              <p className="text-zinc-400 text-xs sm:text-sm font-normal leading-relaxed">
+                See how cybersecurity professionals, investigators, journalists, and enterprises across India use Huntme to accelerate OSINT investigations with confidence.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {testimonials.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-2xl border border-zinc-800/80 bg-zinc-950/60 p-6 flex flex-col justify-start gap-4 hover:border-zinc-700 transition-all text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="size-9 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center font-semibold text-xs text-zinc-200 shrink-0">
+                      {item.initials}
+                    </div>
+                    <div className="flex flex-col justify-center">
+                      <h4 className="font-bold text-sm text-white leading-tight">
+                        {item.name}
+                      </h4>
+                      <p className="text-xs text-zinc-500 font-mono mt-0.5">
+                        {item.handle}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed font-normal">
+                    {item.quote}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Section 6: Frequently Asked Questions */}
           <div className="pt-12 space-y-8">
             <div className="space-y-3">

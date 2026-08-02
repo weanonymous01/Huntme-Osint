@@ -64,6 +64,27 @@ export function HeroSection() {
 					</Button>
 				</div>
 			</div>
+			<div className="relative">
+				<div
+					className={cn(
+						"absolute -inset-x-20 inset-y-0 -translate-y-1/3 scale-120 rounded-full",
+						"bg-[radial-gradient(ellipse_at_center,rgba(120,120,120,0.15),transparent,transparent)]",
+						"blur-[50px]"
+					)}
+				/>
+				<div
+					className={cn(
+						"mask-b-from-60% relative mt-8 -mr-56 overflow-hidden px-2 sm:mt-12 sm:mr-0 md:mt-20",
+						"fade-in slide-in-from-bottom-5 animate-in fill-mode-backwards delay-100 duration-1000 ease-out"
+					)}
+				>
+						<img
+						alt="Huntme Dashboard"
+						className="z-2 w-full rounded-lg border border-zinc-800 object-cover shadow-2xl"
+						src="/DashBoard-huntme.png"
+					/>
+				</div>
+			</div>
 		</section>
 	);
 }
