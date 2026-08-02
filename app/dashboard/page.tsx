@@ -371,12 +371,9 @@ export default function DashboardPage() {
       .order('created_at', { ascending: false });
 
     if (data) {
-      // Deduplicate near-identical entries (same phone_number within 10 sec)
+      // Deduplicate entries by target phone number — keep only the most recent search per phone number
       const unique = data.filter((item, index, self) =>
-        index === self.findIndex((t) =>
-          t.phone_number === item.phone_number &&
-          Math.abs(new Date(t.created_at).getTime() - new Date(item.created_at).getTime()) < 10000
-        )
+        index === self.findIndex((t) => t.phone_number === item.phone_number)
       );
       setSavedReports(unique);
     }
