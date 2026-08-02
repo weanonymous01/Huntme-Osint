@@ -16,8 +16,30 @@ import {
   Signal,
   AlertCircle,
   CheckCircle2,
-  Sparkles
+  Sparkles,
+  Lock
 } from 'lucide-react';
+
+function maskWord(w: string): string {
+  if (!w || w.length === 0) return '';
+  if (w.length <= 2) return w[0] + '*';
+  return w[0] + '*'.repeat(Math.max(1, w.length - 2)) + w[w.length - 1];
+}
+
+function maskText(str: string | null): string {
+  if (!str) return '';
+  return str.split(/(\s+|-|!|,|\/|:|\.)/).map(part => {
+    if (!part || /^[\s!,-/:.]+$/.test(part)) return part;
+    return maskWord(part);
+  }).join('');
+}
+
+function maskNumber(str: string | null): string {
+  if (!str) return '';
+  const clean = str.trim();
+  if (clean.length <= 4) return clean[0] + '*'.repeat(Math.max(1, clean.length - 1));
+  return clean.slice(0, 2) + '*'.repeat(Math.max(2, clean.length - 4)) + clean.slice(-2);
+}
 
 type PhoneResult = {
   name: string;
@@ -282,9 +304,10 @@ export default function DashboardPage() {
     loadProfile();
   }, []);
 
-  // Deduct 1 credit and refresh profile
+  // Deduct 1 credit and refresh profile if credits > 0
   const deductCredit = async () => {
     if (!profile) return;
+    if (profile.api_credits <= 0) return; // Free trial search allowed, no negative credits
     const newCredits = Math.max(0, profile.api_credits - 1);
     await supabase
       .from('profiles')
@@ -359,6 +382,8 @@ export default function DashboardPage() {
     { id: 'reports' as const, label: 'Reports', icon: FileText },
     { id: 'settings' as const, label: 'Settings', icon: Settings },
   ];
+
+  const isLocked = !profileLoading && (profile?.api_credits ?? 0) <= 0;
 
   const handlePhoneSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -588,6 +613,23 @@ export default function DashboardPage() {
 
               {phoneResults && phoneResults.length > 0 && (
                 <div className="space-y-4 animate-in fade-in duration-300">
+                  {/* Lock Notice Banner for 0 Credit Users */}
+                  {isLocked && (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-xs shadow-lg">
+                      <div className="flex items-center gap-2 text-amber-300 font-medium">
+                        <Lock className="size-4 shrink-0 text-amber-400" />
+                        <span>Preview Mode (0 Credits) — Full identity, address & ID records are locked.</span>
+                      </div>
+                      <a
+                        href="/pricing"
+                        className="bg-amber-400 hover:bg-amber-300 text-black font-bold px-4 py-2 rounded-xl text-xs transition-colors shrink-0 flex items-center justify-center gap-1.5 shadow-md"
+                      >
+                        <Lock className="size-3.5" />
+                        <span>Unlock Full Report</span>
+                      </a>
+                    </div>
+                  )}
+
                   {/* Success header */}
                   <div className="flex items-center gap-2 text-xs text-emerald-400 font-medium">
                     <CheckCircle2 className="size-4" />
@@ -595,34 +637,55 @@ export default function DashboardPage() {
                   </div>
 
                   {phoneResults.map((r, idx) => (
-                    <div key={idx} className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 space-y-5 shadow-2xl">
+                    <div
+                      key={idx}
+                      onClick={() => isLocked && (window.location.href = '/pricing')}
+                      className={`relative rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 space-y-5 shadow-2xl transition-all ${isLocked ? 'cursor-pointer hover:border-amber-500/40' : ''}`}
+                    >
                       {/* Identity Header */}
                       <div className="flex items-start justify-between gap-4 border-b border-zinc-800/80 pb-5">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <User className="size-4 text-zinc-400" />
-                            <h3 className="text-lg font-bold text-white">{r.name}</h3>
+                            <h3 className={`text-lg font-bold text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                              {isLocked ? maskText(r.name) : r.name}
+                            </h3>
                           </div>
                           {r.fatherName && (
-                            <p className="text-xs text-zinc-500">S/O: <span className="text-zinc-300">{r.fatherName}</span></p>
+                            <p className="text-xs text-zinc-500">S/O: <span className={`text-zinc-300 ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>{isLocked ? maskText(r.fatherName) : r.fatherName}</span></p>
                           )}
                         </div>
-                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full shrink-0">
-                          <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          Verified Record
-                        </div>
+                        {isLocked ? (
+                          <a
+                            href="/pricing"
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full shrink-0 hover:bg-amber-500/20 transition-colors"
+                          >
+                            <Lock className="size-3" />
+                            Unlock Data
+                          </a>
+                        ) : (
+                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full shrink-0">
+                            <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            Verified Record
+                          </div>
+                        )}
                       </div>
 
                       {/* Info Grid */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                           <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Phone className="size-3" />Primary Mobile</p>
-                          <p className="text-sm font-mono text-white">{r.mobile}</p>
+                          <p className={`text-sm font-mono text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                            {isLocked ? maskNumber(r.mobile) : r.mobile}
+                          </p>
                         </div>
                         {r.alternativeMobile && (
                           <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                             <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Phone className="size-3" />Alternative Mobile</p>
-                            <p className="text-sm font-mono text-white">{r.alternativeMobile}</p>
+                            <p className={`text-sm font-mono text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                              {isLocked ? maskNumber(r.alternativeMobile) : r.alternativeMobile}
+                            </p>
                           </div>
                         )}
                         {r.circle && (
@@ -634,13 +697,17 @@ export default function DashboardPage() {
                         {r.email && (
                           <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                             <p className="text-[11px] text-zinc-500 font-medium">Email</p>
-                            <p className="text-sm text-white">{r.email}</p>
+                            <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                              {isLocked ? maskText(r.email) : r.email}
+                            </p>
                           </div>
                         )}
                         {r.idNumber && (
                           <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                             <p className="text-[11px] text-zinc-500 font-medium">ID Number</p>
-                            <p className="text-sm font-mono text-white">{r.idNumber}</p>
+                            <p className={`text-sm font-mono text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                              {isLocked ? maskNumber(r.idNumber) : r.idNumber}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -649,7 +716,9 @@ export default function DashboardPage() {
                       {r.address && (
                         <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                           <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered Address</p>
-                          <p className="text-sm text-zinc-200 leading-relaxed">{r.address}</p>
+                          <p className={`text-sm text-zinc-200 leading-relaxed ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                            {isLocked ? maskText(r.address) : r.address}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -682,12 +751,34 @@ export default function DashboardPage() {
 
                   {/* AI Report Card */}
                   {aiReport && !aiReportLoading && (
-                    <div className="rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl animate-in fade-in duration-500">
+                    <div className="relative rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl animate-in fade-in duration-500 overflow-hidden">
                       <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
                         <h3 className="text-sm font-bold text-white">AI Intelligence Report</h3>
                         <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">NVIDIA NIM · Llama 3.1</span>
                       </div>
-                      <AIReportSection text={aiReport} />
+                      <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
+                        <AIReportSection text={aiReport} />
+                      </div>
+                      {isLocked && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d10] via-[#0d0d10]/95 to-[#0d0d10]/60 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10">
+                          <div className="size-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                            <Lock className="size-5" />
+                          </div>
+                          <div className="space-y-1 max-w-sm">
+                            <h4 className="text-sm font-bold text-white">AI Intelligence Analysis Locked</h4>
+                            <p className="text-xs text-zinc-400">
+                              Upgrade to a paid plan to unlock complete OSINT framework analysis, Google Dorks, social platform presence, and risk scores.
+                            </p>
+                          </div>
+                          <a
+                            href="/pricing"
+                            className="bg-amber-400 hover:bg-amber-300 text-black font-bold px-5 py-2.5 rounded-xl text-xs transition-colors flex items-center gap-2 shadow-lg"
+                          >
+                            <Lock className="size-3.5" />
+                            <span>Unlock Full Intelligence Report</span>
+                          </a>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

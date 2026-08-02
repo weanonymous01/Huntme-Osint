@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   full_name TEXT,
   avatar_url TEXT,
   plan_type TEXT DEFAULT 'free' CHECK (plan_type IN ('free', 'monthly', 'lifetime')),
-  api_credits INTEGER DEFAULT 100,
+  api_credits INTEGER DEFAULT 0,
   max_credits INTEGER DEFAULT 100,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
