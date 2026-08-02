@@ -20,39 +20,39 @@ export function HeroSection() {
 			<div className="relative z-10 flex max-w-2xl flex-col gap-5 px-4">
 				<a
 					className={cn(
-						"group flex w-fit items-center gap-3 rounded-full border border-zinc-800 bg-zinc-950/80 px-3 py-1.5 shadow-xl backdrop-blur-md",
-						"fade-in slide-in-from-bottom-10 animate-in fill-mode-backwards transition-all delay-500 duration-500 ease-out hover:border-zinc-700"
+						"group flex w-fit items-center gap-3 rounded-sm border bg-card p-1 shadow-xs",
+						"fade-in slide-in-from-bottom-10 animate-in fill-mode-backwards transition-all delay-500 duration-500 ease-out"
 					)}
-					href="/products/phone-osint"
+					href="#link"
 				>
-					<div className="rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 shadow-sm">
-						<p className="font-mono text-[11px] font-bold text-emerald-400">NEXT-GEN OSINT</p>
+					<div className="rounded-xs border bg-card px-1.5 py-0.5 shadow-sm">
+						<p className="font-mono text-xs">NOW</p>
 					</div>
 
-					<span className="text-xs text-zinc-300 font-medium">AI-Powered Intelligence Engine</span>
-					<span className="block h-3.5 border-l border-zinc-800" />
+					<span className="text-xs">accepting new client projects</span>
+					<span className="block h-5 border-l" />
 
-					<div className="pr-1 text-zinc-400 group-hover:text-white">
-						<ArrowRightIcon className="size-3.5 -translate-x-0.5 duration-150 ease-out group-hover:translate-x-0.5" />
+					<div className="pr-1">
+						<ArrowRightIcon className="size-3 -translate-x-0.5 duration-150 ease-out group-hover:translate-x-0.5" />
 					</div>
 				</a>
 
 				<h1
 					className={cn(
-						"text-balance font-bold text-4xl text-white tracking-tight leading-tight md:text-6xl",
+						"text-balance font-medium text-4xl text-foreground leading-tight md:text-5xl",
 						"fade-in slide-in-from-bottom-10 animate-in fill-mode-backwards delay-100 duration-500 ease-out"
 					)}
 				>
-					Next-Generation OSINT Intelligence Platform
+					Intelligence Made Simple
 				</h1>
 
 				<p
 					className={cn(
-						"text-zinc-400 text-base sm:text-lg md:text-xl leading-relaxed max-w-xl font-normal",
+						"text-muted-foreground text-sm tracking-wider sm:text-lg md:text-xl",
 						"fade-in slide-in-from-bottom-10 animate-in fill-mode-backwards delay-200 duration-500 ease-out"
 					)}
 				>
-					Uncover hidden connections, carrier telemetry, vehicle registration records, and automated case summaries in seconds.
+					Search public sources faster with AI-powered OSINT built for modern investigations.
 				</p>
 
 				<div className="fade-in slide-in-from-bottom-10 flex w-fit animate-in items-center justify-center gap-3 fill-mode-backwards pt-2 delay-300 duration-500 ease-out">
