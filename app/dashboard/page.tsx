@@ -29,31 +29,103 @@ type PhoneResult = {
   email: string | null;
 };
 
-// Render AI report markdown sections with styled headings
+// Render AI report markdown sections with styled headings and dork blocks
 function AIReportSection({ text }: { text: string }) {
   const lines = text.split('\n');
+
+  const renderInline = (content: string) => {
+    // Handle bold **text** and inline `code`
+    const parts = content.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
+    return parts.map((part, j) => {
+      if (part.startsWith('`') && part.endsWith('`')) {
+        return (
+          <code key={j} className="font-mono text-[11px] bg-zinc-800 text-emerald-300 px-1.5 py-0.5 rounded border border-zinc-700">
+            {part.slice(1, -1)}
+          </code>
+        );
+      }
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={j} className="text-white font-semibold">{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {lines.map((line, i) => {
-        if (line.startsWith('## ')) {
+        // Numbered section heading: ## 1. Title or ## Title
+        if (/^## /.test(line)) {
+          const title = line.replace(/^## \d+\.\s*/, '').replace(/^## /, '');
           return (
-            <h3 key={i} className="text-sm font-bold text-white pt-2 border-t border-zinc-800/80 flex items-center gap-2">
-              <Sparkles className="size-3 text-purple-400" />
-              {line.replace('## ', '')}
+            <h3 key={i} className="text-[13px] font-bold text-white pt-4 pb-1 border-t border-zinc-800/80 flex items-center gap-2 first:pt-0 first:border-t-0">
+              <Sparkles className="size-3 text-purple-400 shrink-0" />
+              {title}
             </h3>
           );
         }
-        if (line.startsWith('- ')) {
+        // Bullet list item
+        if (/^[-•] /.test(line)) {
           return (
-            <p key={i} className="text-xs text-zinc-300 leading-relaxed pl-3 border-l-2 border-zinc-700">
-              {line.replace('- ', '')}
+            <div key={i} className="flex gap-2 pl-1">
+              <span className="text-purple-400 mt-0.5 shrink-0 text-xs">›</span>
+              <p className="text-xs text-zinc-300 leading-relaxed">{renderInline(line.replace(/^[-•] /, ''))}</p>
+            </div>
+          );
+        }
+        // Numbered list items (1. 2. etc for dorks)
+        if (/^\d+\. /.test(line)) {
+          const num = line.match(/^(\d+)\./)?.[1];
+          const content = line.replace(/^\d+\. /, '');
+          // If it's a dork (contains site: or intext: or filetype:)
+          if (/site:|intext:|filetype:|intitle:|OR /.test(content)) {
+            return (
+              <div key={i} className="flex items-start gap-2 pl-1">
+                <span className="text-[10px] font-mono text-purple-400 bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 rounded shrink-0 mt-0.5">{num}</span>
+                <code className="font-mono text-[11px] bg-zinc-900 text-emerald-300 px-2 py-1 rounded border border-zinc-700/80 break-all leading-relaxed flex-1">
+                  {content.replace(/`/g, '')}
+                </code>
+              </div>
+            );
+          }
+          return (
+            <div key={i} className="flex gap-2 pl-1">
+              <span className="text-[11px] font-mono text-zinc-500 shrink-0 mt-0.5">{num}.</span>
+              <p className="text-xs text-zinc-300 leading-relaxed">{renderInline(content)}</p>
+            </div>
+          );
+        }
+        // Platform ratings: lines with HIGH / MEDIUM / LOW
+        if (/\b(HIGH|MEDIUM|LOW)\b/.test(line) && line.includes(':')) {
+          const [platform, ...rest] = line.split(':');
+          const ratingText = rest.join(':').trim();
+          const rating = ratingText.match(/\b(HIGH|MEDIUM|LOW)\b/)?.[1];
+          const ratingColor = rating === 'HIGH' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : rating === 'MEDIUM' ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' : 'text-zinc-400 bg-zinc-700/30 border-zinc-700/40';
+          return (
+            <div key={i} className="flex items-center justify-between gap-4 py-1.5 border-b border-zinc-800/40 pl-1">
+              <span className="text-xs text-zinc-400">{renderInline(platform.trim())}</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${ratingColor}`}>{rating}</span>
+            </div>
+          );
+        }
+        // Confidence score line
+        if (/score|confidence|rating/i.test(line) && /\d/.test(line)) {
+          return (
+            <p key={i} className="text-xs text-zinc-300 leading-relaxed font-mono bg-zinc-900/60 px-3 py-1.5 rounded border border-zinc-800/60">
+              {renderInline(line)}
             </p>
           );
         }
+        // Separator line
+        if (/^---+$/.test(line.trim())) {
+          return <hr key={i} className="border-zinc-800/60" />;
+        }
+        // Empty line
         if (line.trim() === '') return null;
+        // Regular paragraph
         return (
-          <p key={i} className="text-xs text-zinc-300 leading-relaxed">
-            {line}
+          <p key={i} className="text-xs text-zinc-300 leading-relaxed pl-1">
+            {renderInline(line)}
           </p>
         );
       })}

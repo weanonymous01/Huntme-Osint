@@ -22,39 +22,73 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const prompt = `You are an expert OSINT intelligence analyst. You have been given verified public phone record data for a subject. Your task is to analyze this data deeply, draw intelligent inferences, and produce a structured professional investigation report.
+    const prompt = `You are an elite OSINT intelligence analyst operating with the combined capabilities of PhoneInfoga, PhoneIntel, Moriarty-Project, and X-osint frameworks. Your task is to produce a comprehensive, professional intelligence report from verified phone record data.
+
+Apply the following analysis mechanics in your report:
+
+1. **PhoneInfoga mechanics**: Use number prefix analysis (mathematical prefix matching) to determine country code, telecom circle, line type (mobile/landline/VoIP), and original issuing carrier block. Generate targeted Google Dorks to locate this number across paste sites, social media, and classified ads.
+
+2. **PhoneIntel mechanics**: Infer spam/reputation risk from known number patterns and carrier block history. Assess if the number prefix falls in ranges commonly associated with fraud, spoofing or robocalls.
+
+3. **Moriarty-Project mechanics**: Identify which platforms likely have accounts registered to this phone number based on platform registration patterns and the subject's profile.
+
+4. **X-osint mechanics**: Cross-correlate phone, address, name, and alternative number to build a multi-vector identity profile. Infer email patterns, additional contact surfaces, and location data.
 
 VERIFIED RECORD DATA:
-- Name: ${phoneData.name}
-- Father's Name: ${phoneData.fatherName || 'Not available'}
+- Full Name: ${phoneData.name}
+- Father's Name / S/O: ${phoneData.fatherName || 'Not available'}
 - Primary Mobile: ${phoneData.mobile}
 - Alternative Mobile: ${phoneData.alternativeMobile || 'Not available'}
 - Carrier / Telecom Circle: ${phoneData.circle || 'Not available'}
 - Registered Address: ${phoneData.address || 'Not available'}
-- ID Number: ${phoneData.idNumber || 'Not available'}
-- Email: ${phoneData.email || 'Not available'}
+- Government ID Number: ${phoneData.idNumber || 'Not available'}
+- Email on Record: ${phoneData.email || 'Not available'}
 
-Write a comprehensive OSINT investigation report with the following clearly labeled sections:
+---
 
-## Subject Identity Summary
-Provide a brief professional summary of who this subject is based on the data.
+Produce a structured intelligence report with the following sections. Be specific, operational, and professional. Do NOT fabricate — only infer from what the data logically supports.
 
-## Telecom Intelligence
-Analyze the carrier, circle, and mobile numbers. What telecom provider? What region is the number registered in? What can be inferred from dual numbers?
+## 1. Subject Identity Profile
+Summarize who this subject is. Full name analysis (naming conventions, regional origin of name), family context from father's name, and overall identity confidence level.
 
-## Geographic Intelligence
-Analyze the registered address in detail. What district, state, PIN code? What can be inferred about their location and background?
+## 2. Telecom & Carrier Intelligence
+Analyze the phone number prefix to determine:
+- Inferred telecom operator and circle (BSNL/Airtel/Jio/Vi/etc.)
+- Line type: Mobile / Landline / VoIP
+- Geographic origin from number block
+- Dual-number analysis (primary vs alternative) — what does having two numbers suggest?
+- SIM registration age indicators if any
 
-## Family & Social Context
-What can be inferred about family structure, background, or social context from the father's name, naming patterns, and address?
+## 3. Geographic & Address Intelligence
+Deep analysis of the registered address:
+- District, Tehsil, State, PIN code breakdown
+- Rural vs urban classification
+- Nearest major city and distance estimate
+- Geospatial risk or significance flags
 
-## Risk Assessment
-Rate the overall data confidence (High / Medium / Low) and note any anomalies, inconsistencies, or investigative flags.
+## 4. Google Dork Reconnaissance Queries
+Generate 8-10 specific, ready-to-run Google Dork queries for this subject. Format as a numbered list of exact search strings:
+Example format: \`"${phoneData.mobile}" site:facebook.com\`
+Include dorks targeting: Facebook, Instagram, Truecaller-indexed pages, paste sites (Pastebin, Ghostbin), classified ads (OLX, Quikr), LinkedIn, WhatsApp-linked directories, and leaked database indexes.
 
-## Recommended Next Steps
-List 3-5 specific follow-up investigation actions an analyst should take based on this data.
+## 5. Social Platform Presence Assessment
+For each major platform, assess the likelihood that this subject has an account based on their demographic profile, region, and data patterns. Rate each: HIGH / MEDIUM / LOW probability.
+Platforms: WhatsApp, Facebook, Instagram, Truecaller, JustDial, OLX, LinkedIn, Telegram
 
-Be professional, concise, and analytical. Do not fabricate data. Only infer from what is provided.`;
+## 6. Identity Cross-Correlation
+Cross-correlate all data points (name + father's name + address + mobile + alt mobile + ID number) to:
+- Infer likely email address patterns (e.g. name variations on Gmail/Yahoo)
+- Identify if dual numbers suggest business or family usage
+- Note any data inconsistencies or anomalies
+
+## 7. Risk & Threat Assessment
+- Overall data confidence score: X/10
+- Fraud / spoofing risk: LOW / MEDIUM / HIGH (with reasoning)
+- Subject sensitivity level: CIVILIAN / NOTABLE / HIGH-RISK
+- Data completeness rating
+
+## 8. Recommended Investigative Next Steps
+List 5 specific, actionable follow-up steps an investigator should take, ordered by priority. Be precise — name specific tools, platforms, or techniques.`;
 
     const response = await fetch(NVIDIA_API_URL, {
       method: 'POST',
@@ -75,7 +109,7 @@ Be professional, concise, and analytical. Do not fabricate data. Only infer from
           },
         ],
         temperature: 0.4,
-        max_tokens: 1500,
+        max_tokens: 3000,
         stream: false,
       }),
     });
