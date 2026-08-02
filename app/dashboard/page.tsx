@@ -20,7 +20,9 @@ import {
   Lock,
   Calendar,
   Eye,
-  ChevronRight
+  ChevronRight,
+  Copy,
+  Check
 } from 'lucide-react';
 
 function maskWord(w: string): string {
@@ -405,6 +407,16 @@ export default function DashboardPage() {
   // Vehicle search state
   const [vehicleInput, setVehicleInput] = useState('');
   const [vehicleLoading, setVehicleLoading] = useState(false);
+
+  // Copy report state
+  const [copiedReport, setCopiedReport] = useState<boolean>(false);
+
+  const handleCopyReport = (reportText: string) => {
+    if (!reportText) return;
+    navigator.clipboard.writeText(reportText);
+    setCopiedReport(true);
+    setTimeout(() => setCopiedReport(false), 2000);
+  };
 
   // AI report state
   const [aiReport, setAiReport] = useState<string | null>(null);
@@ -878,7 +890,26 @@ export default function DashboardPage() {
                     <div className="relative rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl animate-in fade-in duration-500 overflow-hidden">
                       <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
                         <h3 className="text-sm font-bold text-white">AI Intelligence Report</h3>
-                        <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">NVIDIA NIM · Llama 3.1</span>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyReport(aiReport)}
+                            className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 px-3 py-1.5 rounded-lg transition-all"
+                          >
+                            {copiedReport ? (
+                              <>
+                                <Check className="size-3.5 text-emerald-400" />
+                                <span className="text-emerald-400 font-medium">Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="size-3.5 text-zinc-400" />
+                                <span>Copy Report</span>
+                              </>
+                            )}
+                          </button>
+                          <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">NVIDIA NIM · Llama 3.1</span>
+                        </div>
                       </div>
                       <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
                         <AIReportSection text={aiReport} />
@@ -1086,7 +1117,26 @@ export default function DashboardPage() {
                     <div className="relative rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl overflow-hidden">
                       <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
                         <h3 className="text-sm font-bold text-white">AI Intelligence Report</h3>
-                        <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">NVIDIA NIM · Llama 3.1</span>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyReport(selectedReport.telemetry_json.aiReport)}
+                            className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 px-3 py-1.5 rounded-lg transition-all"
+                          >
+                            {copiedReport ? (
+                              <>
+                                <Check className="size-3.5 text-emerald-400" />
+                                <span className="text-emerald-400 font-medium">Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="size-3.5 text-zinc-400" />
+                                <span>Copy Report</span>
+                              </>
+                            )}
+                          </button>
+                          <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">NVIDIA NIM · Llama 3.1</span>
+                        </div>
                       </div>
                       <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
                         <AIReportSection text={selectedReport.telemetry_json.aiReport} />
