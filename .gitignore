@@ -29,3 +29,8 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 node_modules
+
+# API response cache / leaked data — never commit these
+Images/*.json
+pk_*.json
+*.cache.json
