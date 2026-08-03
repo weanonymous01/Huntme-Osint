@@ -677,7 +677,7 @@ export default function DashboardPage() {
       const res = await fetch('/api/phone-lookup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: phoneInput.trim() }),
+        body: JSON.stringify({ phoneNumber: phoneInput.trim(), isPreview: isLocked }),
       });
       const data = await res.json();
       if (data.success) {
@@ -735,7 +735,7 @@ export default function DashboardPage() {
       const res = await fetch('/api/vehicle-lookup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ registrationNumber: vehicleInput.trim() }),
+        body: JSON.stringify({ registrationNumber: vehicleInput.trim(), isPreview: isLocked }),
       });
       const data = await res.json();
       if (data.success) {
