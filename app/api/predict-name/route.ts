@@ -43,6 +43,16 @@ function createStreamFromGroq(groqBody: ReadableStream<Uint8Array>): ReadableStr
   });
 }
 
+// Helper to extract word constraints
+function extractWordConstraint(maskedWord: string) {
+  const w = (maskedWord || '').trim();
+  if (!w) return null;
+  const first = w[0].toUpperCase();
+  const last = w[w.length - 1].toUpperCase();
+  const len = w.length;
+  return { maskedWord: w, first, last, len };
+}
+
 export async function POST(req: NextRequest) {
   try {
     const apiKey = GROQ_API_KEY || process.env.NVIDIA_NIM_API_KEY;
@@ -62,46 +72,58 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Server-side character pattern analysis
+    const parts = (maskedName as string).trim().split(/\s+/);
+    const word1 = extractWordConstraint(parts[0]);
+    const word2 = parts.length > 1 ? extractWordConstraint(parts[1]) : null;
+
+    const constraintInstructions = `
+CRITICAL PATTERN CONSTRAINT VERIFICATION:
+1. FIRST NAME PATTERN: "${word1?.maskedWord}"
+   - MUST start with letter '${word1?.first}'
+   - MUST end with letter '${word1?.last}'
+   - MUST be EXACTLY ${word1?.len} letters long.
+   - Example VALID matches: ${word1?.first === 'K' && word1?.last === 'H' && word1?.len === 7 ? 'KAILASH, KAMLESH, KALPESH, KHIRESH' : 'Names strictly matching start/end/length'}
+   - STRICTLY FORBIDDEN: Any name that does NOT start with '${word1?.first}', does NOT end with '${word1?.last}', or is NOT ${word1?.len} letters long. (e.g. Kunal, Keshav, Kiran DO NOT end with H so they are INVALID).
+
+${word2 ? `2. LAST NAME / SURNAME PATTERN: "${word2.maskedWord}"
+   - MUST start with letter '${word2.first}'
+   - MUST end with letter '${word2.last}'
+   - MUST be EXACTLY ${word2.len} letters long.
+   - Example VALID matches: ${word2.first === 'J' && word2.last === 'N' && word2.len === 4 ? 'JAIN, JOHN' : 'Surnames strictly matching start/end/length'}
+   - STRICTLY FORBIDDEN: Any surname that does NOT start with '${word2.first}', does NOT end with '${word2.last}', or is NOT ${word2.len} letters long. (e.g. Jaiswal, Joshi, Jha DO NOT match length or end letter so they are INVALID).` : ''}
+`;
+
     const prompt = `You are an advanced pattern analysis and probabilistic reasoning model.
 
-Your task is to analyze a sequence generation system using only the information provided. Do not assume hidden rules, external datasets, or undocumented behavior. Base every conclusion strictly on observable patterns.
+Your task is to analyze a masked name sequence using ONLY the character constraints and regional demographic data provided. Do not assume hidden rules or invent names that violate character constraints.
+
+${constraintInstructions}
 
 INPUT DATA:
-- Starting Value / Prefix & Anchor: ${maskedName.split(' ')[0] || ''}
-- Ending Value / Surname Anchor: ${maskedName.split(' ')[1] || ''}
-- Full Masked Target Sequence: ${maskedName}
+- Full Target Sequence: ${maskedName}
 - Historical Context / Father Name: ${fatherName || 'Not available'}
 - Regional Context: ${address || cityName || registeredRTO || 'India'}
 
 Perform a deep multi-stage analysis before producing any prediction.
 
-### Stage 1: Structure & Sequence Analysis
-Identify:
-* Character patterns
-* Length consistency (exact character count per word)
-* Alphabet distribution
-* Prefixes and Suffixes
-* Internal repetition
-* Frequency of characters
-* Formatting consistency
+Stage 1: Structure and Sequence Analysis
+- First Name Pattern: Starts with ${word1?.first}, ends with ${word1?.last}, total length ${word1?.len} characters.
+- Last Name Pattern: ${word2 ? `Starts with ${word2.first}, ends with ${word2.last}, total length ${word2.len} characters.` : 'N/A'}
+- Formatting: Two space-separated words.
 
-### Stage 2: Transition & Constraint Analysis
-Determine:
-* Which sections remain fixed (starting/ending anchor letters)
-* Which sections change (asterisks/masked positions)
-* Which positions are variable
-* Regional demographic correlation for ${cityName || registeredRTO || 'this area'}
+Stage 2: Transition and Constraint Analysis
+- Fixed section 1: Starting letter ${word1?.first}, ending letter ${word1?.last}.
+- Fixed section 2: ${word2 ? `Starting letter ${word2.first}, ending letter ${word2.last}.` : 'N/A'}
+- Variable positions: ${word1 ? word1.len - 2 : 0} characters in word 1, ${word2 ? word2.len - 2 : 0} characters in word 2.
+- Regional demographic correlation for ${cityName || registeredRTO || 'Rajasthan/India'}.
 
-### Stage 3: Probability Estimation
-For every possible outcome:
-* Calculate relative likelihood
-* Rank candidates from highest probability to lowest probability
-* Explain ranking
-* State confidence level
-* Identify uncertainty
+Stage 3: Probability Estimation
+- Calculate relative likelihoods for valid Indian names matching the EXACT character constraints.
+- Rank candidates from highest probability (Rank 1) to lowest probability (Rank 10).
+- Probabilities must sum to 100%.
 
-### Stage 4: Comprehensive Reasoning Report
-Produce a detailed report covering:
+Stage 4: Comprehensive Reasoning Report
 1. Structural observations
 2. Pattern observations
 3. Variable positions
@@ -113,36 +135,24 @@ Produce a detailed report covering:
 9. Assumptions
 10. Limitations
 11. Confidence assessment
-12. Final ranked prediction
+12. Final ranked predictions
 
-## Output Format & Ranking Rules
-Return exactly ten predicted outcomes. Rank them from most likely (Rank 1) to least likely (Rank 10).
-Percentages across all 10 predictions must sum to 100%.
+Return exactly 10 predicted outcomes. Rank them from most likely to least likely.
 
-For EVERY prediction from Rank 1 to Rank 10, format EXACTLY as:
+For EVERY prediction include:
+Rank 1
+Prediction: [Full Name matching exact start/end/length constraints]
+Estimated Probability: [XX]%
+Reasoning: [Detailed pattern verification showing character-by-character match]
+Confidence: [High / Medium / Low]
 
-Rank [X]
+Repeat for Rank 2 through Rank 10.
 
-Prediction:
-[Predicted Full Name]
-
-Estimated Probability:
-[XX]%
-
-Reasoning:
-[Detailed pattern verification and demographic alignment explanation]
-
-Confidence:
-[High / Medium / Low]
-
----
-
-RULES TO STRICTLY FOLLOW:
+STRICT FORMATTING RULES:
+- Do not use markdown headers (Do NOT use #, ##, or ###).
 - Do not use emojis anywhere in the response.
-- Do not use em dashes anywhere in the response (use standard hyphens or colons).
-- Do not skip any reasoning stage.
-- Perform the complete multi-stage analysis before producing final ranked predictions.
-- Ensure all 10 ranks are fully detailed.`;
+- Do not use em dashes anywhere in the response.
+- Every candidate name MUST 100% strictly satisfy the start letter, end letter, and length constraints.`;
 
     const isGroq = !!GROQ_API_KEY;
     const apiUrl = isGroq ? GROQ_API_URL : 'https://integrate.api.nvidia.com/v1/chat/completions';
@@ -161,11 +171,11 @@ RULES TO STRICTLY FOLLOW:
           messages: [
             {
               role: 'system',
-              content: 'You are an advanced pattern analysis and probabilistic reasoning model. Perform complete multi-stage analysis before returning output. Do not use emojis. Do not use em dashes.',
+              content: 'You are an advanced pattern analysis and probabilistic reasoning model. Every prediction MUST 100% strictly satisfy the character length, first letter, and last letter constraints. Do not use markdown headers (# or ## or ###). Do not use emojis. Do not use em dashes.',
             },
             { role: 'user', content: prompt },
           ],
-          temperature: 0.2,
+          temperature: 0.1,
           max_tokens: 3500,
           stream: true,
         }),

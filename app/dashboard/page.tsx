@@ -116,9 +116,9 @@ function AIReportSection({ text }: { text: string }) {
   return (
     <div className="space-y-3">
       {lines.map((line, i) => {
-        // Numbered section heading: ## 1. Title or ## Title
-        if (/^## /.test(line)) {
-          const title = line.replace(/^## \d+\.\s*/, '').replace(/^## /, '');
+        // Heading matching #, ##, or ###
+        if (/^#{1,3}\s+/.test(line)) {
+          const title = line.replace(/^#{1,3}\s+\d+\.\s*/, '').replace(/^#{1,3}\s+/, '');
           return (
             <h3 key={i} className="text-[13px] font-bold text-white pt-4 pb-1 border-t border-zinc-800/80 first:pt-0 first:border-t-0">
               {title}
