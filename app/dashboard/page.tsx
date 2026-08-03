@@ -1136,8 +1136,8 @@ export default function DashboardPage() {
                             Unlock Data
                           </a>
                         ) : (
-                          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full shrink-0">
-                            <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-1 rounded-full shrink-0">
+                            <span className="size-1.5 rounded-full bg-zinc-400 animate-pulse" />
                             Verified Record
                           </div>
                         )}
@@ -1407,8 +1407,8 @@ export default function DashboardPage() {
                           <p className="text-sm text-zinc-300 pl-8">{vehicleResult.modelName}</p>
                         )}
                       </div>
-                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full shrink-0">
-                        <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-1 rounded-full shrink-0">
+                        <span className="size-1.5 rounded-full bg-zinc-400 animate-pulse" />
                         Verified Record
                       </div>
                     </div>
@@ -1498,9 +1498,9 @@ export default function DashboardPage() {
 
                   {/* ── AI Name Reconstruction Loading Skeleton ── */}
                   {namePredictionLoading && (
-                    <div className="rounded-2xl border border-sky-500/30 bg-[#0d0d10] p-6 space-y-4 animate-pulse shadow-xl">
+                    <div className="rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-4 animate-pulse shadow-xl">
                       <div className="flex items-center gap-2">
-                        <RefreshCw className="size-4 text-sky-400 animate-spin" />
+                        <RefreshCw className="size-4 text-zinc-400 animate-spin" />
                         <span className="text-sm font-bold text-white">Reconstructing Masked Owner Identity & Pattern Analysis (Groq AI)...</span>
                       </div>
                       {[1, 2, 3].map(i => (
@@ -1514,7 +1514,7 @@ export default function DashboardPage() {
 
                   {/* ── AI Name Reconstruction Card ── */}
                   {namePredictionReport !== null && !namePredictionLoading && (
-                    <div className="relative rounded-2xl border border-sky-500/40 bg-[#0d0d10] p-6 space-y-5 shadow-2xl animate-in fade-in duration-500 overflow-hidden">
+                    <div className="relative rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl animate-in fade-in duration-500 overflow-hidden">
                       <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
                         <div className="flex items-center gap-2">
                           <h3 className="text-sm font-bold text-white">AI Owner Name Pattern & Top 10 Predictions</h3>
@@ -1527,8 +1527,8 @@ export default function DashboardPage() {
                           >
                             {copiedNamePrediction ? (
                               <>
-                                <Check className="size-3.5 text-emerald-400" />
-                                <span className="text-emerald-400 font-medium">Copied!</span>
+                                <Check className="size-3.5 text-zinc-300" />
+                                <span className="text-zinc-300 font-medium">Copied!</span>
                               </>
                             ) : (
                               <>
@@ -1537,7 +1537,7 @@ export default function DashboardPage() {
                               </>
                             )}
                           </button>
-                          <span className="text-[11px] text-sky-300 font-mono bg-sky-500/10 border border-sky-500/30 px-2.5 py-0.5 rounded-full">Groq · Llama 3.3 70B</span>
+                          <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-0.5 rounded-full">Groq · Llama 3.3 70B</span>
                         </div>
                       </div>
                       <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
@@ -1752,10 +1752,10 @@ export default function DashboardPage() {
 
                       {/* Saved Name Reconstruction Card */}
                       {selectedReport.vehicle_json?.namePredictions && (
-                        <div className="relative rounded-2xl border border-sky-500/40 bg-[#0d0d10] p-6 space-y-5 shadow-2xl overflow-hidden">
+                        <div className="relative rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl overflow-hidden">
                           <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
                             <h3 className="text-sm font-bold text-white">AI Owner Name Pattern & Top 10 Predictions</h3>
-                            <span className="text-[11px] text-sky-300 font-mono bg-sky-500/10 border border-sky-500/30 px-2.5 py-0.5 rounded-full">Groq · Llama 3.3 70B</span>
+                            <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-0.5 rounded-full">Groq · Llama 3.3 70B</span>
                           </div>
                           <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
                             <AIReportSection text={selectedReport.vehicle_json.namePredictions} />
@@ -1793,8 +1793,8 @@ export default function DashboardPage() {
                                 <p className="text-xs text-zinc-500">S/O: <span className={`text-zinc-300 ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>{isLocked ? maskText(selectedReport.telemetry_json.result.fatherName) : selectedReport.telemetry_json.result.fatherName}</span></p>
                               )}
                             </div>
-                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-                              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-1 rounded-full">
+                              <span className="size-1.5 rounded-full bg-zinc-400 animate-pulse" />
                               Verified Record
                             </div>
                           </div>
@@ -1931,10 +1931,10 @@ export default function DashboardPage() {
                             >
                               <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
                                 <div className="flex items-center gap-2">
-                                  <Car className="size-4 text-sky-400 group-hover:text-white transition-colors" />
+                                  <Car className="size-4 text-zinc-400 group-hover:text-white transition-colors" />
                                   <h3 className={`text-sm font-bold text-white font-mono ${isLocked ? 'blur-[1px]' : ''}`}>{plate}</h3>
                                 </div>
-                                <span className="text-[10px] font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full">
+                                <span className="text-[10px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">
                                   Vehicle OSINT
                                 </span>
                               </div>
@@ -1988,7 +1988,7 @@ export default function DashboardPage() {
                                 <User className="size-4 text-zinc-400 group-hover:text-white transition-colors" />
                                 <h3 className={`text-sm font-bold text-white ${isLocked ? 'blur-[1px]' : ''}`}>{targetName}</h3>
                               </div>
-                              <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                              <span className="text-[10px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">
                                 Phone OSINT
                               </span>
                             </div>
