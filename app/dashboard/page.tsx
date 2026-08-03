@@ -321,28 +321,9 @@ export default function DashboardPage() {
 
   // Load user session + profile on mount
   useEffect(() => {
-    // Check for OAuth redirect errors in URL query or hash
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const hashString = window.location.hash.replace(/^#/, '');
-      const hashParams = new URLSearchParams(hashString);
-      const errorDesc = urlParams.get('error_description') || hashParams.get('error_description');
-      const errorMsg = urlParams.get('error') || hashParams.get('error');
-
-      if (errorDesc || errorMsg) {
-        const decodedError = errorDesc
-          ? decodeURIComponent(errorDesc.replace(/\+/g, ' '))
-          : 'Authentication error occurred during login. Please try logging in again.';
-
-        // Sign out any stale local session so old user isn't shown
-        supabase.auth.signOut().then(() => {
-          setProfile(null);
-          setAuthError(decodedError);
-          window.history.replaceState({}, document.title, window.location.pathname);
-          setProfileLoading(false);
-        });
-        return;
-      }
+    // Clean up any OAuth error redirect parameters from URL bar without logging user out
+    if (typeof window !== 'undefined' && (window.location.search.includes('error=') || window.location.hash.includes('error='))) {
+      window.history.replaceState({}, document.title, window.location.pathname);
     }
 
     const loadProfileForUser = async (user: any) => {
