@@ -25,7 +25,9 @@ import {
   Check,
   Menu,
   X,
-  Download
+  Download,
+  LogOut,
+  Mail
 } from 'lucide-react';
 import { exportVehiclePdf, exportPhonePdf } from '@/lib/exportPdf';
 
@@ -312,6 +314,13 @@ export default function DashboardPage() {
   // Real user profile from Supabase
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+  };
 
   // Auth redirect error tracking
   const [authError, setAuthError] = useState<string | null>(null);
@@ -927,12 +936,22 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <a
-            href="/products/rest-api"
-            className="flex items-center gap-2 px-2 text-xs text-zinc-400 hover:text-white transition-colors"
-          >
-            <span>Documentation</span>
-          </a>
+          <div className="flex items-center justify-between px-2 pt-2 border-t border-zinc-800/60">
+            <a
+              href="/products/rest-api"
+              className="text-xs text-zinc-400 hover:text-white transition-colors"
+            >
+              Documentation
+            </a>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 transition-colors font-medium cursor-pointer"
+            >
+              <LogOut className="size-3.5" />
+              <span>Log Out</span>
+            </button>
+          </div>
         </div>
       </aside>
 
@@ -2233,36 +2252,93 @@ export default function DashboardPage() {
           )}
 
           {activeTab === 'settings' && (
-            <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-8 space-y-6 animate-in fade-in duration-300">
-              <div className="space-y-2">
+            <div className="space-y-6 animate-in fade-in duration-300">
+              <div className="space-y-1">
                 <h2 className="text-xl font-bold text-white">
                   Platform Settings
                 </h2>
                 <p className="text-xs text-zinc-400">
-                  Manage API keys, team access permissions, and export preferences.
+                  Manage your account session, API keys, and platform preferences.
                 </p>
               </div>
 
-              <div className="space-y-4 max-w-md">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-zinc-300">Default Confidence Threshold</label>
-                  <input
-                    type="text"
-                    disabled
-                    value="85% (High Precision)"
-                    className="w-full bg-[#141418] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-400 font-mono"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-zinc-300">Enterprise API Token</label>
-                  <input
-                    type="password"
-                    disabled
-                    value="huntme_live_9f8a3c2b1e"
-                    className="w-full bg-[#141418] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-400 font-mono"
-                  />
+              {/* Account Profile Card */}
+              <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 space-y-4 shadow-xl">
+                <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Account Overview</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                    <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><User className="size-3" />Full Name</p>
+                    <p className="text-sm font-semibold text-white">
+                      {profile?.full_name || profile?.email?.split('@')[0] || 'User'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                    <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Mail className="size-3" />Email Address</p>
+                    <p className="text-sm text-white font-mono">
+                      {profile?.email || 'Not logged in'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                    <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Sparkles className="size-3" />Plan Status</p>
+                    <p className="text-sm text-white capitalize font-semibold">
+                      {profile?.plan_type || 'Free Trial'}
+                    </p>
+                  </div>
+                  <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                    <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />API Credits Remaining</p>
+                    <p className="text-sm text-white font-mono font-semibold">
+                      {(profile?.api_credits ?? 0).toLocaleString()} / {(profile?.max_credits ?? 100).toLocaleString()}
+                    </p>
+                  </div>
                 </div>
               </div>
+
+              {/* API Configuration Card */}
+              <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 space-y-4 shadow-xl">
+                <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">API Configuration</h3>
+                <div className="space-y-4 max-w-md">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-zinc-300">Default Confidence Threshold</label>
+                    <input
+                      type="text"
+                      disabled
+                      value="85% (High Precision)"
+                      className="w-full bg-[#141418] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-400 font-mono"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-zinc-300">Enterprise API Token</label>
+                    <input
+                      type="password"
+                      disabled
+                      value="huntme_live_9f8a3c2b1e"
+                      className="w-full bg-[#141418] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-400 font-mono"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Session & Logout Danger Zone Card */}
+              <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                    <LogOut className="size-4 text-rose-400" />
+                    <span>Account Session</span>
+                  </h3>
+                  <p className="text-xs text-zinc-400 leading-relaxed">
+                    Sign out of your active session on this device. You will need to log back in to query OSINT records.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="bg-rose-600 hover:bg-rose-500 text-white font-semibold px-5 py-2.5 rounded-xl text-xs transition-colors shrink-0 flex items-center justify-center gap-2 shadow-lg cursor-pointer"
+                >
+                  <LogOut className="size-4" />
+                  <span>Log Out of Account</span>
+                </button>
+              </div>
+
             </div>
           )}
 
