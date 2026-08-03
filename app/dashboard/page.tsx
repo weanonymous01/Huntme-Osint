@@ -322,6 +322,42 @@ export default function DashboardPage() {
     }
   };
 
+  // Editable full name state
+  const [editingName, setEditingName] = useState<string>('');
+  const [isUpdatingName, setIsUpdatingName] = useState<boolean>(false);
+  const [nameSavedSuccess, setNameSavedSuccess] = useState<boolean>(false);
+
+  const handleSaveName = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!profile || !editingName.trim() || isUpdatingName) return;
+    setIsUpdatingName(true);
+    setNameSavedSuccess(false);
+
+    const updatedName = editingName.trim();
+
+    try {
+      // 1. Update Supabase public.profiles table
+      await supabase
+        .from('profiles')
+        .update({ full_name: updatedName })
+        .eq('id', profile.id);
+
+      // 2. Update Supabase auth user metadata
+      await supabase.auth.updateUser({
+        data: { full_name: updatedName }
+      });
+
+      // 3. Update local profile state
+      setProfile(prev => prev ? { ...prev, full_name: updatedName } : prev);
+      setNameSavedSuccess(true);
+      setTimeout(() => setNameSavedSuccess(false), 3000);
+    } catch (err) {
+      console.error('Failed to update name:', err);
+    } finally {
+      setIsUpdatingName(false);
+    }
+  };
+
   // Auth redirect error tracking
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -395,7 +431,10 @@ export default function DashboardPage() {
         data = updated || { ...data, plan_type: 'lifetime', api_credits: 9999, max_credits: 9999 };
       }
 
-      setProfile(data);
+      if (data) {
+        setProfile(data);
+        setEditingName(data.full_name || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || '');
+      }
       setProfileLoading(false);
     };
 
@@ -2480,63 +2519,56 @@ export default function DashboardPage() {
                 </p>
               </div>
 
-              {/* Account Profile Card */}
-              <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 space-y-4 shadow-xl">
+              {/* Account Overview Card (Matching Image 2 + Editable Name) */}
+              <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 space-y-5 shadow-xl">
                 <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">Account Overview</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                    <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><User className="size-3" />Full Name</p>
-                    <p className="text-sm font-semibold text-white">
-                      {profile?.full_name || profile?.email?.split('@')[0] || 'User'}
+                  {/* Editable Full Name Card */}
+                  <form onSubmit={handleSaveName} className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] text-zinc-400 font-medium flex items-center gap-1.5">
+                        <User className="size-3 text-zinc-400" />
+                        <span>Full Name</span>
+                      </label>
+                      {nameSavedSuccess && (
+                        <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
+                          <Check className="size-3" />
+                          <span>Saved!</span>
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={editingName}
+                        onChange={(e) => setEditingName(e.target.value)}
+                        placeholder="Enter your full name"
+                        className="grow bg-[#08080a] border border-zinc-700/80 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-zinc-500 transition-colors font-medium"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isUpdatingName || !editingName.trim() || editingName.trim() === (profile?.full_name || '')}
+                        className="bg-white hover:bg-zinc-200 text-black font-bold px-3.5 py-2 rounded-lg text-xs transition-colors shrink-0 disabled:opacity-40 cursor-pointer"
+                      >
+                        {isUpdatingName ? 'Saving...' : 'Save'}
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* Email Address Card */}
+                  <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-2">
+                    <p className="text-[11px] text-zinc-400 font-medium flex items-center gap-1.5">
+                      <Mail className="size-3 text-zinc-400" />
+                      <span>Email Address</span>
                     </p>
-                  </div>
-                  <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                    <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Mail className="size-3" />Email Address</p>
-                    <p className="text-sm text-white font-mono">
+                    <p className="text-sm text-white font-mono py-1.5 truncate">
                       {profile?.email || 'Not logged in'}
                     </p>
                   </div>
-                  <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                    <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Sparkles className="size-3" />Plan Status</p>
-                    <p className="text-sm text-white capitalize font-semibold">
-                      {profile?.plan_type || 'Free Trial'}
-                    </p>
-                  </div>
-                  <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                    <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />API Credits Remaining</p>
-                    <p className="text-sm text-white font-mono font-semibold">
-                      {(profile?.api_credits ?? 0).toLocaleString()} / {(profile?.max_credits ?? 100).toLocaleString()}
-                    </p>
-                  </div>
                 </div>
               </div>
 
-              {/* API Configuration Card */}
-              <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 space-y-4 shadow-xl">
-                <h3 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">API Configuration</h3>
-                <div className="space-y-4 max-w-md">
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-zinc-300">Default Confidence Threshold</label>
-                    <input
-                      type="text"
-                      disabled
-                      value="85% (High Precision)"
-                      className="w-full bg-[#141418] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-400 font-mono"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs font-semibold text-zinc-300">Enterprise API Token</label>
-                    <input
-                      type="password"
-                      disabled
-                      value="huntme_live_9f8a3c2b1e"
-                      className="w-full bg-[#141418] border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-400 font-mono"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Session & Logout Danger Zone Card */}
+              {/* Session & Logout Card */}
               <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="space-y-1">
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
