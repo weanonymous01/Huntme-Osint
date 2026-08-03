@@ -24,8 +24,10 @@ import {
   Copy,
   Check,
   Menu,
-  X
+  X,
+  Download
 } from 'lucide-react';
+import { exportVehiclePdf, exportPhonePdf } from '@/lib/exportPdf';
 
 function maskWord(w: string): string {
   if (!w || w.length === 0) return '';
@@ -1157,9 +1159,19 @@ export default function DashboardPage() {
                             Unlock Data
                           </a>
                         ) : (
-                          <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-1 rounded-full shrink-0">
-                            <span className="size-1.5 rounded-full bg-zinc-400 animate-pulse" />
-                            Verified Record
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); exportPhonePdf(r, aiReport); }}
+                              className="flex items-center gap-1.5 text-[11px] font-mono font-medium text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 px-3 py-1 rounded-full transition-all shadow-sm"
+                            >
+                              <Download className="size-3 text-zinc-400" />
+                              <span>Export PDF</span>
+                            </button>
+                            <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-1 rounded-full">
+                              <span className="size-1.5 rounded-full bg-zinc-400 animate-pulse" />
+                              Verified Record
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1446,9 +1458,19 @@ export default function DashboardPage() {
                           <p className="text-sm text-zinc-300 pl-8">{vehicleResult.modelName}</p>
                         )}
                       </div>
-                      <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-1 rounded-full shrink-0">
-                        <span className="size-1.5 rounded-full bg-zinc-400 animate-pulse" />
-                        Verified Record
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => exportVehiclePdf(vehicleResult, namePredictionReport, vehicleAiReport)}
+                          className="flex items-center gap-1.5 text-[11px] font-mono font-medium text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 px-3 py-1 rounded-full transition-all shadow-sm"
+                        >
+                          <Download className="size-3 text-zinc-400" />
+                          <span>Export PDF</span>
+                        </button>
+                        <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-1 rounded-full">
+                          <span className="size-1.5 rounded-full bg-zinc-400 animate-pulse" />
+                          Verified Record
+                        </div>
                       </div>
                     </div>
 
@@ -1738,9 +1760,19 @@ export default function DashboardPage() {
                                 <p className="text-xs text-zinc-400 pl-6">{selectedReport.vehicle_json.vehicle.modelName}</p>
                               )}
                             </div>
-                            <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-1 rounded-full shrink-0">
-                              <span className="size-1.5 rounded-full bg-zinc-400 animate-pulse" />
-                              Verified Record
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => exportVehiclePdf(selectedReport.vehicle_json.vehicle, selectedReport.vehicle_json.namePredictions, selectedReport.vehicle_json.aiReport)}
+                                className="flex items-center gap-1.5 text-[11px] font-mono font-medium text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 px-3 py-1 rounded-full transition-all shadow-sm"
+                              >
+                                <Download className="size-3 text-zinc-400" />
+                                <span>Export PDF</span>
+                              </button>
+                              <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-1 rounded-full">
+                                <span className="size-1.5 rounded-full bg-zinc-400 animate-pulse" />
+                                Verified Record
+                              </div>
                             </div>
                           </div>
 
@@ -1828,9 +1860,19 @@ export default function DashboardPage() {
                                 <p className="text-xs text-zinc-500">S/O: <span className={`text-zinc-300 ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>{isLocked ? maskText(selectedReport.telemetry_json.result.fatherName) : selectedReport.telemetry_json.result.fatherName}</span></p>
                               )}
                             </div>
-                            <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-1 rounded-full">
-                              <span className="size-1.5 rounded-full bg-zinc-400 animate-pulse" />
-                              Verified Record
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => exportPhonePdf(selectedReport.telemetry_json.result, selectedReport.telemetry_json.aiReport)}
+                                className="flex items-center gap-1.5 text-[11px] font-mono font-medium text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 px-3 py-1 rounded-full transition-all shadow-sm"
+                              >
+                                <Download className="size-3 text-zinc-400" />
+                                <span>Export PDF</span>
+                              </button>
+                              <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-1 rounded-full">
+                                <span className="size-1.5 rounded-full bg-zinc-400 animate-pulse" />
+                                Verified Record
+                              </div>
                             </div>
                           </div>
 
