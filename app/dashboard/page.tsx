@@ -659,7 +659,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-[#070708] text-white flex selection:bg-zinc-800 selection:text-white font-sans">
       {/* Left Sidebar */}
-      <aside className="w-64 border-r border-zinc-800/80 bg-[#0a0a0c] flex flex-col justify-between p-5 shrink-0 hidden md:flex min-h-screen sticky top-0">
+      <aside className="w-64 border-r border-zinc-800/80 bg-[#0a0a0c] flex flex-col justify-between p-5 shrink-0 hidden md:flex h-screen sticky top-0 overflow-y-auto">
         <div className="space-y-6">
           {/* Brand Header */}
           <a href="/" className="flex flex-col gap-0.5 px-2">
