@@ -13,12 +13,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Extract 10-digit number for Indian numbers, plus full clean number
-    let cleanNumber = phoneNumber.replace(/\D/g, '');
-    const tenDigitNumber = cleanNumber.length >= 10 ? cleanNumber.slice(-10) : cleanNumber;
-    if (cleanNumber.length === 10) {
-      cleanNumber = '91' + cleanNumber;
-    }
+    // Preview mode uses 91 prefix for Numverify API; Paid mode NEVER uses 91 prefix
+    let rawDigits = phoneNumber.replace(/\D/g, '');
+    const tenDigitNumber = rawDigits.length >= 10 ? rawDigits.slice(-10) : rawDigits;
+    const numverifyNumber = rawDigits.length === 10 ? '91' + rawDigits : rawDigits;
 
     // ── 1. CHECK SUPABASE CACHE (Cost = 0 credits!) — only for paid users ──
     if (!isPreview) {
@@ -26,7 +24,7 @@ export async function POST(req: NextRequest) {
         const { data: cached } = await supabaseAdmin
           .from('phone_searches')
           .select('*')
-          .or(`phone_number.ilike.%${tenDigitNumber}%,phone_number.ilike.%${cleanNumber}%`)
+          .or(`phone_number.ilike.%${tenDigitNumber}%`)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -55,14 +53,14 @@ export async function POST(req: NextRequest) {
     const apiBase = process.env.PHONE_LOOKUP_API_BASE || 'https://myapi.lovable.app/api/public/p';
 
     if (isPreview || !apiKey || !apiBase) {
-      console.log(`[phone-lookup] PREVIEW MODE using Numverify API for phone: ${tenDigitNumber}`);
+      console.log(`[phone-lookup] PREVIEW MODE using Numverify API for phone: ${numverifyNumber}`);
       let provider: string | null = null;
       let location: string | null = null;
       let country: string | null = null;
       let carrierCircle = 'Jio / Airtel (National Circle)';
 
       try {
-        const nvRes = await fetch(`http://apilayer.net/api/validate?access_key=${numverifyKey}&number=${encodeURIComponent(cleanNumber)}&format=1`, {
+        const nvRes = await fetch(`http://apilayer.net/api/validate?access_key=${numverifyKey}&number=${encodeURIComponent(numverifyNumber)}&format=1`, {
           cache: 'no-store',
         });
         if (nvRes.ok) {
@@ -95,27 +93,15 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // ── 3. CALL UPSTREAM PAID API FOR CREDITED USERS ──
+    // ── 3. CALL UPSTREAM PAID API FOR CREDITED USERS (NEVER use 91 in front) ──
     try {
-      // Try 10-digit number first (e.g. 8299512084), then cleanNumber with 91 prefix
-      let externalRes = await fetch(`${apiBase}/${apiKey}?num=${encodeURIComponent(tenDigitNumber)}`, {
+      const externalRes = await fetch(`${apiBase}/${apiKey}?num=${encodeURIComponent(tenDigitNumber)}`, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
         cache: 'no-store',
       });
 
-      let raw = externalRes.ok ? await externalRes.json() : null;
-
-      if (!raw?.success || !raw?.data?.result?.length) {
-        externalRes = await fetch(`${apiBase}/${apiKey}?num=${encodeURIComponent(cleanNumber)}`, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-          cache: 'no-store',
-        });
-        if (externalRes.ok) {
-          raw = await externalRes.json();
-        }
-      }
+      const raw = externalRes.ok ? await externalRes.json() : null;
 
       if (raw?.success && raw?.data?.result?.length) {
         const seen = new Set<string>();

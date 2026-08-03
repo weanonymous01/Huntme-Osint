@@ -673,11 +673,13 @@ export default function DashboardPage() {
     if (!phoneInput.trim()) return;
 
     let targetPhone = phoneInput.trim();
+    const rawDigits = targetPhone.replace(/\D/g, '');
     if (isLocked) {
-      const clean = targetPhone.replace(/\D/g, '');
-      if (clean.length === 10) {
-        targetPhone = '91' + clean;
-      }
+      // Preview user (Numverify API): always prepend 91 for 10-digit numbers
+      targetPhone = rawDigits.length === 10 ? '91' + rawDigits : rawDigits;
+    } else {
+      // Paid user (Paid API): NEVER use 91 in front of 10-digit number input
+      targetPhone = rawDigits.length >= 10 ? rawDigits.slice(-10) : rawDigits;
     }
 
     // Hard block if 0-credit user has already performed their free preview searches limit
