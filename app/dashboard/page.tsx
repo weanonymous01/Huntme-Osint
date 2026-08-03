@@ -161,7 +161,7 @@ function AIReportSection({ text }: { text: string }) {
           const [platform, ...rest] = line.split(':');
           const ratingText = rest.join(':').trim();
           const rating = ratingText.match(/\b(HIGH|MEDIUM|LOW)\b/)?.[1];
-          const ratingColor = rating === 'HIGH' ? 'text-zinc-300 bg-zinc-800/80 border-zinc-700/60' : rating === 'MEDIUM' ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' : 'text-zinc-400 bg-zinc-700/30 border-zinc-700/40';
+          const ratingColor = rating === 'HIGH' ? 'text-zinc-300 bg-zinc-800/80 border-zinc-700/60' : rating === 'MEDIUM' ? 'text-zinc-400 bg-zinc-800/60 border-zinc-700/50' : 'text-zinc-400 bg-zinc-800/30 border-zinc-700/40';
           return (
             <div key={i} className="flex items-center justify-between gap-4 py-1.5 border-b border-zinc-800/40 pl-1">
               <span className="text-xs text-zinc-400">{renderInline(platform.trim())}</span>
@@ -844,7 +844,7 @@ export default function DashboardPage() {
             </div>
             {isLocked && (
               <div className="pt-1 flex items-center justify-between text-[11px]">
-                <span className="text-amber-400 font-medium flex items-center gap-1">
+                <span className="text-zinc-300 font-medium flex items-center gap-1">
                   <Lock className="size-3" />
                   Free Trial
                 </span>
@@ -963,11 +963,11 @@ export default function DashboardPage() {
               </div>
               {isLocked && (
                 <div className="flex items-center justify-between pt-1 text-xs">
-                  <span className="text-amber-400 font-medium flex items-center gap-1">
+                  <span className="text-zinc-300 font-medium flex items-center gap-1">
                     <Lock className="size-3" />
                     {freeSearchCount === 0 ? '1 Free Search Left' : '0 Free Left'}
                   </span>
-                  <a href="/pricing" className="text-amber-400 underline font-semibold">
+                  <a href="/pricing" className="text-white underline font-semibold">
                     Upgrade Plan
                   </a>
                 </div>
@@ -994,7 +994,7 @@ export default function DashboardPage() {
                         Phone Number OSINT Lookup
                       </h2>
                       {isLocked && (
-                        <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${freeSearchCount === 0 ? 'text-amber-300 bg-amber-500/10 border-amber-500/30' : 'text-rose-300 bg-rose-500/10 border-rose-500/30'}`}>
+                        <span className="text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-0.5 rounded-full">
                           {freeSearchCount === 0 ? '1 Free Search Available' : '0 Free Searches Left'}
                         </span>
                       )}
@@ -1037,8 +1037,8 @@ export default function DashboardPage() {
                   </div>
 
                   {isLocked && freeSearchCount === 0 && (
-                    <div className="flex items-center gap-2 text-xs text-amber-300/90 bg-amber-500/10 border border-amber-500/20 px-3.5 py-2 rounded-xl">
-                      <Lock className="size-3.5 text-amber-400 shrink-0" />
+                    <div className="flex items-center gap-2 text-xs text-zinc-300 bg-zinc-800/80 border border-zinc-700/60 px-3.5 py-2 rounded-xl">
+                      <Lock className="size-3.5 text-zinc-400 shrink-0" />
                       <span>You have <strong>1 free preview search</strong> available. Results will be partially masked.</span>
                     </div>
                   )}
@@ -1049,8 +1049,8 @@ export default function DashboardPage() {
               {phoneLoading && <ReportSkeleton type="phone" />}
 
               {phoneError === "FREE_SEARCH_LIMIT_REACHED" || phoneError === "INSUFFICIENT_CREDITS" ? (
-                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-8 space-y-4 text-center animate-in fade-in duration-300 shadow-xl">
-                  <div className="size-12 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 mx-auto">
+                <div className="rounded-2xl border border-zinc-700/80 bg-[#121215] p-8 space-y-4 text-center animate-in fade-in duration-300 shadow-xl">
+                  <div className="size-12 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300 mx-auto">
                     <Lock className="size-6" />
                   </div>
                   <div className="space-y-2 max-w-md mx-auto">
@@ -1068,7 +1068,7 @@ export default function DashboardPage() {
                   <div className="pt-2">
                     <a
                       href="/pricing"
-                      className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-black font-bold px-6 py-3 rounded-xl text-xs transition-all shadow-lg"
+                      className="inline-flex items-center gap-2 bg-white hover:bg-zinc-200 text-black font-semibold px-6 py-3 rounded-xl text-xs transition-all shadow-lg"
                     >
                       <Lock className="size-4" />
                       <span>Upgrade Plan for Unlimited Searches</span>
@@ -1076,9 +1076,9 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ) : phoneError ? (
-                <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 flex items-center gap-3">
-                  <AlertCircle className="size-5 text-rose-400 shrink-0" />
-                  <p className="text-sm text-rose-300">{phoneError}</p>
+                <div className="rounded-2xl border border-zinc-800 bg-[#121215] p-6 flex items-center gap-3">
+                  <AlertCircle className="size-5 text-zinc-400 shrink-0" />
+                  <p className="text-sm text-zinc-300">{phoneError}</p>
                 </div>
               ) : null}
 
@@ -1086,14 +1086,14 @@ export default function DashboardPage() {
                 <div className="space-y-4 animate-in fade-in duration-300">
                   {/* Lock Notice Banner for 0 Credit Users */}
                   {isLocked && (
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-xs shadow-lg">
-                      <div className="flex items-center gap-2 text-amber-300 font-medium">
-                        <Lock className="size-4 shrink-0 text-amber-400" />
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-800/80 border border-zinc-700/60 p-4 rounded-2xl text-xs shadow-lg">
+                      <div className="flex items-center gap-2 text-zinc-300 font-medium">
+                        <Lock className="size-4 shrink-0 text-zinc-400" />
                         <span>Preview Mode (0 Credits) — Full identity, address & ID records are locked.</span>
                       </div>
                       <a
                         href="/pricing"
-                        className="bg-amber-400 hover:bg-amber-300 text-black font-bold px-4 py-2 rounded-xl text-xs transition-colors shrink-0 flex items-center justify-center gap-1.5 shadow-md"
+                        className="bg-white hover:bg-zinc-200 text-black font-semibold px-4 py-2 rounded-xl text-xs transition-colors shrink-0 flex items-center justify-center gap-1.5 shadow-md"
                       >
                         <Lock className="size-3.5" />
                         <span>Unlock Full Report</span>
@@ -1130,7 +1130,7 @@ export default function DashboardPage() {
                           <a
                             href="/pricing"
                             onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full shrink-0 hover:bg-amber-500/20 transition-colors"
+                            className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-300 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 px-3 py-1 rounded-full shrink-0 transition-colors"
                           >
                             <Lock className="size-3" />
                             Unlock Data
@@ -1197,9 +1197,9 @@ export default function DashboardPage() {
 
                   {/* AI Report Error */}
                   {aiReportError && (
-                    <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-5 flex items-center gap-3">
-                      <AlertCircle className="size-4 text-rose-400 shrink-0" />
-                      <p className="text-xs text-rose-300">{aiReportError}</p>
+                    <div className="rounded-2xl border border-zinc-800 bg-[#121215] p-5 flex items-center gap-3">
+                      <AlertCircle className="size-4 text-zinc-400 shrink-0" />
+                      <p className="text-xs text-zinc-300">{aiReportError}</p>
                     </div>
                   )}
 
@@ -1251,7 +1251,7 @@ export default function DashboardPage() {
                       </div>
                       {isLocked && (
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d10] via-[#0d0d10]/95 to-[#0d0d10]/60 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10">
-                          <div className="size-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                          <div className="size-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300">
                             <Lock className="size-5" />
                           </div>
                           <div className="space-y-1 max-w-sm">
@@ -1262,7 +1262,7 @@ export default function DashboardPage() {
                           </div>
                           <a
                             href="/pricing"
-                            className="bg-amber-400 hover:bg-amber-300 text-black font-bold px-5 py-2.5 rounded-xl text-xs transition-colors flex items-center gap-2 shadow-lg"
+                            className="bg-white hover:bg-zinc-200 text-black font-semibold px-5 py-2.5 rounded-xl text-xs transition-colors flex items-center gap-2 shadow-lg"
                           >
                             <Lock className="size-3.5" />
                             <span>Unlock Full Intelligence Report</span>
@@ -1331,8 +1331,8 @@ export default function DashboardPage() {
                   </div>
 
                   {isLocked && freeSearchCount === 0 && (
-                    <div className="flex items-center gap-2 text-xs text-amber-300/90 bg-amber-500/10 border border-amber-500/20 px-3.5 py-2 rounded-xl">
-                      <Lock className="size-3.5 text-amber-400 shrink-0" />
+                    <div className="flex items-center gap-2 text-xs text-zinc-300 bg-zinc-800/80 border border-zinc-700/60 px-3.5 py-2 rounded-xl">
+                      <Lock className="size-3.5 text-zinc-400 shrink-0" />
                       <span>You have <strong>1 free preview search</strong> available. Results will be partially masked.</span>
                     </div>
                   )}
@@ -1344,8 +1344,8 @@ export default function DashboardPage() {
 
               {/* Free search limit / insufficient credits */}
               {(vehicleError === 'FREE_SEARCH_LIMIT_REACHED' || vehicleError === 'INSUFFICIENT_CREDITS') ? (
-                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-8 space-y-4 text-center animate-in fade-in duration-300 shadow-xl">
-                  <div className="size-12 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 mx-auto">
+                <div className="rounded-2xl border border-zinc-700/80 bg-[#121215] p-8 space-y-4 text-center animate-in fade-in duration-300 shadow-xl">
+                  <div className="size-12 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300 mx-auto">
                     <Lock className="size-6" />
                   </div>
                   <div className="space-y-2 max-w-md mx-auto">
@@ -1355,16 +1355,16 @@ export default function DashboardPage() {
                     </p>
                   </div>
                   <div className="pt-2">
-                    <a href="/pricing" className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-black font-bold px-6 py-3 rounded-xl text-xs transition-all shadow-lg">
+                    <a href="/pricing" className="inline-flex items-center gap-2 bg-white hover:bg-zinc-200 text-black font-semibold px-6 py-3 rounded-xl text-xs transition-all shadow-lg">
                       <Lock className="size-4" />
                       <span>Upgrade Plan for Unlimited Searches</span>
                     </a>
                   </div>
                 </div>
               ) : vehicleError ? (
-                <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 flex items-center gap-3">
-                  <AlertCircle className="size-5 text-rose-400 shrink-0" />
-                  <p className="text-sm text-rose-300">{vehicleError}</p>
+                <div className="rounded-2xl border border-zinc-800 bg-[#121215] p-6 flex items-center gap-3">
+                  <AlertCircle className="size-5 text-zinc-400 shrink-0" />
+                  <p className="text-sm text-zinc-300">{vehicleError}</p>
                 </div>
               ) : null}
 
@@ -1373,12 +1373,12 @@ export default function DashboardPage() {
                 <div className="space-y-4 animate-in fade-in duration-300">
                   {/* Lock banner for free users */}
                   {isLocked && (
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-xs shadow-lg">
-                      <div className="flex items-center gap-2 text-amber-300 font-medium">
-                        <Lock className="size-4 shrink-0 text-amber-400" />
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-zinc-800/80 border border-zinc-700/60 p-4 rounded-2xl text-xs shadow-lg">
+                      <div className="flex items-center gap-2 text-zinc-300 font-medium">
+                        <Lock className="size-4 shrink-0 text-zinc-400" />
                         <span>Preview Mode — Full owner identity & address records are locked.</span>
                       </div>
-                      <a href="/pricing" className="bg-amber-400 hover:bg-amber-300 text-black font-bold px-4 py-2 rounded-xl text-xs transition-colors shrink-0 flex items-center justify-center gap-1.5 shadow-md">
+                      <a href="/pricing" className="bg-white hover:bg-zinc-200 text-black font-semibold px-4 py-2 rounded-xl text-xs transition-colors shrink-0 flex items-center justify-center gap-1.5 shadow-md">
                         <Lock className="size-3.5" />
                         <span>Unlock Full Report</span>
                       </a>
@@ -1459,11 +1459,7 @@ export default function DashboardPage() {
                         {vehicleResult.insuranceExpiry && (
                           <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                             <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><AlertCircle className="size-3" />Insurance Expiry</p>
-                            <p className={`text-sm font-medium ${
-                              new Date(vehicleResult.insuranceExpiry.split('-').reverse().join('-')) < new Date()
-                                ? 'text-rose-400'
-                                : 'text-zinc-300'
-                            }`}>{vehicleResult.insuranceExpiry}</p>
+                            <p className="text-sm font-medium text-zinc-300">{vehicleResult.insuranceExpiry}</p>
                           </div>
                         )}
                         {vehicleResult.registeredRTO && (
@@ -1490,9 +1486,9 @@ export default function DashboardPage() {
 
                   {/* ── AI Name Reconstruction & Pattern Analysis Error ── */}
                   {namePredictionError && (
-                    <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-5 flex items-center gap-3">
-                      <AlertCircle className="size-4 text-rose-400 shrink-0" />
-                      <p className="text-xs text-rose-300">{namePredictionError}</p>
+                    <div className="rounded-2xl border border-zinc-800 bg-[#121215] p-5 flex items-center gap-3">
+                      <AlertCircle className="size-4 text-zinc-400 shrink-0" />
+                      <p className="text-xs text-zinc-300">{namePredictionError}</p>
                     </div>
                   )}
 
@@ -1548,9 +1544,9 @@ export default function DashboardPage() {
 
                   {/* ── Vehicle AI Report Error ── */}
                   {vehicleAiReportError && (
-                    <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-5 flex items-center gap-3">
-                      <AlertCircle className="size-4 text-rose-400 shrink-0" />
-                      <p className="text-xs text-rose-300">{vehicleAiReportError}</p>
+                    <div className="rounded-2xl border border-zinc-800 bg-[#121215] p-5 flex items-center gap-3">
+                      <AlertCircle className="size-4 text-zinc-400 shrink-0" />
+                      <p className="text-xs text-zinc-300">{vehicleAiReportError}</p>
                     </div>
                   )}
 
@@ -1602,7 +1598,7 @@ export default function DashboardPage() {
                       </div>
                       {isLocked && (
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d10] via-[#0d0d10]/95 to-[#0d0d10]/60 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10">
-                          <div className="size-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                          <div className="size-10 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-zinc-300">
                             <Lock className="size-5" />
                           </div>
                           <div className="space-y-1 max-w-sm">
@@ -1613,7 +1609,7 @@ export default function DashboardPage() {
                           </div>
                           <a
                             href="/pricing"
-                            className="bg-amber-400 hover:bg-amber-300 text-black font-bold px-5 py-2.5 rounded-xl text-xs transition-colors flex items-center gap-2 shadow-lg"
+                            className="bg-white hover:bg-zinc-200 text-black font-semibold px-5 py-2.5 rounded-xl text-xs transition-colors flex items-center gap-2 shadow-lg"
                           >
                             <Lock className="size-3.5" />
                             <span>Unlock Full Intelligence Report</span>
