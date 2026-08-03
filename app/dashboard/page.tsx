@@ -31,22 +31,21 @@ import { exportVehiclePdf, exportPhonePdf } from '@/lib/exportPdf';
 
 function maskWord(w: string): string {
   if (!w || w.length === 0) return '';
-  if (w.length <= 2) return w[0] + '*';
-  return w[0] + '*'.repeat(Math.max(1, w.length - 2)) + w[w.length - 1];
+  return '*'.repeat(w.length);
 }
 
 function maskText(str: string | null): string {
-  if (!str) return '';
+  if (!str) return '**********';
   return str.split(/(\s+|-|!|,|\/|:|\.)/).map(part => {
     if (!part || /^[\s!,-/:.]+$/.test(part)) return part;
-    return maskWord(part);
+    return '*'.repeat(part.length);
   }).join('');
 }
 
 function maskNumber(str: string | null): string {
-  if (!str) return '';
+  if (!str) return '**********';
   const clean = str.trim();
-  if (clean.length <= 4) return clean[0] + '*'.repeat(Math.max(1, clean.length - 1));
+  if (clean.length <= 4) return '*'.repeat(clean.length);
   return clean.slice(0, 2) + '*'.repeat(Math.max(2, clean.length - 4)) + clean.slice(-2);
 }
 
@@ -1012,7 +1011,6 @@ export default function DashboardPage() {
                               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-90" />
                               <span className="relative inline-flex size-2 rounded-full bg-white" />
                             </span>
-                            <Sparkles className="size-3.5 text-zinc-200" />
                             <span className="tracking-wide font-mono">1 Free Search Available</span>
                           </span>
                         ) : (
@@ -1336,7 +1334,6 @@ export default function DashboardPage() {
                               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-90" />
                               <span className="relative inline-flex size-2 rounded-full bg-white" />
                             </span>
-                            <Sparkles className="size-3.5 text-zinc-200" />
                             <span className="tracking-wide font-mono">1 Free Search Available</span>
                           </span>
                         ) : (

@@ -50,15 +50,15 @@ export function decodeLocalVehicle(plate: string) {
 
   return {
     registrationNumber: clean,
-    ownerName: 'K*****H J**N',
-    fatherName: 'R*****R J**N',
+    ownerName: '******* ******',
+    fatherName: '******* ******',
     modelName: 'MOTOR CAR / UTILITY VEHICLE',
     vehicleClass: 'MOTOR CAR (LPV)',
     fuelType: 'DIESEL',
     registrationDate: '15-Apr-2018',
     insuranceExpiry: '24-Mar-2026',
     registeredRTO: rto,
-    address: `${city}, ${state}, India`,
+    address: '**********************',
     cityName: city,
     sourceCredit: 'RTO Public Registry (Local Decoder)',
   };
@@ -66,18 +66,17 @@ export function decodeLocalVehicle(plate: string) {
 
 export function decodeLocalPhone(phone: string) {
   const clean = phone.replace(/\D/g, '');
-  const prefix = clean.slice(0, 4);
 
   return [
     {
-      name: 'A****H V***A',
+      name: '******* ******',
       mobile: clean,
-      alternativeMobile: clean.slice(0, 5) + '98765',
-      fatherName: 'R****H V***A',
-      address: 'Registered Telecom Address, India',
+      alternativeMobile: clean.length >= 10 ? clean.slice(0, 2) + '*******' + clean.slice(-2) : '**********',
+      fatherName: '******* ******',
+      address: '*********************************',
       circle: 'Jio / Airtel (National Circle)',
-      idNumber: 'ID-******' + clean.slice(-4),
-      email: 'a***h@domain.com',
+      idNumber: 'ID-************',
+      email: '*************@*******.com',
     },
   ];
 }
