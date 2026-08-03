@@ -336,18 +336,32 @@ export default function DashboardPage() {
     const updatedName = editingName.trim();
 
     try {
-      // 1. Update Supabase public.profiles table
+      // 1. Save locally in localStorage for persistent instant fallback
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`huntme_user_fullname_${profile.id}`, updatedName);
+        if (profile.email) {
+          localStorage.setItem(`huntme_user_fullname_${profile.email.toLowerCase()}`, updatedName);
+        }
+      }
+
+      // 2. Update Supabase public.profiles table via upsert
       await supabase
         .from('profiles')
-        .update({ full_name: updatedName })
-        .eq('id', profile.id);
+        .upsert({
+          id: profile.id,
+          email: profile.email,
+          full_name: updatedName,
+          plan_type: profile.plan_type,
+          api_credits: profile.api_credits,
+          max_credits: profile.max_credits,
+        });
 
-      // 2. Update Supabase auth user metadata
+      // 3. Update Supabase auth user metadata
       await supabase.auth.updateUser({
-        data: { full_name: updatedName }
+        data: { full_name: updatedName, name: updatedName }
       });
 
-      // 3. Update local profile state
+      // 4. Update local profile state immediately
       setProfile(prev => prev ? { ...prev, full_name: updatedName } : prev);
       setNameSavedSuccess(true);
       setTimeout(() => setNameSavedSuccess(false), 3000);
@@ -394,16 +408,24 @@ export default function DashboardPage() {
         setFreeSearchCount(storedCount);
       }
 
+      let savedFullName = '';
+      if (typeof window !== 'undefined') {
+        savedFullName = localStorage.getItem(`huntme_user_fullname_${user.id}`) ||
+                        localStorage.getItem(`huntme_user_fullname_${userKey}`) || '';
+      }
+
       let { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .maybeSingle();
 
+      const resolvedName = savedFullName || user.user_metadata?.full_name || user.user_metadata?.name || null;
+
       const defaultProfile: UserProfile = {
         id: user.id,
         email: user.email || '',
-        full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email || null,
+        full_name: resolvedName || (user.email ? user.email.split('@')[0] : null),
         avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
         plan_type: isPaidOrVIP ? 'lifetime' : 'free',
         api_credits: isPaidOrVIP ? 9999 : 0,
@@ -423,18 +445,19 @@ export default function DashboardPage() {
         // Upgrade existing VIP/Owner profile in Supabase to 9999 credits
         const { data: updated } = await supabase
           .from('profiles')
-          .update({ plan_type: 'lifetime', api_credits: 9999, max_credits: 9999 })
+          .update({ plan_type: 'lifetime', api_credits: 9999, max_credits: 9999, full_name: resolvedName || data.full_name })
           .eq('id', user.id)
           .select()
           .maybeSingle();
 
-        data = updated || { ...data, plan_type: 'lifetime', api_credits: 9999, max_credits: 9999 };
+        data = updated || { ...data, plan_type: 'lifetime', api_credits: 9999, max_credits: 9999, full_name: resolvedName || data.full_name };
       }
 
-      if (data) {
-        setProfile(data);
-        setEditingName(data.full_name || user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || '');
-      }
+      const finalName = resolvedName || data?.full_name || user.email?.split('@')[0] || 'User';
+      const finalProfile = { ...data, full_name: finalName };
+
+      setProfile(finalProfile);
+      setEditingName(finalName);
       setProfileLoading(false);
     };
 
