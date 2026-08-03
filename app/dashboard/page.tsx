@@ -848,7 +848,17 @@ export default function DashboardPage() {
                   <Lock className="size-3" />
                   Free Trial
                 </span>
-                <span className="text-zinc-400 font-mono">{freeSearchCount === 0 ? '1 Free Search' : '0 Left'}</span>
+                {freeSearchCount === 0 ? (
+                  <span className="inline-flex items-center gap-1 font-semibold text-white bg-[#1a1a1e] border border-zinc-400/80 px-2.5 py-0.5 rounded-full shadow-[0_0_12px_rgba(255,255,255,0.2)] animate-pulse">
+                    <span className="relative flex size-1.5">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-90" />
+                      <span className="relative inline-flex size-1.5 rounded-full bg-white" />
+                    </span>
+                    <span>1 Free Search</span>
+                  </span>
+                ) : (
+                  <span className="text-zinc-500 font-mono">0 Left</span>
+                )}
               </div>
             )}
           </div>
@@ -965,7 +975,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between pt-1 text-xs">
                   <span className="text-zinc-300 font-medium flex items-center gap-1">
                     <Lock className="size-3" />
-                    {freeSearchCount === 0 ? '1 Free Search Left' : '0 Free Left'}
+                    {freeSearchCount === 0 ? '1 Free Search Available' : '0 Free Left'}
                   </span>
                   <a href="/pricing" className="text-white underline font-semibold">
                     Upgrade Plan
@@ -994,9 +1004,20 @@ export default function DashboardPage() {
                         Phone Number OSINT Lookup
                       </h2>
                       {isLocked && (
-                        <span className="text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-0.5 rounded-full">
-                          {freeSearchCount === 0 ? '1 Free Search Available' : '0 Free Searches Left'}
-                        </span>
+                        freeSearchCount === 0 ? (
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-white bg-[#18181b] border border-zinc-400/80 px-3 py-1 rounded-full shadow-[0_0_16px_rgba(255,255,255,0.25)] transition-all animate-pulse">
+                            <span className="relative flex size-2">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-90" />
+                              <span className="relative inline-flex size-2 rounded-full bg-white" />
+                            </span>
+                            <Sparkles className="size-3.5 text-zinc-200" />
+                            <span className="tracking-wide font-mono">1 Free Search Available</span>
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800 px-2.5 py-0.5 rounded-full">
+                            0 Free Searches Left
+                          </span>
+                        )
                       )}
                     </div>
                     <p className="text-xs text-zinc-400">
@@ -1292,9 +1313,27 @@ export default function DashboardPage() {
               <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 sm:p-8 space-y-6 shadow-2xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
-                    <h2 className="text-lg font-bold text-white">
-                      Vehicle License Plate & VIN OSINT Lookup
-                    </h2>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-lg font-bold text-white">
+                        Vehicle License Plate & VIN OSINT Lookup
+                      </h2>
+                      {isLocked && (
+                        freeSearchCount === 0 ? (
+                          <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-white bg-[#18181b] border border-zinc-400/80 px-3 py-1 rounded-full shadow-[0_0_16px_rgba(255,255,255,0.25)] transition-all animate-pulse">
+                            <span className="relative flex size-2">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-90" />
+                              <span className="relative inline-flex size-2 rounded-full bg-white" />
+                            </span>
+                            <Sparkles className="size-3.5 text-zinc-200" />
+                            <span className="tracking-wide font-mono">1 Free Search Available</span>
+                          </span>
+                        ) : (
+                          <span className="text-[11px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800 px-2.5 py-0.5 rounded-full">
+                            0 Free Searches Left
+                          </span>
+                        )
+                      )}
+                    </div>
                     <p className="text-xs text-zinc-400">
                       Query vehicle registration records, maker specs, RTO regional data, and compliance status.
                     </p>
