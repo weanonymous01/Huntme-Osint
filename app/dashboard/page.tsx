@@ -326,22 +326,23 @@ export default function DashboardPage() {
         .single();
 
       const isOwner = session.user.email === 'adarshverma3655@gmail.com';
+      const isVIP = session.user.email === 'skyboundkrypton@gmail.com';
 
       if (typeof window !== 'undefined') {
         const storedCount = parseInt(localStorage.getItem(`huntme_free_searches_${session.user.id}`) || '0', 10);
         setFreeSearchCount(storedCount);
       }
 
-      // If profile missing or newly created user, upsert with 0 credits for free users
+      // If profile missing or newly created user, upsert with credits
       if (!data || error) {
         const newProfile = {
           id: session.user.id,
           email: session.user.email || '',
           full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || null,
           avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || null,
-          plan_type: isOwner ? 'lifetime' : 'free',
-          api_credits: isOwner ? 9999 : 0,
-          max_credits: isOwner ? 9999 : 100,
+          plan_type: isOwner ? 'lifetime' : (isVIP ? 'pro' : 'free'),
+          api_credits: isOwner ? 9999 : (isVIP ? 500 : 0),
+          max_credits: isOwner ? 9999 : (isVIP ? 500 : 100),
         };
 
         const { data: inserted } = await supabase
@@ -351,6 +352,14 @@ export default function DashboardPage() {
           .single();
 
         if (inserted) data = inserted;
+      } else if (isVIP && (data.api_credits < 500 || data.plan_type !== 'pro')) {
+        const { data: updated } = await supabase
+          .from('profiles')
+          .update({ plan_type: 'pro', api_credits: 500, max_credits: 500 })
+          .eq('id', session.user.id)
+          .select()
+          .single();
+        if (updated) data = updated;
       }
 
       if (data) setProfile(data);
