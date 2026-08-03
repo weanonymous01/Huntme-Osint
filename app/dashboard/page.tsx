@@ -318,60 +318,76 @@ export default function DashboardPage() {
 
   // Load user session + profile on mount
   useEffect(() => {
-    const loadProfile = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) { setProfileLoading(false); return; }
-      
-      let { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single();
+    const loadProfileForUser = async (user: any) => {
+      if (!user) {
+        setProfile(null);
+        setProfileLoading(false);
+        return;
+      }
 
-      const isOwner = session.user.email === 'adarshverma3655@gmail.com';
-      const isVIP = session.user.email === 'skyboundkrypton@gmail.com';
+      const isOwner = user.email === 'adarshverma3655@gmail.com';
+      const isVIP = user.email === 'skyboundkrypton@gmail.com';
       const isPaidOrVIP = isOwner || isVIP;
 
       if (typeof window !== 'undefined') {
-        const storedCount = parseInt(localStorage.getItem(`huntme_free_searches_${session.user.id}`) || '0', 10);
+        const storedCount = parseInt(localStorage.getItem(`huntme_free_searches_${user.id}`) || '0', 10);
         setFreeSearchCount(storedCount);
       }
 
-      // If profile missing or newly created user, upsert with credits for VIP/Owner
-      if (!data || error) {
-        const newProfile = {
-          id: session.user.id,
-          email: session.user.email || '',
-          full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || null,
-          avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || null,
-          plan_type: isPaidOrVIP ? 'lifetime' : 'free',
-          api_credits: isPaidOrVIP ? 9999 : 0,
-          max_credits: isPaidOrVIP ? 9999 : 100,
-        };
+      let { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
 
+      const defaultProfile: UserProfile = {
+        id: user.id,
+        email: user.email || '',
+        full_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email || null,
+        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        plan_type: isPaidOrVIP ? 'lifetime' : 'free',
+        api_credits: isPaidOrVIP ? 9999 : 0,
+        max_credits: isPaidOrVIP ? 9999 : 100,
+      };
+
+      if (!data || error) {
+        // Try inserting profile to Supabase
         const { data: inserted } = await supabase
           .from('profiles')
-          .upsert(newProfile)
+          .upsert(defaultProfile)
           .select()
-          .single();
+          .maybeSingle();
 
-        if (inserted) data = inserted;
+        data = inserted || defaultProfile;
       } else if (isPaidOrVIP && (data.api_credits < 9999 || data.plan_type !== 'lifetime')) {
         // Upgrade existing VIP/Owner profile in Supabase to 9999 credits
         const { data: updated } = await supabase
           .from('profiles')
           .update({ plan_type: 'lifetime', api_credits: 9999, max_credits: 9999 })
-          .eq('id', session.user.id)
+          .eq('id', user.id)
           .select()
-          .single();
+          .maybeSingle();
 
-        if (updated) data = updated;
+        data = updated || { ...data, plan_type: 'lifetime', api_credits: 9999, max_credits: 9999 };
       }
 
-      if (data) setProfile(data);
+      setProfile(data);
       setProfileLoading(false);
     };
-    loadProfile();
+
+    // Initial session load
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      loadProfileForUser(session?.user || null);
+    });
+
+    // Listen to real-time auth changes (sign in, sign out, user switch)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      loadProfileForUser(session?.user || null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   // Deduct 5 credits per search and refresh profile if credits >= 5

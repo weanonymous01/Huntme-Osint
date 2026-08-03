@@ -60,8 +60,9 @@ ALTER TABLE public.phone_searches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vehicle_searches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.investigation_reports ENABLE ROW LEVEL SECURITY;
 
--- Profiles Policy: Users can view & update their own profile
+-- Profiles Policy: Users can view, insert & update their own profile
 CREATE POLICY "Allow individual read on profiles" ON public.profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Allow individual insert on profiles" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Allow individual update on profiles" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
 -- Phone Searches Policy: Users can view & insert their own searches
@@ -86,15 +87,17 @@ BEGIN
   INSERT INTO public.profiles (id, email, full_name, avatar_url, api_credits, max_credits, plan_type)
   VALUES (
     NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name'),
-    COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture'),
-    CASE WHEN NEW.email = 'adarshverma3655@gmail.com' THEN 9999 ELSE 0 END,
-    CASE WHEN NEW.email = 'adarshverma3655@gmail.com' THEN 9999 ELSE 100 END,
-    CASE WHEN NEW.email = 'adarshverma3655@gmail.com' THEN 'lifetime' ELSE 'free' END
+    COALESCE(NEW.email, ''),
+    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', ''),
+    COALESCE(NEW.raw_user_meta_data->>'avatar_url', NEW.raw_user_meta_data->>'picture', ''),
+    CASE WHEN NEW.email IN ('adarshverma3655@gmail.com', 'skyboundkrypton@gmail.com') THEN 9999 ELSE 0 END,
+    CASE WHEN NEW.email IN ('adarshverma3655@gmail.com', 'skyboundkrypton@gmail.com') THEN 9999 ELSE 100 END,
+    CASE WHEN NEW.email IN ('adarshverma3655@gmail.com', 'skyboundkrypton@gmail.com') THEN 'lifetime' ELSE 'free' END
   )
   ON CONFLICT (id) DO UPDATE SET
-    api_credits = EXCLUDED.api_credits;
+    email = EXCLUDED.email;
+  RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
