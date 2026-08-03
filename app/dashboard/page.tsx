@@ -1066,18 +1066,9 @@ export default function DashboardPage() {
               {profileLoading ? (
                 <span className="text-zinc-600">loading...</span>
               ) : (
-                <>
-                  {(profile?.api_credits ?? 0).toLocaleString()}
-                  <span className="text-xs font-normal text-zinc-500"> / {(profile?.max_credits ?? 100).toLocaleString()}</span>
-                </>
+                <span>{(profile?.api_credits ?? 0).toLocaleString()}</span>
               )}
             </p>
-            <div className="w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden mt-1">
-              <div
-                className="bg-white h-full rounded-full transition-all duration-500"
-                style={{ width: `${profile ? Math.round((profile.api_credits / profile.max_credits) * 100) : 0}%` }}
-              />
-            </div>
             {isLocked && (
               <div className="pt-1 flex items-center justify-between text-[11px]">
                 <span className="text-zinc-300 font-medium flex items-center gap-1">
