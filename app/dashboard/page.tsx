@@ -1456,7 +1456,7 @@ export default function DashboardPage() {
                   {namePredictionLoading && (
                     <div className="rounded-2xl border border-sky-500/30 bg-[#0d0d10] p-6 space-y-4 animate-pulse shadow-xl">
                       <div className="flex items-center gap-2">
-                        <Sparkles className="size-4 text-sky-400 animate-spin" />
+                        <RefreshCw className="size-4 text-sky-400 animate-spin" />
                         <span className="text-sm font-bold text-white">Reconstructing Masked Owner Identity & Pattern Analysis (Groq AI)...</span>
                       </div>
                       {[1, 2, 3].map(i => (
@@ -1473,7 +1473,6 @@ export default function DashboardPage() {
                     <div className="relative rounded-2xl border border-sky-500/40 bg-[#0d0d10] p-6 space-y-5 shadow-2xl animate-in fade-in duration-500 overflow-hidden">
                       <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
                         <div className="flex items-center gap-2">
-                          <Sparkles className="size-4 text-sky-400" />
                           <h3 className="text-sm font-bold text-white">AI Owner Name Pattern & Top 10 Predictions</h3>
                         </div>
                         <div className="flex items-center gap-3">

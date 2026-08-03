@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-// Using Llama-3.3-70b-versatile or deepseek-r1-distill-llama-70b on Groq for ultra-fast reasoning
 const MODEL_PRIMARY = 'llama-3.3-70b-versatile';
 const MODEL_FALLBACK = 'llama-3.1-8b-instant';
 
@@ -63,57 +62,88 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const prompt = `You are a specialized OSINT Cryptanalyst & Indian Name Reconstruction Expert. Your sole task is to analyze masked Indian names (where letters are replaced by asterisks *) and reconstruct the 10 most likely full names in High to Low probability order using pattern analysis, character length counting, letter anchor constraints, and regional demographic data.
+    const prompt = `You are an advanced pattern analysis and probabilistic reasoning model.
 
-MASKED OWNER RECORD DATA:
-- Masked Owner Name: ${maskedName}
-- Masked Father's Name: ${fatherName || 'Not available'}
-- Registered Address: ${address || 'Not available'}
-- City / District: ${cityName || 'Not available'}
-- Registered RTO: ${registeredRTO || 'Not available'}
+Your task is to analyze a sequence generation system using only the information provided. Do not assume hidden rules, external datasets, or undocumented behavior. Base every conclusion strictly on observable patterns.
 
-INSTRUCTIONS & PATTERN MATCHING RULES:
-1. Break down the masked name word by word.
-   - Count EXACT number of characters in each word including start and end anchor letters.
-   - Example: "K*****H" = Exactly 7 letters, starts with 'K', ends with 'H'.
-   - Example: "J**N" = Exactly 4 letters, starts with 'J', ends with 'N'.
-2. Apply Regional Demographic Context:
-   - Location: ${cityName || registeredRTO || 'India'}.
-   - Identify common surnames matching the last word's pattern in this state/district (e.g. J**N in Rajasthan = JAIN; S****A in UP = SHARMA/SHUKLA; C*****Y in West Bengal = CHOWDHURY).
-   - Identify common first names matching the exact letter length and start/end letters in this region.
-3. Rank top 10 full name predictions strictly from Highest Probability to Lowest Probability.
+INPUT DATA:
+- Starting Value / Prefix & Anchor: ${maskedName.split(' ')[0] || ''}
+- Ending Value / Surname Anchor: ${maskedName.split(' ')[1] || ''}
+- Full Masked Target Sequence: ${maskedName}
+- Historical Context / Father Name: ${fatherName || 'Not available'}
+- Regional Context: ${address || cityName || registeredRTO || 'India'}
+
+Perform a deep multi-stage analysis before producing any prediction.
+
+### Stage 1: Structure & Sequence Analysis
+Identify:
+* Character patterns
+* Length consistency (exact character count per word)
+* Alphabet distribution
+* Prefixes and Suffixes
+* Internal repetition
+* Frequency of characters
+* Formatting consistency
+
+### Stage 2: Transition & Constraint Analysis
+Determine:
+* Which sections remain fixed (starting/ending anchor letters)
+* Which sections change (asterisks/masked positions)
+* Which positions are variable
+* Regional demographic correlation for ${cityName || registeredRTO || 'this area'}
+
+### Stage 3: Probability Estimation
+For every possible outcome:
+* Calculate relative likelihood
+* Rank candidates from highest probability to lowest probability
+* Explain ranking
+* State confidence level
+* Identify uncertainty
+
+### Stage 4: Comprehensive Reasoning Report
+Produce a detailed report covering:
+1. Structural observations
+2. Pattern observations
+3. Variable positions
+4. Stable positions
+5. Character frequency analysis
+6. Transition analysis
+7. Entropy assessment
+8. Possible generation mechanism
+9. Assumptions
+10. Limitations
+11. Confidence assessment
+12. Final ranked prediction
+
+## Output Format & Ranking Rules
+Return exactly ten predicted outcomes. Rank them from most likely (Rank 1) to least likely (Rank 10).
+Percentages across all 10 predictions must sum to 100%.
+
+For EVERY prediction from Rank 1 to Rank 10, format EXACTLY as:
+
+Rank [X]
+
+Prediction:
+[Predicted Full Name]
+
+Estimated Probability:
+[XX]%
+
+Reasoning:
+[Detailed pattern verification and demographic alignment explanation]
+
+Confidence:
+[High / Medium / Low]
 
 ---
 
-PRODUCE THE NAME RECONSTRUCTION REPORT IN THIS STRUCTURED MARKDOWN FORMAT:
+RULES TO STRICTLY FOLLOW:
+- Do not use emojis anywhere in the response.
+- Do not use em dashes anywhere in the response (use standard hyphens or colons).
+- Do not skip any reasoning stage.
+- Perform the complete multi-stage analysis before producing final ranked predictions.
+- Ensure all 10 ranks are fully detailed.`;
 
-## 1. Mask Pattern Analysis
-- **First Name Constraint**: ${maskedName.split(' ')[0] || ''} (Exact letter count, starting letter, ending letter)
-- **Last Name Constraint**: ${maskedName.split(' ')[1] || ''} (Exact letter count, starting letter, ending letter)
-- **Demographic & Geographic Anchor**: Region/State analysis for surname likelihood
-
-## 2. Top 10 Reconstructed Name Predictions (High to Low Confidence)
-Provide 10 ranked predictions formatted clearly as:
-
-1. **[NAME 1]** — **High Probability (XX% Confidence)**
-   - **Pattern Verification**: Explain character length and start/end letter match.
-   - **Demographic Alignment**: Why this name is common in ${cityName || registeredRTO || 'this region'}.
-
-2. **[NAME 2]** — **High Probability (XX% Confidence)**
-   - **Pattern Verification**: Match details.
-   - **Demographic Alignment**: Reasoning.
-
-3. **[NAME 3]** — **Medium-High Probability (XX% Confidence)**
-   ... continue down to prediction #10.
-
-## 3. Verification & Disambiguation Queries
-Generate 4-5 targeted search queries to confirm which of the top 3 predicted names is the actual vehicle owner:
-- Truecaller search syntax
-- Parivahan / VAHAN owner name matching query
-- Electoral roll / Voter list search query for ${cityName || 'district'}
-`;
-
-    // Use Groq API or fallback to NVIDIA if Groq key isn't set
     const isGroq = !!GROQ_API_KEY;
     const apiUrl = isGroq ? GROQ_API_URL : 'https://integrate.api.nvidia.com/v1/chat/completions';
     const primaryModel = isGroq ? MODEL_PRIMARY : 'meta/llama-3.3-70b-instruct';
@@ -131,12 +161,12 @@ Generate 4-5 targeted search queries to confirm which of the top 3 predicted nam
           messages: [
             {
               role: 'system',
-              content: 'You are an expert OSINT cryptanalyst specializing in Indian name pattern reconstruction. Perform precise character counting, constraint satisfaction, and regional demographic probabilistic matching.',
+              content: 'You are an advanced pattern analysis and probabilistic reasoning model. Perform complete multi-stage analysis before returning output. Do not use emojis. Do not use em dashes.',
             },
             { role: 'user', content: prompt },
           ],
           temperature: 0.2,
-          max_tokens: 3000,
+          max_tokens: 3500,
           stream: true,
         }),
       });
