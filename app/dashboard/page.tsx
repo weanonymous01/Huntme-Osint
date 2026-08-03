@@ -333,16 +333,16 @@ export default function DashboardPage() {
         setFreeSearchCount(storedCount);
       }
 
-      // If profile missing or newly created user, upsert with credits
+      // If profile missing or newly created user, upsert with 0 credits for free users
       if (!data || error) {
         const newProfile = {
           id: session.user.id,
           email: session.user.email || '',
           full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || null,
           avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || null,
-          plan_type: isOwner ? 'lifetime' : (isVIP ? 'pro' : 'free'),
-          api_credits: isOwner ? 9999 : (isVIP ? 500 : 0),
-          max_credits: isOwner ? 9999 : (isVIP ? 500 : 100),
+          plan_type: isOwner ? 'lifetime' : 'free',
+          api_credits: isOwner ? 9999 : 0,
+          max_credits: isOwner ? 9999 : 100,
         };
 
         const { data: inserted } = await supabase
@@ -352,14 +352,6 @@ export default function DashboardPage() {
           .single();
 
         if (inserted) data = inserted;
-      } else if (isVIP && (data.api_credits < 500 || data.plan_type !== 'pro')) {
-        const { data: updated } = await supabase
-          .from('profiles')
-          .update({ plan_type: 'pro', api_credits: 500, max_credits: 500 })
-          .eq('id', session.user.id)
-          .select()
-          .single();
-        if (updated) data = updated;
       }
 
       if (data) setProfile(data);
@@ -659,13 +651,15 @@ export default function DashboardPage() {
   ];
 
   const isLocked = !profileLoading && (profile?.api_credits ?? 0) < 5;
+  const maxFreeSearches = profile?.email === 'skyboundkrypton@gmail.com' ? 100 : 1;
+  const remainingFreeSearches = Math.max(0, maxFreeSearches - freeSearchCount);
 
   const handlePhoneSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!phoneInput.trim()) return;
 
-    // Hard block if 0-credit user has already performed their 1 free search
-    if (isLocked && freeSearchCount >= 1) {
+    // Hard block if 0-credit user has already performed their free preview searches limit
+    if (isLocked && freeSearchCount >= maxFreeSearches) {
       setPhoneResults(null);
       setAiReport(null);
       setPhoneError("FREE_SEARCH_LIMIT_REACHED");
@@ -720,8 +714,8 @@ export default function DashboardPage() {
     e.preventDefault();
     if (!vehicleInput.trim()) return;
 
-    // Hard block if 0-credit user has already performed their 1 free search
-    if (isLocked && freeSearchCount >= 1) {
+    // Hard block if 0-credit user has already performed their free preview searches limit
+    if (isLocked && freeSearchCount >= maxFreeSearches) {
       setVehicleResult(null);
       setVehicleError('FREE_SEARCH_LIMIT_REACHED');
       return;
@@ -1013,13 +1007,13 @@ export default function DashboardPage() {
                         Phone Number OSINT Lookup
                       </h2>
                       {isLocked && (
-                        freeSearchCount === 0 ? (
+                        remainingFreeSearches > 0 ? (
                           <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-white bg-[#18181b] border border-zinc-400/80 px-3 py-1 rounded-full shadow-[0_0_16px_rgba(255,255,255,0.25)] transition-all animate-pulse">
                             <span className="relative flex size-2">
                               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-90" />
                               <span className="relative inline-flex size-2 rounded-full bg-white" />
                             </span>
-                            <span className="tracking-wide font-mono">1 Free Search Available</span>
+                            <span className="tracking-wide font-mono">{remainingFreeSearches} Free Search{remainingFreeSearches !== 1 ? 'es' : ''} Available</span>
                           </span>
                         ) : (
                           <span className="text-[11px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800 px-2.5 py-0.5 rounded-full">
@@ -1336,13 +1330,13 @@ export default function DashboardPage() {
                         Vehicle License Plate & VIN OSINT Lookup
                       </h2>
                       {isLocked && (
-                        freeSearchCount === 0 ? (
+                        remainingFreeSearches > 0 ? (
                           <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-white bg-[#18181b] border border-zinc-400/80 px-3 py-1 rounded-full shadow-[0_0_16px_rgba(255,255,255,0.25)] transition-all animate-pulse">
                             <span className="relative flex size-2">
                               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-90" />
                               <span className="relative inline-flex size-2 rounded-full bg-white" />
                             </span>
-                            <span className="tracking-wide font-mono">1 Free Search Available</span>
+                            <span className="tracking-wide font-mono">{remainingFreeSearches} Free Search{remainingFreeSearches !== 1 ? 'es' : ''} Available</span>
                           </span>
                         ) : (
                           <span className="text-[11px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800 px-2.5 py-0.5 rounded-full">
