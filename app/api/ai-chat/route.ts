@@ -143,14 +143,14 @@ function generateFallbackAnswer(reportData: any, question: string): string {
   const raw = typeof reportData === 'string' ? reportData : JSON.stringify(reportData);
 
   if (q.includes('risk') || q.includes('flag') || q.includes('threat')) {
-    return `### ⚠️ OSINT Risk Analysis\n- **Target Status**: Record identified in investigation database.\n- **Key Risk Indicators**: High compliance vigilance recommended. Check RTO registration validity, active insurance timelines, and associated SIM/carrier locations.`;
+    return `### OSINT Risk Analysis\n- **Target Status**: Record identified in investigation database.\n- **Key Risk Indicators**: High compliance vigilance recommended. Check RTO registration validity, active insurance timelines, and associated SIM/carrier locations.`;
   }
   if (q.includes('owner') || q.includes('who') || q.includes('name') || q.includes('identity')) {
-    return `### 👤 Identity Summary\nBased on the active report records:\n- **Registered Name / Subject**: Extracted from dossier.\n- **Address / Region**: See target location details in dossier summary above.`;
+    return `### Identity Summary\nBased on the active report records:\n- **Registered Name / Subject**: Extracted from dossier.\n- **Address / Region**: See target location details in dossier summary above.`;
   }
   if (q.includes('step') || q.includes('next') || q.includes('investigate')) {
-    return `### 🔍 Recommended Next OSINT Steps\n1. Perform cross-verification of mobile telecom circle and state registration.\n2. Query regional court registry & public dorks for additional subject index matches.\n3. Export full PDF report for dossier archive.`;
+    return `### Recommended Next OSINT Steps\n1. Perform cross-verification of mobile telecom circle and state registration.\n2. Query regional court registry & public dorks for additional subject index matches.\n3. Export full PDF report for dossier archive.`;
   }
 
-  return `### 📊 OSINT Target Summary\nAnalysis of target context:\n${raw.slice(0, 400)}\n\n*Note: Report verified against primary OSINT index.*`;
+  return `### OSINT Target Summary\nAnalysis of target context:\n${raw.slice(0, 400)}\n\n*Note: Report verified against primary OSINT index.*`;
 }

@@ -433,7 +433,7 @@ export default function DashboardPage() {
     {
       id: 'welcome_1',
       sender: 'ai',
-      text: '👋 Welcome to the AI Case Assistant! Select any investigation report from your searches below and ask any question about the target, risk score, owner identity, vehicle details, or recommended next OSINT steps.',
+      text: 'Welcome to the AI Case Assistant! Select any investigation report from your searches below and ask any question about the target, risk score, owner identity, vehicle details, or recommended next OSINT steps.',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     }
   ]);
@@ -508,7 +508,7 @@ export default function DashboardPage() {
           {
             id: 'ai_' + Date.now(),
             sender: 'ai',
-            text: '⚠️ Unable to process question. Please verify connection and try again.',
+            text: 'Unable to process question. Please verify connection and try again.',
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           }
         ]);
@@ -519,7 +519,7 @@ export default function DashboardPage() {
         {
           id: 'ai_' + Date.now(),
           sender: 'ai',
-          text: '⚠️ Network error communicating with AI Assistant service.',
+          text: 'Network error communicating with AI Assistant service.',
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }
       ]);
@@ -1937,9 +1937,8 @@ export default function DashboardPage() {
               {/* Top Title & Header */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
                 <div>
-                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                    <BrainCircuit className="size-5 text-zinc-300" />
-                    <span>AI Case Assistant</span>
+                  <h2 className="text-xl font-bold text-white">
+                    AI Case Assistant
                   </h2>
                   <p className="text-xs text-zinc-400">
                     Interrogate any saved OSINT investigation report using interactive generative AI.
@@ -1956,9 +1955,8 @@ export default function DashboardPage() {
               {/* Report Selection Dropdown Box */}
               <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-5 sm:p-6 space-y-4 shadow-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <label className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
-                    <FileText className="size-4 text-zinc-400" />
-                    <span>Select Active Investigation Report to Interrogate:</span>
+                  <label className="text-xs font-semibold text-zinc-300">
+                    Select Active Investigation Report to Interrogate:
                   </label>
                   <span className="text-[11px] font-mono text-zinc-400">
                     {savedReports.length} Saved Report{savedReports.length !== 1 ? 's' : ''} Available
@@ -1970,17 +1968,17 @@ export default function DashboardPage() {
                   onChange={(e) => setSelectedAiReportId(e.target.value)}
                   className="w-full bg-[#141418] border border-zinc-700/80 rounded-xl px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-zinc-500 transition-colors shadow-inner"
                 >
-                  <optgroup label="✨ Preset Demo Cases">
-                    <option value="demo_vehicle">🚗 Demo Case: MH01BG3590 (TOYOTA INNOVA — RTO Mumbai)</option>
-                    <option value="demo_phone">📱 Demo Case: Rajeev Kumar — 8299512084 (JIO UPE)</option>
+                  <optgroup label="Preset Demo Cases">
+                    <option value="demo_vehicle">Demo Case: MH01BG3590 (TOYOTA INNOVA — RTO Mumbai)</option>
+                    <option value="demo_phone">Demo Case: Rajeev Kumar — 8299512084 (JIO UPE)</option>
                   </optgroup>
                   {savedReports.length > 0 && (
-                    <optgroup label="📁 Your Saved Investigation Reports">
+                    <optgroup label="Your Saved Investigation Reports">
                       {savedReports.map((r) => {
                         const isV = r.report_type === 'vehicle' || !!r.vehicle_json;
                         const label = isV
-                          ? `🚗 Vehicle: ${r.plate_number || r.vehicle_json?.vehicle?.registrationNumber || 'Vehicle Target'} (${r.rto_location || 'RTO'})`
-                          : `📱 Phone: ${r.telemetry_json?.result?.name || r.phone_number} (${r.circle || 'Telecom'})`;
+                          ? `Vehicle: ${r.plate_number || r.vehicle_json?.vehicle?.registrationNumber || 'Vehicle Target'} (${r.rto_location || 'RTO'})`
+                          : `Phone: ${r.telemetry_json?.result?.name || r.phone_number} (${r.circle || 'Telecom'})`;
                         return (
                           <option key={r.id} value={r.id}>
                             {label} — {new Date(r.created_at).toLocaleDateString()}
@@ -2007,9 +2005,8 @@ export default function DashboardPage() {
                       type="button"
                       onClick={() => handleSendAiQuestion(q)}
                       disabled={aiChatLoading}
-                      className="text-xs text-zinc-300 hover:text-white bg-[#141418] hover:bg-zinc-800 border border-zinc-700/70 px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      className="text-xs text-zinc-300 hover:text-white bg-[#141418] hover:bg-zinc-800 border border-zinc-700/70 px-3.5 py-1.5 rounded-full transition-all cursor-pointer disabled:opacity-50"
                     >
-                      <Sparkles className="size-3 text-zinc-400" />
                       <span>{q}</span>
                     </button>
                   ))}
@@ -2025,8 +2022,8 @@ export default function DashboardPage() {
                       className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
                       {msg.sender === 'ai' && (
-                        <div className="size-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-white shrink-0 mt-0.5 shadow-sm">
-                          <BrainCircuit className="size-4 text-zinc-300" />
+                        <div className="size-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs font-bold text-white shrink-0 mt-0.5 shadow-sm">
+                          <span>AI</span>
                         </div>
                       )}
                       <div
@@ -2061,13 +2058,12 @@ export default function DashboardPage() {
 
                   {aiChatLoading && (
                     <div className="flex gap-3 justify-start animate-pulse">
-                      <div className="size-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-white shrink-0">
-                        <RefreshCw className="size-4 text-zinc-400 animate-spin" />
+                      <div className="size-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-xs font-bold text-white shrink-0">
+                        <span>AI</span>
                       </div>
                       <div className="bg-[#141418] border border-zinc-800 rounded-2xl p-4 space-y-2 rounded-tl-none max-w-sm">
-                        <p className="text-xs text-zinc-400 flex items-center gap-2 font-mono">
-                          <RefreshCw className="size-3 animate-spin text-zinc-400" />
-                          Analyzing investigation dossier & generating response...
+                        <p className="text-xs text-zinc-400 font-mono">
+                          Analyzing investigation dossier and generating response...
                         </p>
                         <div className="h-2 w-48 bg-zinc-800 rounded" />
                         <div className="h-2 w-36 bg-zinc-800/60 rounded" />
@@ -2095,10 +2091,9 @@ export default function DashboardPage() {
                   <button
                     type="submit"
                     disabled={!aiChatInput.trim() || aiChatLoading}
-                    className="bg-white hover:bg-zinc-200 text-black font-bold px-5 py-3 rounded-xl text-xs transition-colors shrink-0 flex items-center gap-2 shadow-lg disabled:opacity-40 cursor-pointer"
+                    className="bg-white hover:bg-zinc-200 text-black font-bold px-5 py-3 rounded-xl text-xs transition-colors shrink-0 shadow-lg disabled:opacity-40 cursor-pointer"
                   >
-                    {aiChatLoading ? <RefreshCw className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
-                    <span>Ask AI</span>
+                    <span>{aiChatLoading ? 'Processing...' : 'Ask AI'}</span>
                   </button>
                 </form>
               </div>
