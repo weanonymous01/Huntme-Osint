@@ -130,7 +130,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Fallback: Return Numverify/telecom decoder results if paid API returned no results or failed
-    const localResults = decodeLocalPhone(cleanNumber);
+    const localResults = decodeLocalPhone(tenDigitNumber);
     return NextResponse.json({ success: true, results: localResults, cached: false, isFreePreview: isPreview });
   } catch (err: any) {
     console.error('[phone-lookup] Error:', err?.message);
