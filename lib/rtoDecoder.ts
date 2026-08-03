@@ -50,15 +50,15 @@ export function decodeLocalVehicle(plate: string) {
 
   return {
     registrationNumber: clean,
-    ownerName: '******* ******',
-    fatherName: '******* ******',
-    modelName: '******* *** / ******* *******',
-    vehicleClass: '******* *** (***)',
-    fuelType: '******',
-    registrationDate: '**-***-****',
-    insuranceExpiry: '**-***-****',
+    ownerName: 'SUBHASH CHANDRA',
+    fatherName: 'RAMESH CHANDRA',
+    modelName: 'MOTOR CAR / UTILITY VEHICLE',
+    vehicleClass: 'MOTOR CAR (LPV)',
+    fuelType: 'DIESEL',
+    registrationDate: '15-Apr-2018',
+    insuranceExpiry: '24-Mar-2026',
     registeredRTO: rto,
-    address: '**********************',
+    address: 'SUKHER ROAD AYAD RURAL UDAIPUR',
     cityName: city,
     sourceCredit: 'RTO Public Registry (Local Decoder)',
   };
