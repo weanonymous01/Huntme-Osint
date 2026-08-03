@@ -339,8 +339,13 @@ export default function DashboardPage() {
       const isVIP = user.email === 'skyboundkrypton@gmail.com';
       const isPaidOrVIP = isOwner || isVIP;
 
+      const userKey = (user.email || user.id).toLowerCase();
       if (typeof window !== 'undefined') {
-        const storedCount = parseInt(localStorage.getItem(`huntme_free_searches_${user.id}`) || '0', 10);
+        const storedCount = parseInt(
+          localStorage.getItem(`huntme_free_searches_${userKey}`) ||
+          localStorage.getItem(`huntme_free_searches_${user.id}`) || '0',
+          10
+        );
         setFreeSearchCount(storedCount);
       }
 
@@ -738,7 +743,9 @@ export default function DashboardPage() {
         if (isLocked) {
           const nextCount = freeSearchCount + 1;
           setFreeSearchCount(nextCount);
-          if (typeof window !== 'undefined' && profile?.id) {
+          if (typeof window !== 'undefined' && profile) {
+            const userKey = (profile.email || profile.id).toLowerCase();
+            localStorage.setItem(`huntme_free_searches_${userKey}`, nextCount.toString());
             localStorage.setItem(`huntme_free_searches_${profile.id}`, nextCount.toString());
           }
         } else if (!data.cached) {
@@ -796,7 +803,9 @@ export default function DashboardPage() {
         if (isLocked) {
           const nextCount = freeSearchCount + 1;
           setFreeSearchCount(nextCount);
-          if (typeof window !== 'undefined' && profile?.id) {
+          if (typeof window !== 'undefined' && profile) {
+            const userKey = (profile.email || profile.id).toLowerCase();
+            localStorage.setItem(`huntme_free_searches_${userKey}`, nextCount.toString());
             localStorage.setItem(`huntme_free_searches_${profile.id}`, nextCount.toString());
           }
         } else if (!data.cached) {
