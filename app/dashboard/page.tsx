@@ -1483,7 +1483,9 @@ export default function DashboardPage() {
                           </h3>
                         </div>
                         {vehicleResult.modelName && (
-                          <p className="text-sm text-zinc-300 pl-8">{vehicleResult.modelName}</p>
+                          <p className={`text-sm text-zinc-300 pl-8 ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                            {isLocked ? maskText(vehicleResult.modelName) : vehicleResult.modelName}
+                          </p>
                         )}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -1530,25 +1532,33 @@ export default function DashboardPage() {
                         {vehicleResult.vehicleClass && (
                           <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                             <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Car className="size-3" />Vehicle Class</p>
-                            <p className="text-sm text-white">{vehicleResult.vehicleClass}</p>
+                            <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                              {isLocked ? maskText(vehicleResult.vehicleClass) : vehicleResult.vehicleClass}
+                            </p>
                           </div>
                         )}
                         {vehicleResult.fuelType && (
                           <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                             <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Fuel Type</p>
-                            <p className="text-sm text-white">{vehicleResult.fuelType}</p>
+                            <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                              {isLocked ? maskText(vehicleResult.fuelType) : vehicleResult.fuelType}
+                            </p>
                           </div>
                         )}
                         {vehicleResult.registrationDate && (
                           <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                             <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Calendar className="size-3" />Registration Date</p>
-                            <p className="text-sm text-white">{vehicleResult.registrationDate}</p>
+                            <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                              {isLocked ? maskText(vehicleResult.registrationDate) : vehicleResult.registrationDate}
+                            </p>
                           </div>
                         )}
                         {vehicleResult.insuranceExpiry && (
                           <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                             <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><AlertCircle className="size-3" />Insurance Expiry</p>
-                            <p className="text-sm font-medium text-zinc-300">{vehicleResult.insuranceExpiry}</p>
+                            <p className={`text-sm font-medium text-zinc-300 ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                              {isLocked ? maskText(vehicleResult.insuranceExpiry) : vehicleResult.insuranceExpiry}
+                            </p>
                           </div>
                         )}
                         {vehicleResult.registeredRTO && (
@@ -1785,7 +1795,9 @@ export default function DashboardPage() {
                                 </h3>
                               </div>
                               {selectedReport.vehicle_json.vehicle.modelName && (
-                                <p className="text-xs text-zinc-400 pl-6">{selectedReport.vehicle_json.vehicle.modelName}</p>
+                                <p className={`text-xs text-zinc-400 pl-6 ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                                  {isLocked ? maskText(selectedReport.vehicle_json.vehicle.modelName) : selectedReport.vehicle_json.vehicle.modelName}
+                                </p>
                               )}
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
@@ -1814,25 +1826,33 @@ export default function DashboardPage() {
                             {selectedReport.vehicle_json.vehicle.vehicleClass && (
                               <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                                 <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Car className="size-3" />Vehicle Class</p>
-                                <p className="text-sm text-white">{selectedReport.vehicle_json.vehicle.vehicleClass}</p>
+                                <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                                  {isLocked ? maskText(selectedReport.vehicle_json.vehicle.vehicleClass) : selectedReport.vehicle_json.vehicle.vehicleClass}
+                                </p>
                               </div>
                             )}
                             {selectedReport.vehicle_json.vehicle.fuelType && (
                               <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                                 <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Fuel Type</p>
-                                <p className="text-sm text-white">{selectedReport.vehicle_json.vehicle.fuelType}</p>
+                                <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                                  {isLocked ? maskText(selectedReport.vehicle_json.vehicle.fuelType) : selectedReport.vehicle_json.vehicle.fuelType}
+                                </p>
                               </div>
                             )}
                             {selectedReport.vehicle_json.vehicle.registrationDate && (
                               <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                                 <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Calendar className="size-3" />Registration Date</p>
-                                <p className="text-sm text-white">{selectedReport.vehicle_json.vehicle.registrationDate}</p>
+                                <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                                  {isLocked ? maskText(selectedReport.vehicle_json.vehicle.registrationDate) : selectedReport.vehicle_json.vehicle.registrationDate}
+                                </p>
                               </div>
                             )}
                             {selectedReport.vehicle_json.vehicle.insuranceExpiry && (
                               <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                                 <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><AlertCircle className="size-3" />Insurance Expiry</p>
-                                <p className="text-sm text-white">{selectedReport.vehicle_json.vehicle.insuranceExpiry}</p>
+                                <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                                  {isLocked ? maskText(selectedReport.vehicle_json.vehicle.insuranceExpiry) : selectedReport.vehicle_json.vehicle.insuranceExpiry}
+                                </p>
                               </div>
                             )}
                             {selectedReport.vehicle_json.vehicle.registeredRTO && (
