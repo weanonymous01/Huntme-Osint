@@ -313,17 +313,46 @@ export default function DashboardPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
+  // Auth redirect error tracking
+  const [authError, setAuthError] = useState<string | null>(null);
+
   // Free search tracking for 0-credit preview users
   const [freeSearchCount, setFreeSearchCount] = useState<number>(0);
 
   // Load user session + profile on mount
   useEffect(() => {
+    // Check for OAuth redirect errors in URL query or hash
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hashString = window.location.hash.replace(/^#/, '');
+      const hashParams = new URLSearchParams(hashString);
+      const errorDesc = urlParams.get('error_description') || hashParams.get('error_description');
+      const errorMsg = urlParams.get('error') || hashParams.get('error');
+
+      if (errorDesc || errorMsg) {
+        const decodedError = errorDesc
+          ? decodeURIComponent(errorDesc.replace(/\+/g, ' '))
+          : 'Authentication error occurred during login. Please try logging in again.';
+
+        // Sign out any stale local session so old user isn't shown
+        supabase.auth.signOut().then(() => {
+          setProfile(null);
+          setAuthError(decodedError);
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setProfileLoading(false);
+        });
+        return;
+      }
+    }
+
     const loadProfileForUser = async (user: any) => {
       if (!user) {
         setProfile(null);
         setProfileLoading(false);
         return;
       }
+
+      setAuthError(null);
 
       const isOwner = user.email === 'adarshverma3655@gmail.com';
       const isVIP = user.email === 'skyboundkrypton@gmail.com';
@@ -1033,6 +1062,25 @@ export default function DashboardPage() {
 
         {/* Dashboard Main View Container */}
         <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8 max-w-6xl mx-auto w-full">
+
+          {/* Auth Redirect Error Banner */}
+          {authError && (
+            <div className="rounded-2xl border border-rose-500/30 bg-rose-500/10 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-rose-300">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="size-5 text-rose-400 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold text-white">Authentication Notice</p>
+                  <p className="text-xs text-rose-300/90">{authError}</p>
+                </div>
+              </div>
+              <a
+                href="/login"
+                className="bg-white hover:bg-zinc-200 text-black font-semibold px-4 py-2 rounded-xl text-xs transition-colors shrink-0 flex items-center justify-center gap-1.5 shadow-md"
+              >
+                <span>Sign In Again</span>
+              </a>
+            </div>
+          )}
 
           {/* ========================================================================= */}
           {/* PHONE INTELLIGENCE TAB VIEW */}
