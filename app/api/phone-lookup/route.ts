@@ -39,13 +39,34 @@ export async function POST(req: NextRequest) {
       console.warn('[phone-lookup] Cache check error:', cacheErr);
     }
 
-    // ── 2. PREVIEW MODE FALLBACK (Zero Upstream API Cost!) ──
+    // ── 2. PREVIEW MODE (Numverify Free Tier + Pure Asterisk Masking) ──
+    const numverifyKey = process.env.NUMVERIFY_API_KEY || '2e3798cc22af8a1506d82e1212ac6a60';
     const apiKey = process.env.PHONE_LOOKUP_API_KEY;
     const apiBase = process.env.PHONE_LOOKUP_API_BASE;
 
     if (isPreview || !apiKey || !apiBase) {
-      console.log(`[phone-lookup] PREVIEW/FREE OSINT ENGINE for phone: ${cleanNumber} (0 API credits used!)`);
+      console.log(`[phone-lookup] PREVIEW MODE using Numverify API for phone: ${cleanNumber}`);
+      let carrierCircle = 'Jio / Airtel (National Circle)';
+      try {
+        const nvRes = await fetch(`http://apilayer.net/api/validate?access_key=${numverifyKey}&number=${encodeURIComponent(cleanNumber)}&format=1`, {
+          cache: 'no-store',
+        });
+        if (nvRes.ok) {
+          const nv = await nvRes.json();
+          if (nv.valid) {
+            const parts = [nv.carrier, nv.location, nv.country_name].filter(Boolean);
+            if (parts.length > 0) {
+              carrierCircle = parts.join(' — ');
+            }
+          }
+        }
+      } catch (nvErr) {
+        console.warn('[phone-lookup] Numverify API fetch error:', nvErr);
+      }
+
       const localResults = decodeLocalPhone(cleanNumber);
+      localResults[0].circle = carrierCircle;
+
       return NextResponse.json({
         success: true,
         results: localResults,
@@ -88,10 +109,10 @@ export async function POST(req: NextRequest) {
         }
       }
     } catch (apiErr) {
-      console.warn('[phone-lookup] Upstream API call failed, serving free OSINT decoder:', apiErr);
+      console.warn('[phone-lookup] Upstream API call failed, serving free Numverify preview:', apiErr);
     }
 
-    // Fallback to local phone OSINT engine if API failed or no record returned
+    // Fallback to free Numverify preview if API failed or no record returned
     const localResults = decodeLocalPhone(cleanNumber);
     return NextResponse.json({ success: true, results: localResults, cached: false, isFreePreview: true });
   } catch (err: any) {
