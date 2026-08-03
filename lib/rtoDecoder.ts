@@ -71,7 +71,7 @@ export function decodeLocalPhone(phone: string) {
     {
       name: '******* ******',
       mobile: clean,
-      alternativeMobile: clean.length >= 10 ? clean.slice(0, 2) + '*******' + clean.slice(-2) : '**********',
+      alternativeMobile: '**********',
       fatherName: '******* ******',
       address: '*********************************',
       circle: 'Jio / Airtel (National Circle)',

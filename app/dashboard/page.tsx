@@ -44,9 +44,8 @@ function maskText(str: string | null): string {
 
 function maskNumber(str: string | null): string {
   if (!str) return '**********';
-  const clean = str.trim();
-  if (clean.length <= 4) return '*'.repeat(clean.length);
-  return clean.slice(0, 2) + '*'.repeat(Math.max(2, clean.length - 4)) + clean.slice(-2);
+  const clean = str.replace(/\D/g, '');
+  return '*'.repeat(clean.length || 10);
 }
 
 type PhoneResult = {
