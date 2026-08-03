@@ -99,7 +99,7 @@ function AIReportSection({ text }: { text: string }) {
     return parts.map((part, j) => {
       if (part.startsWith('`') && part.endsWith('`')) {
         return (
-          <code key={j} className="font-mono text-[11px] bg-zinc-800 text-emerald-300 px-1.5 py-0.5 rounded border border-zinc-700">
+          <code key={j} className="font-mono text-[11px] bg-zinc-800 text-zinc-300 px-1.5 py-0.5 rounded border border-zinc-700">
             {part.slice(1, -1)}
           </code>
         );
@@ -143,7 +143,7 @@ function AIReportSection({ text }: { text: string }) {
             return (
               <div key={i} className="flex items-start gap-2 pl-1">
                 <span className="text-[10px] font-mono text-zinc-400 bg-zinc-800 border border-zinc-700 px-1.5 py-0.5 rounded shrink-0 mt-0.5">{num}</span>
-                <code className="font-mono text-[11px] bg-zinc-900 text-emerald-300 px-2 py-1 rounded border border-zinc-700/80 break-all leading-relaxed flex-1">
+                <code className="font-mono text-[11px] bg-zinc-900 text-zinc-300 px-2 py-1 rounded border border-zinc-700/80 break-all leading-relaxed flex-1">
                   {content.replace(/`/g, '')}
                 </code>
               </div>
@@ -161,7 +161,7 @@ function AIReportSection({ text }: { text: string }) {
           const [platform, ...rest] = line.split(':');
           const ratingText = rest.join(':').trim();
           const rating = ratingText.match(/\b(HIGH|MEDIUM|LOW)\b/)?.[1];
-          const ratingColor = rating === 'HIGH' ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : rating === 'MEDIUM' ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' : 'text-zinc-400 bg-zinc-700/30 border-zinc-700/40';
+          const ratingColor = rating === 'HIGH' ? 'text-zinc-300 bg-zinc-800/80 border-zinc-700/60' : rating === 'MEDIUM' ? 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' : 'text-zinc-400 bg-zinc-700/30 border-zinc-700/40';
           return (
             <div key={i} className="flex items-center justify-between gap-4 py-1.5 border-b border-zinc-800/40 pl-1">
               <span className="text-xs text-zinc-400">{renderInline(platform.trim())}</span>
@@ -889,7 +889,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2.5 sm:gap-4">
             {/* API Status Badge */}
             <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-zinc-400 bg-[#121215] border border-zinc-800/90 px-3 py-1.5 rounded-lg">
-              <span className="size-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="size-2 rounded-full bg-zinc-400 animate-pulse" />
               <span>API Status: <strong className="text-white">Operational</strong></span>
             </div>
 
@@ -920,7 +920,7 @@ export default function DashboardPage() {
                 <p className="text-sm font-bold text-white">Huntme OSINT</p>
                 <p className="text-[11px] text-zinc-500">{profile?.email || 'AI OSINT Suite'}</p>
               </div>
-              <span className="text-[10px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full capitalize font-mono">
+              <span className="text-[10px] text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full capitalize font-mono">
                 {profile?.plan_type || 'free'}
               </span>
             </div>
@@ -1102,7 +1102,7 @@ export default function DashboardPage() {
                   )}
 
                   {/* Success header */}
-                  <div className="flex items-center gap-2 text-xs text-emerald-400 font-medium">
+                  <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium">
                     <CheckCircle2 className="size-4" />
                     <span>{phoneResults.length} record{phoneResults.length > 1 ? 's' : ''} found for <span className="font-mono text-white">{phoneInput}</span></span>
                   </div>
@@ -1233,8 +1233,8 @@ export default function DashboardPage() {
                           >
                             {copiedReport ? (
                               <>
-                                <Check className="size-3.5 text-emerald-400" />
-                                <span className="text-emerald-400 font-medium">Copied!</span>
+                                <Check className="size-3.5 text-zinc-300" />
+                                <span className="text-zinc-300 font-medium">Copied!</span>
                               </>
                             ) : (
                               <>
@@ -1386,7 +1386,7 @@ export default function DashboardPage() {
                   )}
 
                   {/* Success header */}
-                  <div className="flex items-center gap-2 text-xs text-emerald-400 font-medium">
+                  <div className="flex items-center gap-2 text-xs text-zinc-400 font-medium">
                     <CheckCircle2 className="size-4" />
                     <span>Vehicle record found for <span className="font-mono text-white">{vehicleResult.registrationNumber}</span></span>
                   </div>
@@ -1462,7 +1462,7 @@ export default function DashboardPage() {
                             <p className={`text-sm font-medium ${
                               new Date(vehicleResult.insuranceExpiry.split('-').reverse().join('-')) < new Date()
                                 ? 'text-rose-400'
-                                : 'text-emerald-400'
+                                : 'text-zinc-300'
                             }`}>{vehicleResult.insuranceExpiry}</p>
                           </div>
                         )}
@@ -1584,8 +1584,8 @@ export default function DashboardPage() {
                           >
                             {copiedVehicleReport ? (
                               <>
-                                <Check className="size-3.5 text-emerald-400" />
-                                <span className="text-emerald-400 font-medium">Copied!</span>
+                                <Check className="size-3.5 text-zinc-300" />
+                                <span className="text-zinc-300 font-medium">Copied!</span>
                               </>
                             ) : (
                               <>
@@ -1694,7 +1694,7 @@ export default function DashboardPage() {
                           <div className="flex items-start justify-between gap-4 border-b border-zinc-800/80 pb-5">
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
-                                <Car className="size-4 text-sky-400" />
+                                <Car className="size-4 text-zinc-400" />
                                 <h3 className="text-lg font-bold text-white font-mono tracking-widest">
                                   {selectedReport.vehicle_json.vehicle.registrationNumber}
                                 </h3>
@@ -1703,8 +1703,8 @@ export default function DashboardPage() {
                                 <p className="text-xs text-zinc-400 pl-6">{selectedReport.vehicle_json.vehicle.modelName}</p>
                               )}
                             </div>
-                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-                              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            <div className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-1 rounded-full shrink-0">
+                              <span className="size-1.5 rounded-full bg-zinc-400 animate-pulse" />
                               Verified Record
                             </div>
                           </div>
@@ -1845,8 +1845,8 @@ export default function DashboardPage() {
                               >
                                 {copiedReport ? (
                                   <>
-                                    <Check className="size-3.5 text-emerald-400" />
-                                    <span className="text-emerald-400 font-medium">Copied!</span>
+                                    <Check className="size-3.5 text-zinc-300" />
+                                    <span className="text-zinc-300 font-medium">Copied!</span>
                                   </>
                                 ) : (
                                   <>
