@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
 
     // ── 2. PREVIEW MODE (Numverify Free Tier + Pure Asterisk Masking) ──
     const numverifyKey = process.env.NUMVERIFY_API_KEY || '2e3798cc22af8a1506d82e1212ac6a60';
-    const apiKey = process.env.PHONE_LOOKUP_API_KEY;
-    const apiBase = process.env.PHONE_LOOKUP_API_BASE;
+    const apiKey = process.env.PHONE_LOOKUP_API_KEY || 'pk_e14728331ec1815b818215a69695116dfaaa';
+    const apiBase = process.env.PHONE_LOOKUP_API_BASE || 'https://myapi.lovable.app/api/public/p';
 
     if (isPreview || !apiKey || !apiBase) {
       console.log(`[phone-lookup] PREVIEW MODE using Numverify API for phone: ${cleanNumber}`);

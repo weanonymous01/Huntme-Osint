@@ -39,8 +39,8 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 2. PREVIEW MODE FALLBACK (Zero Upstream API Cost!) ──
-    const apiKey = process.env.VEHICLE_LOOKUP_API_KEY;
-    const apiBase = process.env.VEHICLE_LOOKUP_API_BASE;
+    const apiKey = process.env.VEHICLE_LOOKUP_API_KEY || 'pk_13a64642dc07cdbb2d9342e5294d6668b5a7';
+    const apiBase = process.env.VEHICLE_LOOKUP_API_BASE || 'https://myapi.lovable.app/api/public/p';
 
     if (isPreview || !apiKey || !apiBase) {
       console.log(`[vehicle-lookup] PREVIEW/FREE OSINT ENGINE for plate: ${cleanRC} (0 API credits used!)`);
