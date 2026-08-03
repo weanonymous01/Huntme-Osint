@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const NVIDIA_API_KEY = process.env.NVIDIA_NIM_API_KEY;
+
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
-const MODEL_PRIMARY = 'meta/llama-3.3-70b-instruct';
-const MODEL_FALLBACK = 'meta/llama-3.1-8b-instruct';
 
 // ─── Full Indian RTO District Mapping ────────────────────────────────────────
 const RTO_DISTRICT_MAP: Record<string, { state: string; district: string; tier: string; region: string }> = {
@@ -298,12 +299,17 @@ Rate: HIGH / MEDIUM / LOW
 - What 3 key data points are MISSING that would complete the picture?
 - 6 ranked investigation steps with exact URLs/portals: Parivahan VAHAN (vahan.parivahan.gov.in), mParivahan app, ecourts.gov.in, JustDial, IndiaMART, Udaipur RTO office contact`;
 
+    const apiKey = GROQ_API_KEY || NVIDIA_API_KEY;
+    const apiUrl = GROQ_API_KEY ? GROQ_API_URL : NVIDIA_API_URL;
+    const primaryModel = GROQ_API_KEY ? 'llama-3.3-70b-versatile' : 'meta/llama-3.3-70b-instruct';
+    const fallbackModel = GROQ_API_KEY ? 'llama-3.1-8b-instant' : 'meta/llama-3.1-8b-instruct';
+
     // Try primary model (70B streaming), fallback to 8B if needed
     const tryStream = async (model: string) => {
-      const r = await fetch(NVIDIA_API_URL, {
+      const r = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${NVIDIA_API_KEY}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -323,20 +329,20 @@ Rate: HIGH / MEDIUM / LOW
       return r;
     };
 
-    let nvidiaRes = await tryStream(MODEL_PRIMARY);
+    let aiRes = await tryStream(primaryModel);
 
     // Fallback to 8B if 70B is unavailable
-    if (!nvidiaRes.ok) {
-      nvidiaRes = await tryStream(MODEL_FALLBACK);
-      if (!nvidiaRes.ok) {
-        const err = await nvidiaRes.text();
+    if (!aiRes.ok) {
+      aiRes = await tryStream(fallbackModel);
+      if (!aiRes.ok) {
+        const err = await aiRes.text();
         console.error('[generate-vehicle-report] Both models failed:', err);
         return NextResponse.json({ success: false, message: 'AI service unavailable. Try again shortly.' }, { status: 503 });
       }
     }
 
-    // Pipe NVIDIA SSE → plain text stream to client
-    const textStream = createStreamFromNVIDIA(nvidiaRes.body!);
+    // Pipe SSE → plain text stream to client
+    const textStream = createStreamFromNVIDIA(aiRes.body!);
 
     return new Response(textStream, {
       status: 200,
