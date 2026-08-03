@@ -3,7 +3,7 @@
 import React from 'react';
 import { Header } from '@/components/ui/header-3';
 import { Footer } from '@/components/ui/footer';
-import { Check, ArrowRight, Star } from 'lucide-react';
+import { Check, ArrowRight } from 'lucide-react';
 
 export default function PricingPage() {
   return (
@@ -103,9 +103,8 @@ export default function PricingPage() {
             <div className="rounded-2xl border border-zinc-700 bg-[#0d0d0e] p-8 flex flex-col justify-between shadow-2xl transition-all duration-300 hover:border-zinc-600 relative">
               
               {/* Most Popular Badge */}
-              <div className="absolute -top-3.5 right-6 bg-zinc-800 border border-zinc-600/90 text-zinc-200 text-[11px] font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg font-mono">
-                <Star className="size-3 text-amber-400 fill-amber-400" />
-                <span>MOST POPULAR</span>
+              <div className="absolute -top-3.5 right-6 bg-zinc-800 border border-zinc-700 text-zinc-300 text-[11px] font-semibold px-3 py-1 rounded-full shadow-lg font-mono tracking-wider">
+                MOST POPULAR
               </div>
 
               <div>
@@ -114,20 +113,15 @@ export default function PricingPage() {
                   <h3 className="text-xs font-semibold text-zinc-300 tracking-widest uppercase flex items-center gap-2">
                     PREMIUM MONTHLY
                   </h3>
-                  <div className="space-y-1">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-5xl font-bold tracking-tight text-white">
-                        ₹499
-                      </span>
-                      <span className="text-sm text-zinc-400 font-normal">
-                        /month
-                      </span>
-                    </div>
-                    <p className="text-xs text-zinc-400 italic">
-                      Save more with higher credits and priority features.
-                    </p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-bold tracking-tight text-white">
+                      ₹499
+                    </span>
+                    <span className="text-sm text-zinc-400 font-normal">
+                      /month
+                    </span>
                   </div>
-                  <p className="text-xs text-white font-semibold leading-relaxed">
+                  <p className="text-xs text-zinc-300 font-medium leading-relaxed">
                     Best Value for professionals and power users.
                   </p>
                 </div>
