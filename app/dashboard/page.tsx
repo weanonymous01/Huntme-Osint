@@ -970,7 +970,7 @@ export default function DashboardPage() {
                         type="text"
                         value={phoneInput}
                         onChange={(e) => setPhoneInput(e.target.value)}
-                        placeholder="Enter phone number (e.g. +91 98765 43210 or +1 415 555 2671)"
+                        placeholder="Enter phone number (e.g. 7755012345 without +91)"
                         className="w-full bg-[#141418] border border-zinc-700/80 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-colors font-mono"
                       />
                     </div>
