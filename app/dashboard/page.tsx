@@ -427,6 +427,107 @@ export default function DashboardPage() {
   };
 
   // Saved Reports state
+  // Interactive AI Chat Assistant state
+  const [selectedAiReportId, setSelectedAiReportId] = useState<string>('demo_vehicle');
+  const [aiChatMessages, setAiChatMessages] = useState<Array<{ id: string; sender: 'user' | 'ai'; text: string; provider?: string; timestamp: string }>>([
+    {
+      id: 'welcome_1',
+      sender: 'ai',
+      text: '👋 Welcome to the AI Case Assistant! Select any investigation report from your searches below and ask any question about the target, risk score, owner identity, vehicle details, or recommended next OSINT steps.',
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    }
+  ]);
+  const [aiChatInput, setAiChatInput] = useState<string>('');
+  const [aiChatLoading, setAiChatLoading] = useState<boolean>(false);
+
+  const handleSendAiQuestion = async (questionText?: string) => {
+    const q = (questionText || aiChatInput).trim();
+    if (!q || aiChatLoading) return;
+
+    const userMsgId = 'msg_' + Date.now();
+    const userMsg = {
+      id: userMsgId,
+      sender: 'user' as const,
+      text: q,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setAiChatMessages(prev => [...prev, userMsg]);
+    setAiChatInput('');
+    setAiChatLoading(true);
+
+    // Resolve target report context data
+    let targetReportData: any = null;
+    if (selectedAiReportId === 'demo_vehicle') {
+      targetReportData = {
+        title: 'Vehicle Intelligence Dossier — MH01BG3590',
+        registrationNumber: 'MH01BG3590',
+        ownerName: 'Sunil Kumar',
+        modelName: 'TOYOTA INNOVA',
+        vehicleClass: 'MOTOR CAR / UTILITY VEHICLE',
+        fuelType: 'DIESEL',
+        registrationDate: '14-May-2010',
+        insuranceExpiry: '10-May-2024 (Expired)',
+        registeredRTO: 'RTO Mumbai South, Maharashtra (MH01)',
+      };
+    } else if (selectedAiReportId === 'demo_phone') {
+      targetReportData = {
+        title: 'Phone Intelligence Dossier — 8299512084',
+        name: 'Rajeev Kumar',
+        fatherName: 'Sobran Lal',
+        mobile: '8299512084',
+        alternativeMobile: '918604147637',
+        circle: 'JIO UPE',
+        address: 'S/O Sobran Lal, HARDOIYA POST mandaruwa, Misrikh Sitapur, Uttar Pradesh 261401',
+      };
+    } else {
+      targetReportData = savedReports.find(r => r.id === selectedAiReportId) || phoneResults || vehicleResult || savedReports[0];
+    }
+
+    try {
+      const res = await fetch('/api/ai-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportData: targetReportData, question: q }),
+      });
+      const data = await res.json();
+      if (data.success && data.answer) {
+        setAiChatMessages(prev => [
+          ...prev,
+          {
+            id: 'ai_' + Date.now(),
+            sender: 'ai',
+            text: data.answer,
+            provider: data.provider,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          }
+        ]);
+      } else {
+        setAiChatMessages(prev => [
+          ...prev,
+          {
+            id: 'ai_' + Date.now(),
+            sender: 'ai',
+            text: '⚠️ Unable to process question. Please verify connection and try again.',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          }
+        ]);
+      }
+    } catch (err) {
+      setAiChatMessages(prev => [
+        ...prev,
+        {
+          id: 'ai_' + Date.now(),
+          sender: 'ai',
+          text: '⚠️ Network error communicating with AI Assistant service.',
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }
+      ]);
+    } finally {
+      setAiChatLoading(false);
+    }
+  };
+
   const [savedReports, setSavedReports] = useState<any[]>([]);
   const [reportsLoading, setReportsLoading] = useState<boolean>(false);
   const [selectedReport, setSelectedReport] = useState<any | null>(null);
@@ -1832,34 +1933,174 @@ export default function DashboardPage() {
           {/* OTHER TABS: AI Assistant, Reports, Settings */}
           {/* ========================================================================= */}
           {activeTab === 'ai' && (
-            <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-8 space-y-6 animate-in fade-in duration-300">
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-white">
-                  AI Case Assistant
-                </h2>
-                <p className="text-xs text-zinc-400">
-                  Connect phone numbers, vehicle records, and subject identities into structured investigation timelines.
-                </p>
+            <div className="space-y-6 animate-in fade-in duration-300">
+              {/* Top Title & Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
+                <div>
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <BrainCircuit className="size-5 text-zinc-300" />
+                    <span>AI Case Assistant</span>
+                  </h2>
+                  <p className="text-xs text-zinc-400">
+                    Interrogate any saved OSINT investigation report using interactive generative AI.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono text-zinc-300 bg-zinc-800/80 border border-zinc-700/60 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
+                    <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Multi-Model Failover Active
+                  </span>
+                </div>
               </div>
 
-              <div className="rounded-xl border border-zinc-800 bg-[#121216] p-6 space-y-4">
-                <p className="text-sm text-zinc-300 leading-relaxed">
-                  Select any active investigation from Phone Intelligence or Vehicle Intelligence to synthesize relationships, map connected nodes, and auto-generate comprehensive summaries.
-                </p>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setActiveTab('phone')}
-                    className="bg-white hover:bg-zinc-200 text-black font-semibold px-4 py-2 rounded-lg text-xs transition-colors"
-                  >
-                    Open Phone Intelligence
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('vehicle')}
-                    className="bg-zinc-800 hover:bg-zinc-700 text-white font-semibold px-4 py-2 rounded-lg text-xs transition-colors"
-                  >
-                    Open Vehicle Intelligence
-                  </button>
+              {/* Report Selection Dropdown Box */}
+              <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-5 sm:p-6 space-y-4 shadow-xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <label className="text-xs font-semibold text-zinc-300 flex items-center gap-2">
+                    <FileText className="size-4 text-zinc-400" />
+                    <span>Select Active Investigation Report to Interrogate:</span>
+                  </label>
+                  <span className="text-[11px] font-mono text-zinc-400">
+                    {savedReports.length} Saved Report{savedReports.length !== 1 ? 's' : ''} Available
+                  </span>
                 </div>
+
+                <select
+                  value={selectedAiReportId}
+                  onChange={(e) => setSelectedAiReportId(e.target.value)}
+                  className="w-full bg-[#141418] border border-zinc-700/80 rounded-xl px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-zinc-500 transition-colors shadow-inner"
+                >
+                  <optgroup label="✨ Preset Demo Cases">
+                    <option value="demo_vehicle">🚗 Demo Case: MH01BG3590 (TOYOTA INNOVA — RTO Mumbai)</option>
+                    <option value="demo_phone">📱 Demo Case: Rajeev Kumar — 8299512084 (JIO UPE)</option>
+                  </optgroup>
+                  {savedReports.length > 0 && (
+                    <optgroup label="📁 Your Saved Investigation Reports">
+                      {savedReports.map((r) => {
+                        const isV = r.report_type === 'vehicle' || !!r.vehicle_json;
+                        const label = isV
+                          ? `🚗 Vehicle: ${r.plate_number || r.vehicle_json?.vehicle?.registrationNumber || 'Vehicle Target'} (${r.rto_location || 'RTO'})`
+                          : `📱 Phone: ${r.telemetry_json?.result?.name || r.phone_number} (${r.circle || 'Telecom'})`;
+                        return (
+                          <option key={r.id} value={r.id}>
+                            {label} — {new Date(r.created_at).toLocaleDateString()}
+                          </option>
+                        );
+                      })}
+                    </optgroup>
+                  )}
+                </select>
+              </div>
+
+              {/* Preset Quick Questions Chips */}
+              <div className="space-y-2">
+                <p className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Quick Suggested Questions:</p>
+                <div className="flex flex-wrap items-center gap-2">
+                  {[
+                    'Summarize target profile and key identity facts',
+                    'What are the primary red flags and compliance risks?',
+                    'What carrier / RTO geographic details were identified?',
+                    'Suggest recommended next OSINT investigation steps',
+                  ].map((q, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleSendAiQuestion(q)}
+                      disabled={aiChatLoading}
+                      className="text-xs text-zinc-300 hover:text-white bg-[#141418] hover:bg-zinc-800 border border-zinc-700/70 px-3.5 py-1.5 rounded-full transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <Sparkles className="size-3 text-zinc-400" />
+                      <span>{q}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Interactive Chat Stream Window */}
+              <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 space-y-6 shadow-2xl min-h-[380px] max-h-[550px] overflow-y-auto flex flex-col justify-between">
+                <div className="space-y-5">
+                  {aiChatMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      {msg.sender === 'ai' && (
+                        <div className="size-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-white shrink-0 mt-0.5 shadow-sm">
+                          <BrainCircuit className="size-4 text-zinc-300" />
+                        </div>
+                      )}
+                      <div
+                        className={`max-w-[85%] rounded-2xl p-4 space-y-2 shadow-lg ${
+                          msg.sender === 'user'
+                            ? 'bg-zinc-800 text-white border border-zinc-700/80 rounded-tr-none'
+                            : 'bg-[#141418] text-zinc-200 border border-zinc-800/90 rounded-tl-none'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-4 border-b border-zinc-800/60 pb-2 text-[11px] text-zinc-400 font-mono">
+                          <span className="font-semibold text-zinc-300">{msg.sender === 'user' ? 'Investigator' : 'AI Assistant'}</span>
+                          <div className="flex items-center gap-2">
+                            {msg.provider && (
+                              <span className="bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded-full border border-zinc-700/50">{msg.provider}</span>
+                            )}
+                            <span>{msg.timestamp}</span>
+                          </div>
+                        </div>
+                        {msg.sender === 'ai' ? (
+                          <AIReportSection text={msg.text} />
+                        ) : (
+                          <p className="text-sm leading-relaxed">{msg.text}</p>
+                        )}
+                      </div>
+                      {msg.sender === 'user' && (
+                        <div className="size-8 rounded-full bg-white text-black font-bold flex items-center justify-center text-xs shrink-0 mt-0.5 shadow-sm">
+                          {profile?.full_name?.charAt(0)?.toUpperCase() || profile?.email?.charAt(0)?.toUpperCase() || 'U'}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {aiChatLoading && (
+                    <div className="flex gap-3 justify-start animate-pulse">
+                      <div className="size-8 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-white shrink-0">
+                        <RefreshCw className="size-4 text-zinc-400 animate-spin" />
+                      </div>
+                      <div className="bg-[#141418] border border-zinc-800 rounded-2xl p-4 space-y-2 rounded-tl-none max-w-sm">
+                        <p className="text-xs text-zinc-400 flex items-center gap-2 font-mono">
+                          <RefreshCw className="size-3 animate-spin text-zinc-400" />
+                          Analyzing investigation dossier & generating response...
+                        </p>
+                        <div className="h-2 w-48 bg-zinc-800 rounded" />
+                        <div className="h-2 w-36 bg-zinc-800/60 rounded" />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Input Bar Form */}
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSendAiQuestion();
+                  }}
+                  className="pt-4 border-t border-zinc-800/80 flex items-center gap-2"
+                >
+                  <input
+                    type="text"
+                    value={aiChatInput}
+                    onChange={(e) => setAiChatInput(e.target.value)}
+                    placeholder="Ask any question about this investigation report..."
+                    disabled={aiChatLoading}
+                    className="grow bg-[#141418] border border-zinc-700/80 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500 transition-colors shadow-inner disabled:opacity-50"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!aiChatInput.trim() || aiChatLoading}
+                    className="bg-white hover:bg-zinc-200 text-black font-bold px-5 py-3 rounded-xl text-xs transition-colors shrink-0 flex items-center gap-2 shadow-lg disabled:opacity-40 cursor-pointer"
+                  >
+                    {aiChatLoading ? <RefreshCw className="size-4 animate-spin" /> : <Sparkles className="size-4" />}
+                    <span>Ask AI</span>
+                  </button>
+                </form>
               </div>
             </div>
           )}
