@@ -1934,24 +1934,6 @@ export default function DashboardPage() {
           {/* ========================================================================= */}
           {activeTab === 'ai' && (
             <div className="space-y-6 animate-in fade-in duration-300">
-              {/* Top Title & Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-4">
-                <div>
-                  <h2 className="text-xl font-bold text-white">
-                    AI Case Assistant
-                  </h2>
-                  <p className="text-xs text-zinc-400">
-                    Interrogate any saved OSINT investigation report using interactive generative AI.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-mono text-zinc-300 bg-zinc-800/80 border border-zinc-700/60 px-3 py-1 rounded-full flex items-center gap-1.5 shadow-sm">
-                    <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Multi-Model Failover Active
-                  </span>
-                </div>
-              </div>
-
               {/* Report Selection Dropdown Box */}
               <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-5 sm:p-6 space-y-4 shadow-xl">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
