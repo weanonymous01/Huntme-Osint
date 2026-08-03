@@ -69,14 +69,14 @@ export function decodeLocalPhone(phone: string) {
 
   return [
     {
-      name: '******* ******',
+      name: 'SUBHASH CHANDRA',
       mobile: clean,
-      alternativeMobile: '**********',
-      fatherName: '******* ******',
-      address: '*********************************',
+      alternativeMobile: clean.length >= 10 ? clean.slice(0, clean.length - 2) + '00' : '9820098200',
+      fatherName: 'RAMESH CHANDRA',
+      address: 'SUKHER ROAD AYAD RURAL UDAIPUR',
       circle: 'Jio / Airtel (National Circle)',
-      idNumber: 'ID-************',
-      email: '*************@*******.com',
+      idNumber: 'ID-8849201948',
+      email: 'subscriber@domain.com',
     },
   ];
 }

@@ -330,22 +330,23 @@ export default function DashboardPage() {
 
       const isOwner = session.user.email === 'adarshverma3655@gmail.com';
       const isVIP = session.user.email === 'skyboundkrypton@gmail.com';
+      const isPaidOrVIP = isOwner || isVIP;
 
       if (typeof window !== 'undefined') {
         const storedCount = parseInt(localStorage.getItem(`huntme_free_searches_${session.user.id}`) || '0', 10);
         setFreeSearchCount(storedCount);
       }
 
-      // If profile missing or newly created user, upsert with 0 credits for free users
+      // If profile missing or newly created user, upsert with credits for VIP/Owner
       if (!data || error) {
         const newProfile = {
           id: session.user.id,
           email: session.user.email || '',
           full_name: session.user.user_metadata?.full_name || session.user.user_metadata?.name || null,
           avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || null,
-          plan_type: isOwner ? 'lifetime' : 'free',
-          api_credits: isOwner ? 9999 : 0,
-          max_credits: isOwner ? 9999 : 100,
+          plan_type: isPaidOrVIP ? 'lifetime' : 'free',
+          api_credits: isPaidOrVIP ? 9999 : 0,
+          max_credits: isPaidOrVIP ? 9999 : 100,
         };
 
         const { data: inserted } = await supabase
@@ -355,6 +356,16 @@ export default function DashboardPage() {
           .single();
 
         if (inserted) data = inserted;
+      } else if (isPaidOrVIP && (data.api_credits < 9999 || data.plan_type !== 'lifetime')) {
+        // Upgrade existing VIP/Owner profile in Supabase to 9999 credits
+        const { data: updated } = await supabase
+          .from('profiles')
+          .update({ plan_type: 'lifetime', api_credits: 9999, max_credits: 9999 })
+          .eq('id', session.user.id)
+          .select()
+          .single();
+
+        if (updated) data = updated;
       }
 
       if (data) setProfile(data);
