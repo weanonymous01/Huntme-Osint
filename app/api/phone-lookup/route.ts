@@ -13,8 +13,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Strip non-digit characters from phone number before querying
-    const cleanNumber = phoneNumber.replace(/\D/g, '');
+    // Strip non-digit characters from phone number
+    let cleanNumber = phoneNumber.replace(/\D/g, '');
+    // Automatically prepend 91 for 10-digit Indian numbers
+    if (cleanNumber.length === 10) {
+      cleanNumber = '91' + cleanNumber;
+    }
 
     // ── 1. CHECK SUPABASE CACHE (Cost = 0 credits!) ──
     try {
@@ -46,7 +50,11 @@ export async function POST(req: NextRequest) {
 
     if (isPreview || !apiKey || !apiBase) {
       console.log(`[phone-lookup] PREVIEW MODE using Numverify API for phone: ${cleanNumber}`);
+      let provider: string | null = null;
+      let location: string | null = null;
+      let country: string | null = null;
       let carrierCircle = 'Jio / Airtel (National Circle)';
+
       try {
         const nvRes = await fetch(`http://apilayer.net/api/validate?access_key=${numverifyKey}&number=${encodeURIComponent(cleanNumber)}&format=1`, {
           cache: 'no-store',
@@ -54,6 +62,9 @@ export async function POST(req: NextRequest) {
         if (nvRes.ok) {
           const nv = await nvRes.json();
           if (nv.valid) {
+            provider = nv.carrier || null;
+            location = nv.location || null;
+            country = nv.country_name || null;
             const parts = [nv.carrier, nv.location, nv.country_name].filter(Boolean);
             if (parts.length > 0) {
               carrierCircle = parts.join(' — ');
@@ -66,6 +77,9 @@ export async function POST(req: NextRequest) {
 
       const localResults = decodeLocalPhone(cleanNumber);
       localResults[0].circle = carrierCircle;
+      (localResults[0] as any).provider = provider;
+      (localResults[0] as any).location = location;
+      (localResults[0] as any).country = country;
 
       return NextResponse.json({
         success: true,

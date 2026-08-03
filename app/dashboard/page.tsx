@@ -57,6 +57,9 @@ type PhoneResult = {
   circle: string | null;
   idNumber: string | null;
   email: string | null;
+  provider?: string | null;
+  location?: string | null;
+  country?: string | null;
 };
 
 type VehicleResult = {
@@ -658,6 +661,14 @@ export default function DashboardPage() {
     e.preventDefault();
     if (!phoneInput.trim()) return;
 
+    let targetPhone = phoneInput.trim();
+    if (isLocked) {
+      const clean = targetPhone.replace(/\D/g, '');
+      if (clean.length === 10) {
+        targetPhone = '91' + clean;
+      }
+    }
+
     // Hard block if 0-credit user has already performed their free preview searches limit
     if (isLocked && freeSearchCount >= maxFreeSearches) {
       setPhoneResults(null);
@@ -678,7 +689,7 @@ export default function DashboardPage() {
       const res = await fetch('/api/phone-lookup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phoneNumber: phoneInput.trim(), isPreview: isLocked }),
+        body: JSON.stringify({ phoneNumber: targetPhone, isPreview: isLocked }),
       });
       const data = await res.json();
       if (data.success) {
@@ -1192,7 +1203,25 @@ export default function DashboardPage() {
                             </p>
                           </div>
                         )}
-                        {r.circle && (
+                        {r.provider && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Telecom Provider</p>
+                            <p className="text-sm font-medium text-white">{r.provider}</p>
+                          </div>
+                        )}
+                        {r.location && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Circle Location</p>
+                            <p className="text-sm font-medium text-white">{r.location}</p>
+                          </div>
+                        )}
+                        {r.country && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Nation</p>
+                            <p className="text-sm font-medium text-white">{r.country}</p>
+                          </div>
+                        )}
+                        {!r.provider && r.circle && (
                           <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                             <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Carrier / Circle</p>
                             <p className="text-sm text-white">{r.circle}</p>
