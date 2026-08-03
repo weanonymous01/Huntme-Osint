@@ -376,22 +376,40 @@ export default function DashboardPage() {
   const [reportsLoading, setReportsLoading] = useState<boolean>(false);
   const [selectedReport, setSelectedReport] = useState<any | null>(null);
   const isSavingRef = React.useRef<boolean>(false);
+  const namePredictionReportRef = React.useRef<string | null>(null);
 
   const fetchSavedReports = async (userId: string) => {
     setReportsLoading(true);
-    const { data } = await supabase
-      .from('phone_searches')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
 
-    if (data) {
-      // Deduplicate entries by target phone number — keep only the most recent search per phone number
-      const unique = data.filter((item, index, self) =>
-        index === self.findIndex((t) => t.phone_number === item.phone_number)
-      );
-      setSavedReports(unique);
-    }
+    const [phoneRes, vehicleRes] = await Promise.all([
+      supabase
+        .from('phone_searches')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('vehicle_searches')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+    ]);
+
+    const phoneReports = (phoneRes.data || []).map(p => ({ ...p, report_type: 'phone' }));
+    const vehicleReports = (vehicleRes.data || []).map(v => ({ ...v, report_type: 'vehicle' }));
+
+    const combined = [...phoneReports, ...vehicleReports].sort((a, b) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+
+    const seen = new Set<string>();
+    const unique = combined.filter(item => {
+      const key = item.report_type === 'phone' ? `phone_${item.phone_number}` : `vehicle_${item.plate_number}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    setSavedReports(unique);
     setReportsLoading(false);
   };
 
@@ -420,6 +438,24 @@ export default function DashboardPage() {
       setTimeout(() => {
         isSavingRef.current = false;
       }, 3000);
+    }
+  };
+
+  // Save vehicle search to Supabase
+  const saveVehicleSearch = async (vehicle: VehicleResult, aiReportText: string | null, namePredText: string | null) => {
+    if (!profile) return;
+    try {
+      await supabase.from('vehicle_searches').insert({
+        user_id: profile.id,
+        plate_number: vehicle.registrationNumber,
+        make_model: vehicle.modelName || null,
+        rto_location: vehicle.registeredRTO || null,
+        status: 'Completed',
+        vehicle_json: { vehicle, aiReport: aiReportText, namePredictions: namePredText },
+      });
+      await fetchSavedReports(profile.id);
+    } catch (err) {
+      console.error('[saveVehicleSearch] Error:', err);
     }
   };
 
@@ -489,6 +525,7 @@ export default function DashboardPage() {
         const data = await res.json();
         setVehicleAiReportError(data.message || 'Failed to generate report.');
         setVehicleAiReportLoading(false);
+        saveVehicleSearch(vehicle, null, namePredictionReportRef.current);
         return;
       }
 
@@ -500,12 +537,15 @@ export default function DashboardPage() {
       setVehicleAiReport('');
       setVehicleAiReportLoading(false);
 
+      let accumulatedReport = '';
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
+        accumulatedReport += chunk;
         setVehicleAiReport(prev => (prev ?? '') + chunk);
       }
+      saveVehicleSearch(vehicle, accumulatedReport, namePredictionReportRef.current);
     } catch {
       setVehicleAiReportError('Network error. Please try again.');
       setVehicleAiReportLoading(false);
@@ -516,6 +556,7 @@ export default function DashboardPage() {
     setNamePredictionLoading(true);
     setNamePredictionReport(null);
     setNamePredictionError(null);
+    namePredictionReportRef.current = null;
     try {
       const res = await fetch('/api/predict-name', {
         method: 'POST',
@@ -543,12 +584,15 @@ export default function DashboardPage() {
       setNamePredictionReport('');
       setNamePredictionLoading(false);
 
+      let accumulatedPred = '';
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
+        accumulatedPred += chunk;
         setNamePredictionReport(prev => (prev ?? '') + chunk);
       }
+      namePredictionReportRef.current = accumulatedPred;
     } catch {
       setNamePredictionError('Network error during name prediction.');
       setNamePredictionLoading(false);
@@ -1641,108 +1685,182 @@ export default function DashboardPage() {
                     </span>
                   </div>
 
-                  {/* Saved Record Card */}
-                  {selectedReport.telemetry_json?.result && (
-                    <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 space-y-5 shadow-2xl">
-                      <div className="flex items-start justify-between gap-4 border-b border-zinc-800/80 pb-5">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <User className="size-4 text-zinc-400" />
-                            <h3 className={`text-lg font-bold text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                              {isLocked ? maskText(selectedReport.telemetry_json.result.name) : selectedReport.telemetry_json.result.name}
-                            </h3>
+                  {/* ── Vehicle Selected Report View ── */}
+                  {(selectedReport.report_type === 'vehicle' || selectedReport.vehicle_json) ? (
+                    <div className="space-y-6">
+                      {/* Vehicle Record Card */}
+                      {selectedReport.vehicle_json?.vehicle && (
+                        <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 space-y-5 shadow-2xl">
+                          <div className="flex items-start justify-between gap-4 border-b border-zinc-800/80 pb-5">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <Car className="size-4 text-sky-400" />
+                                <h3 className="text-lg font-bold text-white font-mono tracking-widest">
+                                  {selectedReport.vehicle_json.vehicle.registrationNumber}
+                                </h3>
+                              </div>
+                              {selectedReport.vehicle_json.vehicle.modelName && (
+                                <p className="text-xs text-zinc-400 pl-6">{selectedReport.vehicle_json.vehicle.modelName}</p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              Verified Record
+                            </div>
                           </div>
-                          {selectedReport.telemetry_json.result.fatherName && (
-                            <p className="text-xs text-zinc-500">S/O: <span className={`text-zinc-300 ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>{isLocked ? maskText(selectedReport.telemetry_json.result.fatherName) : selectedReport.telemetry_json.result.fatherName}</span></p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-                          <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          Verified Record
-                        </div>
-                      </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Phone className="size-3" />Primary Mobile</p>
-                          <p className={`text-sm font-mono text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                            {isLocked ? maskNumber(selectedReport.telemetry_json.result.mobile) : selectedReport.telemetry_json.result.mobile}
-                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><User className="size-3" />Owner Name</p>
+                              <p className={`text-sm font-semibold text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                                {isLocked ? maskText(selectedReport.vehicle_json.vehicle.ownerName) : (selectedReport.vehicle_json.vehicle.ownerName || '—')}
+                              </p>
+                            </div>
+                            {selectedReport.vehicle_json.vehicle.vehicleClass && (
+                              <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                                <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Car className="size-3" />Vehicle Class</p>
+                                <p className="text-sm text-white">{selectedReport.vehicle_json.vehicle.vehicleClass}</p>
+                              </div>
+                            )}
+                            {selectedReport.vehicle_json.vehicle.fuelType && (
+                              <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                                <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Fuel Type</p>
+                                <p className="text-sm text-white">{selectedReport.vehicle_json.vehicle.fuelType}</p>
+                              </div>
+                            )}
+                            {selectedReport.vehicle_json.vehicle.registrationDate && (
+                              <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                                <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Calendar className="size-3" />Registration Date</p>
+                                <p className="text-sm text-white">{selectedReport.vehicle_json.vehicle.registrationDate}</p>
+                              </div>
+                            )}
+                            {selectedReport.vehicle_json.vehicle.insuranceExpiry && (
+                              <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                                <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><AlertCircle className="size-3" />Insurance Expiry</p>
+                                <p className="text-sm text-white">{selectedReport.vehicle_json.vehicle.insuranceExpiry}</p>
+                              </div>
+                            )}
+                            {selectedReport.vehicle_json.vehicle.registeredRTO && (
+                              <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                                <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered RTO</p>
+                                <p className="text-sm text-white">{selectedReport.vehicle_json.vehicle.registeredRTO}</p>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        {selectedReport.telemetry_json.result.alternativeMobile && (
-                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Phone className="size-3" />Alternative Mobile</p>
-                            <p className={`text-sm font-mono text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                              {isLocked ? maskNumber(selectedReport.telemetry_json.result.alternativeMobile) : selectedReport.telemetry_json.result.alternativeMobile}
-                            </p>
-                          </div>
-                        )}
-                        {selectedReport.telemetry_json.result.circle && (
-                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Carrier / Circle</p>
-                            <p className="text-sm text-white">{selectedReport.telemetry_json.result.circle}</p>
-                          </div>
-                        )}
-                      </div>
+                      )}
 
-                      {selectedReport.telemetry_json.result.address && (
-                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered Address</p>
-                          <p className={`text-sm text-zinc-200 leading-relaxed ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                            {isLocked ? maskText(selectedReport.telemetry_json.result.address) : selectedReport.telemetry_json.result.address}
-                          </p>
+                      {/* Saved Name Reconstruction Card */}
+                      {selectedReport.vehicle_json?.namePredictions && (
+                        <div className="relative rounded-2xl border border-sky-500/40 bg-[#0d0d10] p-6 space-y-5 shadow-2xl overflow-hidden">
+                          <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+                            <h3 className="text-sm font-bold text-white">AI Owner Name Pattern & Top 10 Predictions</h3>
+                            <span className="text-[11px] text-sky-300 font-mono bg-sky-500/10 border border-sky-500/30 px-2.5 py-0.5 rounded-full">Groq · Llama 3.3 70B</span>
+                          </div>
+                          <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
+                            <AIReportSection text={selectedReport.vehicle_json.namePredictions} />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Saved Vehicle AI Report */}
+                      {selectedReport.vehicle_json?.aiReport && (
+                        <div className="relative rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl overflow-hidden">
+                          <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+                            <h3 className="text-sm font-bold text-white">AI Vehicle Intelligence Report</h3>
+                            <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">Groq · Llama 3.3 70B</span>
+                          </div>
+                          <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
+                            <AIReportSection text={selectedReport.vehicle_json.aiReport} />
+                          </div>
                         </div>
                       )}
                     </div>
-                  )}
+                  ) : (
+                    /* ── Phone Selected Report View ── */
+                    <div className="space-y-6">
+                      {selectedReport.telemetry_json?.result && (
+                        <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 space-y-5 shadow-2xl">
+                          <div className="flex items-start justify-between gap-4 border-b border-zinc-800/80 pb-5">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <User className="size-4 text-zinc-400" />
+                                <h3 className={`text-lg font-bold text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                                  {isLocked ? maskText(selectedReport.telemetry_json.result.name) : selectedReport.telemetry_json.result.name}
+                                </h3>
+                              </div>
+                              {selectedReport.telemetry_json.result.fatherName && (
+                                <p className="text-xs text-zinc-500">S/O: <span className={`text-zinc-300 ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>{isLocked ? maskText(selectedReport.telemetry_json.result.fatherName) : selectedReport.telemetry_json.result.fatherName}</span></p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
+                              <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              Verified Record
+                            </div>
+                          </div>
 
-                  {/* Saved AI Intelligence Report */}
-                  {selectedReport.telemetry_json?.aiReport && (
-                    <div className="relative rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl overflow-hidden">
-                      <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
-                        <h3 className="text-sm font-bold text-white">AI Intelligence Report</h3>
-                        <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => handleCopyReport(selectedReport.telemetry_json.aiReport)}
-                            className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 px-3 py-1.5 rounded-lg transition-all"
-                          >
-                            {copiedReport ? (
-                              <>
-                                <Check className="size-3.5 text-emerald-400" />
-                                <span className="text-emerald-400 font-medium">Copied!</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="size-3.5 text-zinc-400" />
-                                <span>Copy Report</span>
-                              </>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Phone className="size-3" />Primary Mobile</p>
+                              <p className={`text-sm font-mono text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                                {isLocked ? maskNumber(selectedReport.telemetry_json.result.mobile) : selectedReport.telemetry_json.result.mobile}
+                              </p>
+                            </div>
+                            {selectedReport.telemetry_json.result.alternativeMobile && (
+                              <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                                <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Phone className="size-3" />Alternative Mobile</p>
+                                <p className={`text-sm font-mono text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                                  {isLocked ? maskNumber(selectedReport.telemetry_json.result.alternativeMobile) : selectedReport.telemetry_json.result.alternativeMobile}
+                                </p>
+                              </div>
                             )}
-                          </button>
-                          <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">NVIDIA NIM · Llama 3.1</span>
+                            {selectedReport.telemetry_json.result.circle && (
+                              <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                                <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Carrier / Circle</p>
+                                <p className="text-sm text-white">{selectedReport.telemetry_json.result.circle}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {selectedReport.telemetry_json.result.address && (
+                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered Address</p>
+                              <p className={`text-sm text-zinc-200 leading-relaxed ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                                {isLocked ? maskText(selectedReport.telemetry_json.result.address) : selectedReport.telemetry_json.result.address}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                      <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
-                        <AIReportSection text={selectedReport.telemetry_json.aiReport} />
-                      </div>
-                      {isLocked && (
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d10] via-[#0d0d10]/95 to-[#0d0d10]/60 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10">
-                          <div className="size-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                            <Lock className="size-5" />
+                      )}
+
+                      {selectedReport.telemetry_json?.aiReport && (
+                        <div className="relative rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl overflow-hidden">
+                          <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+                            <h3 className="text-sm font-bold text-white">AI Intelligence Report</h3>
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => handleCopyReport(selectedReport.telemetry_json.aiReport)}
+                                className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 px-3 py-1.5 rounded-lg transition-all"
+                              >
+                                {copiedReport ? (
+                                  <>
+                                    <Check className="size-3.5 text-emerald-400" />
+                                    <span className="text-emerald-400 font-medium">Copied!</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="size-3.5 text-zinc-400" />
+                                    <span>Copy Report</span>
+                                  </>
+                                )}
+                              </button>
+                              <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">NVIDIA NIM · Llama 3.1</span>
+                            </div>
                           </div>
-                          <div className="space-y-1 max-w-sm">
-                            <h4 className="text-sm font-bold text-white">AI Intelligence Analysis Locked</h4>
-                            <p className="text-xs text-zinc-400">
-                              Upgrade to a paid plan to unlock complete OSINT framework analysis, Google Dorks, social platform presence, and risk scores.
-                            </p>
+                          <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
+                            <AIReportSection text={selectedReport.telemetry_json.aiReport} />
                           </div>
-                          <a
-                            href="/pricing"
-                            className="bg-amber-400 hover:bg-amber-300 text-black font-bold px-5 py-2.5 rounded-xl text-xs transition-colors flex items-center gap-2 shadow-lg"
-                          >
-                            <Lock className="size-3.5" />
-                            <span>Unlock Full Intelligence Report</span>
-                          </a>
                         </div>
                       )}
                     </div>
@@ -1777,19 +1895,84 @@ export default function DashboardPage() {
                       <div className="space-y-1 max-w-sm mx-auto">
                         <h3 className="text-sm font-bold text-white">No Reports Generated Yet</h3>
                         <p className="text-xs text-zinc-400 leading-relaxed">
-                          You haven't run any OSINT investigations yet. Go to Phone Intelligence and perform a lookup to auto-create reports.
+                          You haven't run any OSINT investigations yet. Perform a lookup in Phone or Vehicle Intelligence to auto-create reports.
                         </p>
                       </div>
-                      <button
-                        onClick={() => setActiveTab('phone')}
-                        className="bg-white hover:bg-zinc-200 text-black font-semibold px-4 py-2 rounded-xl text-xs transition-colors"
-                      >
-                        Go to Phone Intelligence
-                      </button>
+                      <div className="flex items-center justify-center gap-3">
+                        <button
+                          onClick={() => setActiveTab('phone')}
+                          className="bg-white hover:bg-zinc-200 text-black font-semibold px-4 py-2 rounded-xl text-xs transition-colors"
+                        >
+                          Go to Phone Intelligence
+                        </button>
+                        <button
+                          onClick={() => setActiveTab('vehicle')}
+                          className="bg-zinc-800 hover:bg-zinc-700 text-white font-semibold px-4 py-2 rounded-xl text-xs transition-colors"
+                        >
+                          Go to Vehicle Intelligence
+                        </button>
+                      </div>
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {savedReports.map((item) => {
+                        const isVehicle = item.report_type === 'vehicle' || !!item.vehicle_json;
+
+                        if (isVehicle) {
+                          const v = item.vehicle_json?.vehicle;
+                          const rawOwner = v?.ownerName || 'Vehicle Record';
+                          const ownerDisplay = isLocked ? maskText(rawOwner) : rawOwner;
+                          const plate = item.plate_number || v?.registrationNumber || 'Vehicle Target';
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => setSelectedReport(item)}
+                              className="rounded-2xl border border-zinc-800/90 hover:border-zinc-700 bg-[#121216] hover:bg-[#16161c] p-5 space-y-4 shadow-xl transition-all cursor-pointer group"
+                            >
+                              <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+                                <div className="flex items-center gap-2">
+                                  <Car className="size-4 text-sky-400 group-hover:text-white transition-colors" />
+                                  <h3 className={`text-sm font-bold text-white font-mono ${isLocked ? 'blur-[1px]' : ''}`}>{plate}</h3>
+                                </div>
+                                <span className="text-[10px] font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-0.5 rounded-full">
+                                  Vehicle OSINT
+                                </span>
+                              </div>
+
+                              <div className="space-y-1.5 text-xs">
+                                <div className="flex items-center justify-between text-zinc-400">
+                                  <span className="flex items-center gap-1.5"><User className="size-3 text-zinc-500" /> Owner:</span>
+                                  <span className={`text-white font-medium ${isLocked ? 'blur-[1px]' : ''}`}>{ownerDisplay}</span>
+                                </div>
+                                {item.make_model && (
+                                  <div className="flex items-center justify-between text-zinc-400">
+                                    <span className="flex items-center gap-1.5"><Car className="size-3 text-zinc-500" /> Model:</span>
+                                    <span className="text-zinc-300 truncate max-w-[180px]">{item.make_model}</span>
+                                  </div>
+                                )}
+                                {item.rto_location && (
+                                  <div className="flex items-center justify-between text-zinc-400">
+                                    <span className="flex items-center gap-1.5"><MapPin className="size-3 text-zinc-500" /> RTO:</span>
+                                    <span className="text-zinc-300 truncate max-w-[180px]">{item.rto_location}</span>
+                                  </div>
+                                )}
+                                <div className="flex items-center justify-between text-zinc-400 pt-1">
+                                  <span className="flex items-center gap-1.5 text-[11px] text-zinc-500"><Calendar className="size-3" /> Search Date:</span>
+                                  <span className="text-[11px] font-mono text-zinc-500">
+                                    {new Date(item.created_at).toLocaleDateString()}
+                                  </span>
+                                </div>
+                              </div>
+
+                              <div className="pt-2 flex items-center justify-between border-t border-zinc-800/60 text-xs font-semibold text-zinc-300 group-hover:text-white transition-colors">
+                                <span className="flex items-center gap-1.5"><Eye className="size-3.5 text-zinc-400" /> View Full Vehicle Report</span>
+                                <ChevronRight className="size-4 text-zinc-500 group-hover:translate-x-1 transition-transform" />
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        // Phone OSINT Report Card
                         const res = item.telemetry_json?.result;
                         const rawName = res?.name || 'Subject Report';
                         const targetName = isLocked ? maskText(rawName) : rawName;
@@ -1806,7 +1989,7 @@ export default function DashboardPage() {
                                 <h3 className={`text-sm font-bold text-white ${isLocked ? 'blur-[1px]' : ''}`}>{targetName}</h3>
                               </div>
                               <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                                Completed
+                                Phone OSINT
                               </span>
                             </div>
 
