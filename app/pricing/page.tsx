@@ -3,7 +3,7 @@
 import React from 'react';
 import { Header } from '@/components/ui/header-3';
 import { Footer } from '@/components/ui/footer';
-import { Check, ArrowRight } from 'lucide-react';
+import { Check, ArrowRight, Star } from 'lucide-react';
 
 export default function PricingPage() {
   return (
@@ -15,71 +15,72 @@ export default function PricingPage() {
           {/* Header Section */}
           <div className="flex flex-col items-center text-center gap-4 max-w-2xl mx-auto">
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white">
-              Simple Pricing
+              Simple, Transparent Pricing
             </h1>
             <p className="text-base sm:text-lg text-zinc-400 leading-relaxed">
-              Choose the right plan for AI-powered OSINT searches and investigation workflows.
+              Choose the right plan for AI-powered OSINT searches and enterprise investigation workflows.
             </p>
           </div>
 
           {/* Pricing Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8 max-w-4xl mx-auto pt-4">
-            {/* Plan 1: Monthly */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto pt-4 items-stretch">
+            
+            {/* Plan 1: Pro Monthly */}
             <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d0e] p-8 flex flex-col justify-between shadow-2xl transition-all duration-300 hover:border-zinc-700">
               <div>
                 {/* Plan Header */}
                 <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-zinc-200 tracking-wider uppercase">
-                    MONTHLY
+                  <h3 className="text-xs font-semibold text-zinc-400 tracking-widest uppercase">
+                    PRO MONTHLY
                   </h3>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-5xl sm:text-6xl font-medium tracking-tight text-white">
+                    <span className="text-5xl font-bold tracking-tight text-white">
                       ₹79
                     </span>
                     <span className="text-sm text-zinc-400 font-normal">
                       /month
                     </span>
                   </div>
-                  <p className="text-sm text-zinc-400">
-                    Ideal for recurring investigations.
+                  <p className="text-xs text-zinc-300 font-medium leading-relaxed">
+                    Best for casual users and occasional investigations.
                   </p>
                 </div>
 
                 {/* Divider */}
-                <div className="border-b border-zinc-800/80 my-8" />
+                <div className="border-b border-zinc-800/80 my-6" />
 
                 {/* Features List */}
                 <div className="space-y-4">
                   <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                     Includes
                   </p>
-                  <ul className="space-y-4 text-sm">
+                  <ul className="space-y-3.5 text-sm">
                     <li className="flex items-center gap-3 text-zinc-200">
-                      <Check className="size-4 text-zinc-300 shrink-0" />
-                      <span>100 Credits</span>
+                      <Check className="size-4 text-zinc-400 shrink-0" />
+                      <span className="font-semibold text-white">100 Credits/month</span>
                     </li>
-                    <li className="flex items-center gap-3 text-zinc-200">
-                      <Check className="size-4 text-zinc-300 shrink-0" />
+                    <li className="flex items-center gap-3 text-zinc-300">
+                      <Check className="size-4 text-zinc-400 shrink-0" />
                       <span>Phone Intelligence</span>
                     </li>
-                    <li className="flex items-center gap-3 text-zinc-200">
-                      <Check className="size-4 text-zinc-300 shrink-0" />
+                    <li className="flex items-center gap-3 text-zinc-300">
+                      <Check className="size-4 text-zinc-400 shrink-0" />
                       <span>Vehicle Intelligence</span>
                     </li>
-                    <li className="flex items-center gap-3 text-zinc-200">
-                      <Check className="size-4 text-zinc-300 shrink-0" />
+                    <li className="flex items-center gap-3 text-zinc-300">
+                      <Check className="size-4 text-zinc-400 shrink-0" />
                       <span>AI Case Assistant</span>
                     </li>
-                    <li className="flex items-center gap-3 text-zinc-200">
-                      <Check className="size-4 text-zinc-300 shrink-0" />
+                    <li className="flex items-center gap-3 text-zinc-300">
+                      <Check className="size-4 text-zinc-400 shrink-0" />
                       <span>Investigation Reports</span>
                     </li>
-                    <li className="flex items-center gap-3 text-zinc-200">
-                      <Check className="size-4 text-zinc-300 shrink-0" />
+                    <li className="flex items-center gap-3 text-zinc-300">
+                      <Check className="size-4 text-zinc-400 shrink-0" />
                       <span>Export Reports</span>
                     </li>
-                    <li className="flex items-center gap-3 text-zinc-200">
-                      <Check className="size-4 text-zinc-300 shrink-0" />
+                    <li className="flex items-center gap-3 text-zinc-300">
+                      <Check className="size-4 text-zinc-400 shrink-0" />
                       <span>Email Support</span>
                     </li>
                   </ul>
@@ -90,7 +91,7 @@ export default function PricingPage() {
               <div className="pt-8">
                 <a
                   href="/login"
-                  className="w-full bg-white hover:bg-zinc-200 text-black font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+                  className="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/80 text-white font-medium py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all text-sm shadow-md"
                 >
                   <span>Get Started</span>
                   <ArrowRight className="size-4" />
@@ -98,63 +99,67 @@ export default function PricingPage() {
               </div>
             </div>
 
-            {/* Plan 2: Lifetime */}
-            <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d0e] p-8 flex flex-col justify-between shadow-2xl transition-all duration-300 hover:border-zinc-700 relative overflow-hidden">
+            {/* Plan 2: Premium Monthly (Highlighted) */}
+            <div className="rounded-2xl border border-zinc-700 bg-[#0d0d0e] p-8 flex flex-col justify-between shadow-2xl transition-all duration-300 hover:border-zinc-600 relative">
+              
+              {/* Most Popular Badge */}
+              <div className="absolute -top-3.5 right-6 bg-zinc-800 border border-zinc-600/90 text-zinc-200 text-[11px] font-semibold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-lg font-mono">
+                <Star className="size-3 text-amber-400 fill-amber-400" />
+                <span>MOST POPULAR</span>
+              </div>
+
               <div>
                 {/* Plan Header */}
-                <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-zinc-200 tracking-wider uppercase">
-                    LIFETIME
+                <div className="space-y-4 pt-1">
+                  <h3 className="text-xs font-semibold text-zinc-300 tracking-widest uppercase flex items-center gap-2">
+                    PREMIUM MONTHLY
                   </h3>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-5xl sm:text-6xl font-medium tracking-tight text-white">
-                      ₹799
-                    </span>
-                    <span className="text-sm text-zinc-400 font-normal">
-                      one-time
-                    </span>
+                  <div className="space-y-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-5xl font-bold tracking-tight text-white">
+                        ₹499
+                      </span>
+                      <span className="text-sm text-zinc-400 font-normal">
+                        /month
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-400 italic">
+                      Save more with higher credits and priority features.
+                    </p>
                   </div>
-                  <p className="text-sm text-zinc-400">
-                    Pay once and access forever.
+                  <p className="text-xs text-white font-semibold leading-relaxed">
+                    Best Value for professionals and power users.
                   </p>
                 </div>
 
                 {/* Divider */}
-                <div className="border-b border-zinc-800/80 my-8" />
+                <div className="border-b border-zinc-800/80 my-6" />
 
                 {/* Features List */}
                 <div className="space-y-4">
                   <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                     Includes
                   </p>
-                  <ul className="space-y-4 text-sm">
+                  <ul className="space-y-3.5 text-sm">
                     <li className="flex items-center gap-3 text-zinc-200">
-                      <Check className="size-4 text-zinc-300 shrink-0" />
-                      <span>Unlimited Credits</span>
+                      <Check className="size-4 text-white shrink-0" />
+                      <span className="font-bold text-white">1,000 Credits/month</span>
                     </li>
                     <li className="flex items-center gap-3 text-zinc-200">
-                      <Check className="size-4 text-zinc-300 shrink-0" />
-                      <span>Phone Intelligence</span>
+                      <Check className="size-4 text-white shrink-0" />
+                      <span className="font-semibold text-white">Everything in Pro</span>
                     </li>
-                    <li className="flex items-center gap-3 text-zinc-200">
-                      <Check className="size-4 text-zinc-300 shrink-0" />
-                      <span>Vehicle Intelligence</span>
+                    <li className="flex items-center gap-3 text-zinc-300">
+                      <Check className="size-4 text-zinc-400 shrink-0" />
+                      <span>Faster Processing</span>
                     </li>
-                    <li className="flex items-center gap-3 text-zinc-200">
-                      <Check className="size-4 text-zinc-300 shrink-0" />
-                      <span>AI Case Assistant</span>
+                    <li className="flex items-center gap-3 text-zinc-300">
+                      <Check className="size-4 text-zinc-400 shrink-0" />
+                      <span>Priority Support</span>
                     </li>
-                    <li className="flex items-center gap-3 text-zinc-200">
-                      <Check className="size-4 text-zinc-300 shrink-0" />
-                      <span>Investigation Reports</span>
-                    </li>
-                    <li className="flex items-center gap-3 text-zinc-200">
-                      <Check className="size-4 text-zinc-300 shrink-0" />
-                      <span>Export Reports</span>
-                    </li>
-                    <li className="flex items-center gap-3 text-zinc-200">
-                      <Check className="size-4 text-zinc-300 shrink-0" />
-                      <span>Email Support</span>
+                    <li className="flex items-center gap-3 text-zinc-300">
+                      <Check className="size-4 text-zinc-400 shrink-0" />
+                      <span>Early Access to New Features</span>
                     </li>
                   </ul>
                 </div>
@@ -164,13 +169,14 @@ export default function PricingPage() {
               <div className="pt-8">
                 <a
                   href="/login"
-                  className="w-full bg-white hover:bg-zinc-200 text-black font-medium py-3 px-4 rounded-lg flex items-center justify-center gap-2 transition-colors text-sm"
+                  className="w-full bg-white hover:bg-zinc-200 text-black font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm shadow-xl"
                 >
-                  <span>Buy Lifetime</span>
+                  <span>Upgrade to Premium</span>
                   <ArrowRight className="size-4" />
                 </a>
               </div>
             </div>
+
           </div>
         </div>
       </main>
