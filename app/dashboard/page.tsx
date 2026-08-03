@@ -522,25 +522,25 @@ export default function DashboardPage() {
     let targetReportData: any = null;
     if (selectedAiReportId === 'demo_vehicle') {
       targetReportData = {
-        title: 'Vehicle Intelligence Dossier — MH01BG3590',
-        registrationNumber: 'MH01BG3590',
-        ownerName: 'Sunil Kumar',
-        modelName: 'TOYOTA INNOVA',
+        title: 'Vehicle Intelligence Dossier — MH01AB1234',
+        registrationNumber: 'MH01AB1234',
+        ownerName: 'Sample Commercial Entity',
+        modelName: 'SAMPLE MOTOR VEHICLE',
         vehicleClass: 'MOTOR CAR / UTILITY VEHICLE',
         fuelType: 'DIESEL',
-        registrationDate: '14-May-2010',
-        insuranceExpiry: '10-May-2024 (Expired)',
-        registeredRTO: 'RTO Mumbai South, Maharashtra (MH01)',
+        registrationDate: '15-Jan-2020',
+        insuranceExpiry: '10-Jan-2025 (Active)',
+        registeredRTO: 'RTO Mumbai Central, Maharashtra (MH01)',
       };
     } else if (selectedAiReportId === 'demo_phone') {
       targetReportData = {
-        title: 'Phone Intelligence Dossier — 8299512084',
-        name: 'Rajeev Kumar',
-        fatherName: 'Sobran Lal',
-        mobile: '8299512084',
-        alternativeMobile: '918604147637',
-        circle: 'JIO UPE',
-        address: 'S/O Sobran Lal, HARDOIYA POST mandaruwa, Misrikh Sitapur, Uttar Pradesh 261401',
+        title: 'Phone Intelligence Dossier — 9876543210',
+        name: 'Sample Subject Target',
+        fatherName: 'Not Disclosed',
+        mobile: '9876543210',
+        alternativeMobile: '9876500000',
+        circle: 'TELECOM METRO',
+        address: 'Sample Commercial Complex, Sector 18, Central City, India',
       };
     } else {
       targetReportData = savedReports.find(r => r.id === selectedAiReportId) || phoneResults || vehicleResult || savedReports[0];
@@ -925,10 +925,12 @@ export default function DashboardPage() {
           await deductCredit();
         }
 
-        // Auto-generate AI report immediately using the first result
-        handleGenerateReport(data.results[0], (report) => {
-          savePhoneSearch(data.results[0], report);
-        });
+        // Auto-generate AI report and save search ONLY for paid users (!isLocked)
+        if (!isLocked) {
+          handleGenerateReport(data.results[0], (report) => {
+            savePhoneSearch(data.results[0], report);
+          });
+        }
       } else {
         setPhoneError(data.message || 'No records found.');
       }
@@ -2004,8 +2006,8 @@ export default function DashboardPage() {
                   className="w-full bg-[#141418] border border-zinc-700/80 rounded-xl px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-zinc-500 transition-colors shadow-inner"
                 >
                   <optgroup label="Preset Demo Cases">
-                    <option value="demo_vehicle">Demo Case: MH01BG3590 (TOYOTA INNOVA — RTO Mumbai)</option>
-                    <option value="demo_phone">Demo Case: Rajeev Kumar — 8299512084 (JIO UPE)</option>
+                    <option value="demo_vehicle">Demo Case: MH01AB1234 (Sample Commercial Vehicle — RTO Mumbai)</option>
+                    <option value="demo_phone">Demo Case: Sample Subject — 9876543210 (Telecom Demo)</option>
                   </optgroup>
                   {savedReports.length > 0 && (
                     <optgroup label="Your Saved Investigation Reports">
