@@ -13,41 +13,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Strip non-digit characters from phone number
+    // Extract 10-digit number for Indian numbers, plus full clean number
     let cleanNumber = phoneNumber.replace(/\D/g, '');
-    // Automatically prepend 91 for 10-digit Indian numbers
+    const tenDigitNumber = cleanNumber.length >= 10 ? cleanNumber.slice(-10) : cleanNumber;
     if (cleanNumber.length === 10) {
       cleanNumber = '91' + cleanNumber;
     }
 
     // ── 1. CHECK SUPABASE CACHE (Cost = 0 credits!) — only for paid users ──
-    // Skip cache for free preview: we want real Numverify data each time.
-    // Skip cache for paid users IF the cached record came from a free preview (masked data).
     if (!isPreview) {
       try {
         const { data: cached } = await supabaseAdmin
           .from('phone_searches')
           .select('*')
-          .or(`phone_number.ilike.%${cleanNumber}%,phone_number.ilike.%${phoneNumber}%`)
+          .or(`phone_number.ilike.%${tenDigitNumber}%,phone_number.ilike.%${cleanNumber}%`)
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
 
-        // Only return cache if it was NOT a free preview (i.e. contains real data)
         if (cached?.telemetry_json?.results || cached?.telemetry_json?.result) {
           const cachedResults = cached.telemetry_json.results || [cached.telemetry_json.result];
-          // Check if the cached result has real name (not masked asterisks)
           const firstName = cachedResults[0]?.name || '';
           const isRealData = firstName && !firstName.includes('*');
           if (isRealData) {
-            console.log(`[phone-lookup] CACHE HIT (real data) for phone: ${cleanNumber}`);
+            console.log(`[phone-lookup] CACHE HIT (real data) for phone: ${tenDigitNumber}`);
             return NextResponse.json({
               success: true,
               results: cachedResults,
               cached: true,
             });
-          } else {
-            console.log(`[phone-lookup] Cache hit but data is masked, bypassing cache for paid lookup.`);
           }
         }
       } catch (cacheErr) {
@@ -61,7 +55,7 @@ export async function POST(req: NextRequest) {
     const apiBase = process.env.PHONE_LOOKUP_API_BASE || 'https://myapi.lovable.app/api/public/p';
 
     if (isPreview || !apiKey || !apiBase) {
-      console.log(`[phone-lookup] PREVIEW MODE using Numverify API for phone: ${cleanNumber}`);
+      console.log(`[phone-lookup] PREVIEW MODE using Numverify API for phone: ${tenDigitNumber}`);
       let provider: string | null = null;
       let location: string | null = null;
       let country: string | null = null;
@@ -87,7 +81,7 @@ export async function POST(req: NextRequest) {
         console.warn('[phone-lookup] Numverify API fetch error:', nvErr);
       }
 
-      const localResults = decodeLocalPhone(cleanNumber);
+      const localResults = decodeLocalPhone(tenDigitNumber);
       localResults[0].circle = carrierCircle;
       (localResults[0] as any).provider = provider;
       (localResults[0] as any).location = location;
@@ -103,39 +97,50 @@ export async function POST(req: NextRequest) {
 
     // ── 3. CALL UPSTREAM PAID API FOR CREDITED USERS ──
     try {
-      const externalRes = await fetch(`${apiBase}/${apiKey}?num=${encodeURIComponent(cleanNumber)}`, {
+      // Try 10-digit number first (e.g. 8299512084), then cleanNumber with 91 prefix
+      let externalRes = await fetch(`${apiBase}/${apiKey}?num=${encodeURIComponent(tenDigitNumber)}`, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
         cache: 'no-store',
       });
 
-      if (externalRes.ok) {
-        const raw = await externalRes.json();
-        if (raw?.success && raw?.data?.result?.length) {
-          const seen = new Set<string>();
-          const results = (raw.data.result as any[])
-            .filter((item) => {
-              const key = item['id number'] || item.mobile;
-              if (seen.has(key)) return false;
-              seen.add(key);
-              return true;
-            })
-            .map((item) => ({
-              name: item.name || 'Unknown',
-              mobile: item.mobile || cleanNumber,
-              alternativeMobile: item['alternative mobile'] || null,
-              fatherName: item['father name'] || null,
-              address: item.address?.replace(/!/g, ', ').replace(/,\s*,/g, ',').trim() || null,
-              circle: item['circle/sim'] || null,
-              idNumber: item['id number'] || null,
-              email: item.mail || null,
-            }));
+      let raw = externalRes.ok ? await externalRes.json() : null;
 
-          return NextResponse.json({ success: true, results, cached: false });
+      if (!raw?.success || !raw?.data?.result?.length) {
+        externalRes = await fetch(`${apiBase}/${apiKey}?num=${encodeURIComponent(cleanNumber)}`, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' },
+          cache: 'no-store',
+        });
+        if (externalRes.ok) {
+          raw = await externalRes.json();
         }
       }
+
+      if (raw?.success && raw?.data?.result?.length) {
+        const seen = new Set<string>();
+        const results = (raw.data.result as any[])
+          .filter((item) => {
+            const key = `${item.name}_${item.mobile}_${item['id number'] || ''}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          })
+          .map((item) => ({
+            name: item.name || 'Unknown',
+            mobile: item.mobile || tenDigitNumber,
+            alternativeMobile: item['alternative mobile'] || null,
+            fatherName: item['father name'] || null,
+            address: item.address?.replace(/!+/g, ', ').replace(/,\s*,/g, ',').trim() || null,
+            circle: item['circle/sim'] || null,
+            idNumber: item['id number'] || null,
+            email: item.mail || null,
+          }));
+
+        return NextResponse.json({ success: true, results, cached: false });
+      }
     } catch (apiErr) {
-      console.warn('[phone-lookup] Upstream API call failed, serving free Numverify preview:', apiErr);
+      console.warn('[phone-lookup] Upstream API call failed:', apiErr);
     }
 
     // Fallback: Return Numverify/telecom decoder results if paid API returned no results or failed
