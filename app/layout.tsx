@@ -8,7 +8,10 @@ export const metadata: Metadata = {
   title: "Huntme | AI-Powered OSINT Intelligence Platform",
   description: "Enterprise-grade OSINT platform for phone telemetry, vehicle registration lookups, and AI-powered investigation timelines.",
   icons: {
-    icon: "/icon.png",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon.png", type: "image/png" }
+    ],
     shortcut: "/favicon.ico",
     apple: "/icon.png",
   },
