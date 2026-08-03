@@ -16,26 +16,34 @@ export async function POST(req: NextRequest) {
     // Normalize: uppercase, remove spaces/hyphens
     const cleanRC = registrationNumber.toUpperCase().replace(/[\s\-]/g, '');
 
-    // ── 1. CHECK SUPABASE CACHE (Cost = 0 credits!) ──
-    try {
-      const { data: cached } = await supabaseAdmin
-        .from('vehicle_searches')
-        .select('*')
-        .or(`plate_number.ilike.${cleanRC},plate_number.ilike.${registrationNumber}`)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+    // ── 1. CHECK SUPABASE CACHE — skip if cache has masked data (free preview) ──
+    if (!isPreview) {
+      try {
+        const { data: cached } = await supabaseAdmin
+          .from('vehicle_searches')
+          .select('*')
+          .or(`plate_number.ilike.${cleanRC},plate_number.ilike.${registrationNumber}`)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      if (cached?.vehicle_json?.vehicle) {
-        console.log(`[vehicle-lookup] CACHE HIT for plate: ${cleanRC} (0 API credits used!)`);
-        return NextResponse.json({
-          success: true,
-          vehicle: cached.vehicle_json.vehicle,
-          cached: true,
-        });
+        if (cached?.vehicle_json?.vehicle) {
+          const cachedOwner = cached.vehicle_json.vehicle.ownerName || '';
+          const isRealData = cachedOwner && !cachedOwner.includes('*');
+          if (isRealData) {
+            console.log(`[vehicle-lookup] CACHE HIT (real data) for plate: ${cleanRC}`);
+            return NextResponse.json({
+              success: true,
+              vehicle: cached.vehicle_json.vehicle,
+              cached: true,
+            });
+          } else {
+            console.log(`[vehicle-lookup] Cache hit but data is masked, bypassing cache for paid lookup.`);
+          }
+        }
+      } catch (cacheErr) {
+        console.warn('[vehicle-lookup] Cache check error:', cacheErr);
       }
-    } catch (cacheErr) {
-      console.warn('[vehicle-lookup] Cache check error:', cacheErr);
     }
 
     // ── 2. PREVIEW MODE FALLBACK (Zero Upstream API Cost!) ──
@@ -88,9 +96,16 @@ export async function POST(req: NextRequest) {
       console.warn('[vehicle-lookup] Upstream API call failed, serving free OSINT decoder:', apiErr);
     }
 
-    // Fallback to local RTO OSINT engine if API failed or no record returned
-    const localVehicle = decodeLocalVehicle(cleanRC);
-    return NextResponse.json({ success: true, vehicle: localVehicle, cached: false, isFreePreview: true });
+    // Fallback: free preview users get local decoder; paid users get a real error
+    if (isPreview) {
+      const localVehicle = decodeLocalVehicle(cleanRC);
+      return NextResponse.json({ success: true, vehicle: localVehicle, cached: false, isFreePreview: true });
+    }
+
+    return NextResponse.json(
+      { success: false, message: 'No vehicle records found for this plate number. The data source returned no results. Please try again.' },
+      { status: 404 }
+    );
   } catch (err: any) {
     console.error('[vehicle-lookup] Error:', err?.message);
     return NextResponse.json(

@@ -764,13 +764,14 @@ export default function DashboardPage() {
           await deductCredit();
         }
 
-        // Sequential Flow:
-        // Step 1: Info from API key (2-3 sec) - Done (setVehicleResult)
-        // Step 2: Name prediction (token flowing) -> then Step 3: Vehicle AI report (token flowing)
-        if (data.vehicle.ownerName && data.vehicle.ownerName.includes('*')) {
-          handlePredictName(data.vehicle);
-        } else {
-          handleGenerateVehicleReport(data.vehicle);
+        // For preview/free users: no real data, skip AI features entirely
+        // For paid users: run name prediction if name is masked, else go straight to AI report
+        if (!isLocked) {
+          if (data.vehicle.ownerName && data.vehicle.ownerName.includes('*')) {
+            handlePredictName(data.vehicle);
+          } else {
+            handleGenerateVehicleReport(data.vehicle);
+          }
         }
       } else {
         setVehicleError(data.message || 'No records found.');
@@ -1482,9 +1483,9 @@ export default function DashboardPage() {
                             {vehicleResult.registrationNumber}
                           </h3>
                         </div>
-                        {vehicleResult.modelName && (
-                          <p className={`text-sm text-zinc-300 pl-8 ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                            {isLocked ? maskText(vehicleResult.modelName) : vehicleResult.modelName}
+                        {vehicleResult.modelName && !isLocked && (
+                          <p className="text-sm text-zinc-300 pl-8">
+                            {vehicleResult.modelName}
                           </p>
                         )}
                       </div>
@@ -1504,79 +1505,93 @@ export default function DashboardPage() {
                       </div>
                     </div>
 
-                    {/* Owner Info */}
-                    <div className="space-y-3">
-                      <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Owner Information</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><User className="size-3" />Owner Name</p>
-                          <p className={`text-sm font-semibold text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                            {isLocked ? maskText(vehicleResult.ownerName) : (vehicleResult.ownerName || '—')}
-                          </p>
+                    {/* Owner Info — hidden for preview users */}
+                    {!isLocked && (
+                      <div className="space-y-3">
+                        <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Owner Information</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><User className="size-3" />Owner Name</p>
+                            <p className="text-sm font-semibold text-white">
+                              {vehicleResult.ownerName || '—'}
+                            </p>
+                          </div>
+                          {vehicleResult.fatherName && (
+                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><User className="size-3" />Father's Name</p>
+                              <p className="text-sm text-white">{vehicleResult.fatherName}</p>
+                            </div>
+                          )}
                         </div>
-                        {vehicleResult.fatherName && (
-                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><User className="size-3" />Father's Name</p>
-                            <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                              {isLocked ? maskText(vehicleResult.fatherName) : vehicleResult.fatherName}
-                            </p>
-                          </div>
-                        )}
                       </div>
-                    </div>
+                    )}
 
-                    {/* Vehicle Details */}
-                    <div className="space-y-3">
-                      <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Vehicle Details</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {vehicleResult.vehicleClass && (
-                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Car className="size-3" />Vehicle Class</p>
-                            <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                              {isLocked ? maskText(vehicleResult.vehicleClass) : vehicleResult.vehicleClass}
-                            </p>
-                          </div>
-                        )}
-                        {vehicleResult.fuelType && (
-                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Fuel Type</p>
-                            <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                              {isLocked ? maskText(vehicleResult.fuelType) : vehicleResult.fuelType}
-                            </p>
-                          </div>
-                        )}
-                        {vehicleResult.registrationDate && (
-                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Calendar className="size-3" />Registration Date</p>
-                            <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                              {isLocked ? maskText(vehicleResult.registrationDate) : vehicleResult.registrationDate}
-                            </p>
-                          </div>
-                        )}
-                        {vehicleResult.insuranceExpiry && (
-                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><AlertCircle className="size-3" />Insurance Expiry</p>
-                            <p className={`text-sm font-medium text-zinc-300 ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                              {isLocked ? maskText(vehicleResult.insuranceExpiry) : vehicleResult.insuranceExpiry}
-                            </p>
-                          </div>
-                        )}
+                    {/* Vehicle Details — hidden for preview users */}
+                    {!isLocked && (
+                      <div className="space-y-3">
+                        <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Vehicle Details</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {vehicleResult.vehicleClass && (
+                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Car className="size-3" />Vehicle Class</p>
+                              <p className="text-sm text-white">{vehicleResult.vehicleClass}</p>
+                            </div>
+                          )}
+                          {vehicleResult.fuelType && (
+                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Fuel Type</p>
+                              <p className="text-sm text-white">{vehicleResult.fuelType}</p>
+                            </div>
+                          )}
+                          {vehicleResult.registrationDate && (
+                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Calendar className="size-3" />Registration Date</p>
+                              <p className="text-sm text-white">{vehicleResult.registrationDate}</p>
+                            </div>
+                          )}
+                          {vehicleResult.insuranceExpiry && (
+                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><AlertCircle className="size-3" />Insurance Expiry</p>
+                              <p className="text-sm font-medium text-zinc-300">{vehicleResult.insuranceExpiry}</p>
+                            </div>
+                          )}
+                          {vehicleResult.registeredRTO && (
+                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered RTO</p>
+                              <p className="text-sm text-white">{vehicleResult.registeredRTO}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Address — hidden for preview users */}
+                    {!isLocked && vehicleResult.address && (
+                      <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                        <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered Address</p>
+                        <p className="text-sm text-zinc-200 leading-relaxed">{vehicleResult.address}</p>
+                      </div>
+                    )}
+
+                    {/* Preview: show only RTO + upgrade prompt */}
+                    {isLocked && (
+                      <div className="space-y-4">
                         {vehicleResult.registeredRTO && (
                           <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                             <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered RTO</p>
                             <p className="text-sm text-white">{vehicleResult.registeredRTO}</p>
                           </div>
                         )}
-                      </div>
-                    </div>
-
-                    {/* Address */}
-                    {vehicleResult.address && (
-                      <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                        <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered Address</p>
-                        <p className={`text-sm text-zinc-200 leading-relaxed ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                          {isLocked ? maskText(vehicleResult.address) : vehicleResult.address}
-                        </p>
+                        <div className="rounded-xl border border-zinc-700/40 bg-zinc-900/60 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                          <div className="space-y-1">
+                            <p className="text-xs font-semibold text-white flex items-center gap-2"><Lock className="size-3.5 text-zinc-400" />Full Vehicle Record Locked</p>
+                            <p className="text-[11px] text-zinc-400 leading-relaxed">Upgrade to see owner name, father's name, vehicle class, fuel type, registration & insurance dates, and registered address.</p>
+                          </div>
+                          <a href="/pricing" className="bg-white hover:bg-zinc-200 text-black font-semibold px-4 py-2 rounded-xl text-xs transition-colors shrink-0 flex items-center gap-1.5 shadow-md">
+                            <Lock className="size-3.5" />
+                            <span>Unlock Full Report</span>
+                          </a>
+                        </div>
                       </div>
                     )}
 
@@ -1795,8 +1810,8 @@ export default function DashboardPage() {
                                 </h3>
                               </div>
                               {selectedReport.vehicle_json.vehicle.modelName && (
-                                <p className={`text-xs text-zinc-400 pl-6 ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                                  {isLocked ? maskText(selectedReport.vehicle_json.vehicle.modelName) : selectedReport.vehicle_json.vehicle.modelName}
+                                <p className="text-xs text-zinc-400 pl-6">
+                                  {selectedReport.vehicle_json.vehicle.modelName}
                                 </p>
                               )}
                             </div>
@@ -1819,39 +1834,39 @@ export default function DashboardPage() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
                             <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                               <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><User className="size-3" />Owner Name</p>
-                              <p className={`text-sm font-semibold text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                                {isLocked ? maskText(selectedReport.vehicle_json.vehicle.ownerName) : (selectedReport.vehicle_json.vehicle.ownerName || '—')}
+                              <p className="text-sm font-semibold text-white">
+                                {selectedReport.vehicle_json.vehicle.ownerName || '—'}
                               </p>
                             </div>
                             {selectedReport.vehicle_json.vehicle.vehicleClass && (
                               <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                                 <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Car className="size-3" />Vehicle Class</p>
-                                <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                                  {isLocked ? maskText(selectedReport.vehicle_json.vehicle.vehicleClass) : selectedReport.vehicle_json.vehicle.vehicleClass}
+                                <p className="text-sm text-white">
+                                  {selectedReport.vehicle_json.vehicle.vehicleClass}
                                 </p>
                               </div>
                             )}
                             {selectedReport.vehicle_json.vehicle.fuelType && (
                               <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                                 <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Fuel Type</p>
-                                <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                                  {isLocked ? maskText(selectedReport.vehicle_json.vehicle.fuelType) : selectedReport.vehicle_json.vehicle.fuelType}
+                                <p className="text-sm text-white">
+                                  {selectedReport.vehicle_json.vehicle.fuelType}
                                 </p>
                               </div>
                             )}
                             {selectedReport.vehicle_json.vehicle.registrationDate && (
                               <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                                 <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Calendar className="size-3" />Registration Date</p>
-                                <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                                  {isLocked ? maskText(selectedReport.vehicle_json.vehicle.registrationDate) : selectedReport.vehicle_json.vehicle.registrationDate}
+                                <p className="text-sm text-white">
+                                  {selectedReport.vehicle_json.vehicle.registrationDate}
                                 </p>
                               </div>
                             )}
                             {selectedReport.vehicle_json.vehicle.insuranceExpiry && (
                               <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                                 <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><AlertCircle className="size-3" />Insurance Expiry</p>
-                                <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                                  {isLocked ? maskText(selectedReport.vehicle_json.vehicle.insuranceExpiry) : selectedReport.vehicle_json.vehicle.insuranceExpiry}
+                                <p className="text-sm text-white">
+                                  {selectedReport.vehicle_json.vehicle.insuranceExpiry}
                                 </p>
                               </div>
                             )}
@@ -1872,7 +1887,7 @@ export default function DashboardPage() {
                             <h3 className="text-sm font-bold text-white">AI Owner Name Pattern & Top 10 Predictions</h3>
                             <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2.5 py-0.5 rounded-full">Groq · Llama 3.3 70B</span>
                           </div>
-                          <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
+                          <div>
                             <AIReportSection text={selectedReport.vehicle_json.namePredictions} />
                           </div>
                         </div>
@@ -1885,7 +1900,7 @@ export default function DashboardPage() {
                             <h3 className="text-sm font-bold text-white">AI Vehicle Intelligence Report</h3>
                             <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">Groq · Llama 3.3 70B</span>
                           </div>
-                          <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
+                          <div>
                             <AIReportSection text={selectedReport.vehicle_json.aiReport} />
                           </div>
                         </div>
@@ -1900,12 +1915,12 @@ export default function DashboardPage() {
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
                                 <User className="size-4 text-zinc-400" />
-                                <h3 className={`text-lg font-bold text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                                  {isLocked ? maskText(selectedReport.telemetry_json.result.name) : selectedReport.telemetry_json.result.name}
+                                <h3 className="text-lg font-bold text-white">
+                                  {selectedReport.telemetry_json.result.name}
                                 </h3>
                               </div>
                               {selectedReport.telemetry_json.result.fatherName && (
-                                <p className="text-xs text-zinc-500">S/O: <span className={`text-zinc-300 ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>{isLocked ? maskText(selectedReport.telemetry_json.result.fatherName) : selectedReport.telemetry_json.result.fatherName}</span></p>
+                                <p className="text-xs text-zinc-500">S/O: <span className="text-zinc-300">{selectedReport.telemetry_json.result.fatherName}</span></p>
                               )}
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
@@ -1927,15 +1942,15 @@ export default function DashboardPage() {
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                             <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                               <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Phone className="size-3" />Primary Mobile</p>
-                              <p className={`text-sm font-mono text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                                {isLocked ? maskNumber(selectedReport.telemetry_json.result.mobile) : selectedReport.telemetry_json.result.mobile}
+                              <p className="text-sm font-mono text-white">
+                                {selectedReport.telemetry_json.result.mobile}
                               </p>
                             </div>
                             {selectedReport.telemetry_json.result.alternativeMobile && (
                               <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                                 <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Phone className="size-3" />Alternative Mobile</p>
-                                <p className={`text-sm font-mono text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                                  {isLocked ? maskNumber(selectedReport.telemetry_json.result.alternativeMobile) : selectedReport.telemetry_json.result.alternativeMobile}
+                                <p className="text-sm font-mono text-white">
+                                  {selectedReport.telemetry_json.result.alternativeMobile}
                                 </p>
                               </div>
                             )}
@@ -1950,8 +1965,8 @@ export default function DashboardPage() {
                           {selectedReport.telemetry_json.result.address && (
                             <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                               <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered Address</p>
-                              <p className={`text-sm text-zinc-200 leading-relaxed ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                                {isLocked ? maskText(selectedReport.telemetry_json.result.address) : selectedReport.telemetry_json.result.address}
+                              <p className="text-sm text-zinc-200 leading-relaxed">
+                                {selectedReport.telemetry_json.result.address}
                               </p>
                             </div>
                           )}
@@ -1983,7 +1998,7 @@ export default function DashboardPage() {
                               <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">NVIDIA NIM · Llama 3.1</span>
                             </div>
                           </div>
-                          <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
+                          <div>
                             <AIReportSection text={selectedReport.telemetry_json.aiReport} />
                           </div>
                         </div>
@@ -2046,7 +2061,7 @@ export default function DashboardPage() {
                         if (isVehicle) {
                           const v = item.vehicle_json?.vehicle;
                           const rawOwner = v?.ownerName || 'Vehicle Record';
-                          const ownerDisplay = isLocked ? maskText(rawOwner) : rawOwner;
+                          const ownerDisplay = rawOwner;
                           const plate = item.plate_number || v?.registrationNumber || 'Vehicle Target';
                           return (
                             <div
@@ -2057,7 +2072,7 @@ export default function DashboardPage() {
                               <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
                                 <div className="flex items-center gap-2">
                                   <Car className="size-4 text-zinc-400 group-hover:text-white transition-colors" />
-                                  <h3 className={`text-sm font-bold text-white font-mono ${isLocked ? 'blur-[1px]' : ''}`}>{plate}</h3>
+                                  <h3 className="text-sm font-bold text-white font-mono">{plate}</h3>
                                 </div>
                                 <span className="text-[10px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">
                                   Vehicle OSINT
@@ -2067,7 +2082,7 @@ export default function DashboardPage() {
                               <div className="space-y-1.5 text-xs">
                                 <div className="flex items-center justify-between text-zinc-400">
                                   <span className="flex items-center gap-1.5"><User className="size-3 text-zinc-500" /> Owner:</span>
-                                  <span className={`text-white font-medium ${isLocked ? 'blur-[1px]' : ''}`}>{ownerDisplay}</span>
+                                  <span className="text-white font-medium">{ownerDisplay}</span>
                                 </div>
                                 {item.make_model && (
                                   <div className="flex items-center justify-between text-zinc-400">
@@ -2100,8 +2115,8 @@ export default function DashboardPage() {
                         // Phone OSINT Report Card
                         const res = item.telemetry_json?.result;
                         const rawName = res?.name || 'Subject Report';
-                        const targetName = isLocked ? maskText(rawName) : rawName;
-                        const targetPhone = item.phone_number ? (isLocked ? maskNumber(item.phone_number) : item.phone_number) : '';
+                        const targetName = rawName;
+                        const targetPhone = item.phone_number || '';
                         return (
                           <div
                             key={item.id}
@@ -2111,7 +2126,7 @@ export default function DashboardPage() {
                             <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
                               <div className="flex items-center gap-2">
                                 <User className="size-4 text-zinc-400 group-hover:text-white transition-colors" />
-                                <h3 className={`text-sm font-bold text-white ${isLocked ? 'blur-[1px]' : ''}`}>{targetName}</h3>
+                                <h3 className="text-sm font-bold text-white">{targetName}</h3>
                               </div>
                               <span className="text-[10px] font-mono text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">
                                 Phone OSINT
@@ -2121,7 +2136,7 @@ export default function DashboardPage() {
                             <div className="space-y-1.5 text-xs">
                               <div className="flex items-center justify-between text-zinc-400">
                                 <span className="flex items-center gap-1.5"><Phone className="size-3 text-zinc-500" /> Target Phone:</span>
-                                <span className={`font-mono text-white ${isLocked ? 'blur-[1px]' : ''}`}>{targetPhone}</span>
+                                <span className="font-mono text-white">{targetPhone}</span>
                               </div>
                               {item.circle && (
                                 <div className="flex items-center justify-between text-zinc-400">

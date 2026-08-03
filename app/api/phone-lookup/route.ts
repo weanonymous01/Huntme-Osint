@@ -20,27 +20,39 @@ export async function POST(req: NextRequest) {
       cleanNumber = '91' + cleanNumber;
     }
 
-    // ── 1. CHECK SUPABASE CACHE (Cost = 0 credits!) ──
-    try {
-      const { data: cached } = await supabaseAdmin
-        .from('phone_searches')
-        .select('*')
-        .or(`phone_number.ilike.%${cleanNumber}%,phone_number.ilike.%${phoneNumber}%`)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+    // ── 1. CHECK SUPABASE CACHE (Cost = 0 credits!) — only for paid users ──
+    // Skip cache for free preview: we want real Numverify data each time.
+    // Skip cache for paid users IF the cached record came from a free preview (masked data).
+    if (!isPreview) {
+      try {
+        const { data: cached } = await supabaseAdmin
+          .from('phone_searches')
+          .select('*')
+          .or(`phone_number.ilike.%${cleanNumber}%,phone_number.ilike.%${phoneNumber}%`)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      if (cached?.telemetry_json?.results || cached?.telemetry_json?.result) {
-        console.log(`[phone-lookup] CACHE HIT for phone: ${cleanNumber} (0 API credits used!)`);
-        const results = cached.telemetry_json.results || [cached.telemetry_json.result];
-        return NextResponse.json({
-          success: true,
-          results,
-          cached: true,
-        });
+        // Only return cache if it was NOT a free preview (i.e. contains real data)
+        if (cached?.telemetry_json?.results || cached?.telemetry_json?.result) {
+          const cachedResults = cached.telemetry_json.results || [cached.telemetry_json.result];
+          // Check if the cached result has real name (not masked asterisks)
+          const firstName = cachedResults[0]?.name || '';
+          const isRealData = firstName && !firstName.includes('*');
+          if (isRealData) {
+            console.log(`[phone-lookup] CACHE HIT (real data) for phone: ${cleanNumber}`);
+            return NextResponse.json({
+              success: true,
+              results: cachedResults,
+              cached: true,
+            });
+          } else {
+            console.log(`[phone-lookup] Cache hit but data is masked, bypassing cache for paid lookup.`);
+          }
+        }
+      } catch (cacheErr) {
+        console.warn('[phone-lookup] Cache check error:', cacheErr);
       }
-    } catch (cacheErr) {
-      console.warn('[phone-lookup] Cache check error:', cacheErr);
     }
 
     // ── 2. PREVIEW MODE (Numverify Free Tier + Pure Asterisk Masking) ──
@@ -126,9 +138,17 @@ export async function POST(req: NextRequest) {
       console.warn('[phone-lookup] Upstream API call failed, serving free Numverify preview:', apiErr);
     }
 
-    // Fallback to free Numverify preview if API failed or no record returned
-    const localResults = decodeLocalPhone(cleanNumber);
-    return NextResponse.json({ success: true, results: localResults, cached: false, isFreePreview: true });
+    // Fallback: only serve the free Numverify preview for free users
+    // Paid users get an error so they know something went wrong (not fake masked data)
+    if (isPreview) {
+      const localResults = decodeLocalPhone(cleanNumber);
+      return NextResponse.json({ success: true, results: localResults, cached: false, isFreePreview: true });
+    }
+
+    return NextResponse.json(
+      { success: false, message: 'No records found for this number. The data source returned no results. Please try again or contact support.' },
+      { status: 404 }
+    );
   } catch (err: any) {
     console.error('[phone-lookup] Error:', err?.message);
     return NextResponse.json(
