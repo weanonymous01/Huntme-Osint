@@ -1229,16 +1229,6 @@ export default function DashboardPage() {
                           <h3 className="text-xl font-bold text-white font-mono tracking-widest">
                             {vehicleResult.registrationNumber}
                           </h3>
-                          {vehicleResult.vehicleClass && (
-                            <span className="text-[11px] font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2.5 py-0.5 rounded-full">
-                              {vehicleResult.vehicleClass}
-                            </span>
-                          )}
-                          {vehicleResult.fuelType && (
-                            <span className="text-[11px] font-semibold text-violet-400 bg-violet-500/10 border border-violet-500/20 px-2.5 py-0.5 rounded-full">
-                              {vehicleResult.fuelType}
-                            </span>
-                          )}
                         </div>
                         {vehicleResult.modelName && (
                           <p className="text-sm text-zinc-300 pl-8">{vehicleResult.modelName}</p>
@@ -1275,6 +1265,18 @@ export default function DashboardPage() {
                     <div className="space-y-3">
                       <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Vehicle Details</p>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {vehicleResult.vehicleClass && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Car className="size-3" />Vehicle Class</p>
+                            <p className="text-sm text-white">{vehicleResult.vehicleClass}</p>
+                          </div>
+                        )}
+                        {vehicleResult.fuelType && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Fuel Type</p>
+                            <p className="text-sm text-white">{vehicleResult.fuelType}</p>
+                          </div>
+                        )}
                         {vehicleResult.registrationDate && (
                           <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                             <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Calendar className="size-3" />Registration Date</p>
@@ -1310,13 +1312,7 @@ export default function DashboardPage() {
                       </div>
                     )}
 
-                    {/* Source credit */}
-                    {vehicleResult.sourceCredit && (
-                      <div className="pt-1 border-t border-zinc-800/60 flex items-center gap-2 text-[10px] text-zinc-600">
-                        <span>Source:</span>
-                        <span className="font-mono text-zinc-500">{vehicleResult.sourceCredit}</span>
-                      </div>
-                    )}
+
                   </div>
                 </div>
               )}
