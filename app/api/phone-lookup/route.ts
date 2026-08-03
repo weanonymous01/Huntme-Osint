@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabaseClient';
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,6 +12,33 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Strip non-digit characters from phone number before querying
+    const cleanNumber = phoneNumber.replace(/\D/g, '');
+
+    // ── 1. CHECK SUPABASE CACHE (Cost = 0 credits!) ──
+    try {
+      const { data: cached } = await supabaseAdmin
+        .from('phone_searches')
+        .select('*')
+        .or(`phone_number.ilike.%${cleanNumber}%,phone_number.ilike.%${phoneNumber}%`)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (cached?.telemetry_json?.results || cached?.telemetry_json?.result) {
+        console.log(`[phone-lookup] CACHE HIT for phone: ${cleanNumber} (0 API credits used!)`);
+        const results = cached.telemetry_json.results || [cached.telemetry_json.result];
+        return NextResponse.json({
+          success: true,
+          results,
+          cached: true,
+        });
+      }
+    } catch (cacheErr) {
+      console.warn('[phone-lookup] Cache check error:', cacheErr);
+    }
+
+    // ── 2. CALL UPSTREAM API IF NOT IN CACHE ──
     const apiKey = process.env.PHONE_LOOKUP_API_KEY;
     const apiBase = process.env.PHONE_LOOKUP_API_BASE;
 
@@ -20,9 +48,6 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
-
-    // Strip non-digit characters from phone number before querying
-    const cleanNumber = phoneNumber.replace(/\D/g, '');
 
     const externalRes = await fetch(`${apiBase}/${apiKey}?num=${encodeURIComponent(cleanNumber)}`, {
       method: 'GET',
@@ -66,7 +91,7 @@ export async function POST(req: NextRequest) {
         email: item.mail || null,
       }));
 
-    return NextResponse.json({ success: true, results });
+    return NextResponse.json({ success: true, results, cached: false });
   } catch (err: any) {
     console.error('[phone-lookup] Error:', err?.message);
     return NextResponse.json(

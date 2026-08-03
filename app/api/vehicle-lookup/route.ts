@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabaseClient';
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,6 +12,32 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Normalize: uppercase, remove spaces/hyphens
+    const cleanRC = registrationNumber.toUpperCase().replace(/[\s\-]/g, '');
+
+    // ── 1. CHECK SUPABASE CACHE (Cost = 0 credits!) ──
+    try {
+      const { data: cached } = await supabaseAdmin
+        .from('vehicle_searches')
+        .select('*')
+        .or(`plate_number.ilike.${cleanRC},plate_number.ilike.${registrationNumber}`)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (cached?.vehicle_json?.vehicle) {
+        console.log(`[vehicle-lookup] CACHE HIT for plate: ${cleanRC} (0 API credits used!)`);
+        return NextResponse.json({
+          success: true,
+          vehicle: cached.vehicle_json.vehicle,
+          cached: true,
+        });
+      }
+    } catch (cacheErr) {
+      console.warn('[vehicle-lookup] Cache check error:', cacheErr);
+    }
+
+    // ── 2. CALL UPSTREAM API IF NOT IN CACHE ──
     const apiKey = process.env.VEHICLE_LOOKUP_API_KEY;
     const apiBase = process.env.VEHICLE_LOOKUP_API_BASE;
 
@@ -20,9 +47,6 @@ export async function POST(req: NextRequest) {
         { status: 500 }
       );
     }
-
-    // Normalize: uppercase, remove spaces/hyphens
-    const cleanRC = registrationNumber.toUpperCase().replace(/[\s\-]/g, '');
 
     const externalRes = await fetch(`${apiBase}/${apiKey}?rc=${encodeURIComponent(cleanRC)}`, {
       method: 'GET',
@@ -40,11 +64,9 @@ export async function POST(req: NextRequest) {
     const raw = await externalRes.json();
 
     // The API wraps data under Nexus2 (and optionally Nexus1)
-    // Nexus2 is the primary reliable source
     const nexus2 = raw?.result?.Nexus2;
 
     if (!nexus2 || nexus2.error) {
-      // Try Nexus1 fallback
       const nexus1 = raw?.result?.Nexus1;
       if (!nexus1 || nexus1.error) {
         return NextResponse.json(
@@ -71,7 +93,7 @@ export async function POST(req: NextRequest) {
       sourceCredit: raw?.source_by || raw?.credit || null,
     };
 
-    return NextResponse.json({ success: true, vehicle: vehicleData });
+    return NextResponse.json({ success: true, vehicle: vehicleData, cached: false });
   } catch (err: any) {
     console.error('[vehicle-lookup] Error:', err?.message);
     return NextResponse.json(
