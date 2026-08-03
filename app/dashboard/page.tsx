@@ -1526,34 +1526,36 @@ export default function DashboardPage() {
                     </div>
                   )}
 
-                  {/* AI Report Card */}
-                  {aiReport && !aiReportLoading && (
+                  {/* AI Report Card for Paid Users OR Locked Teaser Card for Preview Users */}
+                  {(aiReport || isLocked) && !aiReportLoading && (
                     <div className="relative rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl animate-in fade-in duration-500 overflow-hidden">
                       <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
                         <h3 className="text-sm font-bold text-white">AI Intelligence Report</h3>
                         <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => handleCopyReport(aiReport)}
-                            className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 px-3 py-1.5 rounded-lg transition-all"
-                          >
-                            {copiedReport ? (
-                              <>
-                                <Check className="size-3.5 text-zinc-300" />
-                                <span className="text-zinc-300 font-medium">Copied!</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="size-3.5 text-zinc-400" />
-                                <span>Copy Report</span>
-                              </>
-                            )}
-                          </button>
+                          {!isLocked && (
+                            <button
+                              type="button"
+                              onClick={() => handleCopyReport(aiReport || '')}
+                              className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 px-3 py-1.5 rounded-lg transition-all"
+                            >
+                              {copiedReport ? (
+                                <>
+                                  <Check className="size-3.5 text-zinc-300" />
+                                  <span className="text-zinc-300 font-medium">Copied!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="size-3.5 text-zinc-400" />
+                                  <span>Copy Report</span>
+                                </>
+                              )}
+                            </button>
+                          )}
                           <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">NVIDIA NIM · Llama 3.1</span>
                         </div>
                       </div>
-                      <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
-                        <AIReportSection text={aiReport} />
+                      <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50 space-y-3" : ""}>
+                        <AIReportSection text={aiReport || "### OSINT Intelligence & Identity Dossier\n- **Target Status**: Record identified in Telemetry Database.\n- **Subject Profile**: Verification completed for regional subscriber circle.\n- **Risk Score**: 12 (Moderate Vigilance Required).\n- **Compliance Checks**: Active telecom circle detected."} />
                       </div>
                       {isLocked && (
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d10] via-[#0d0d10]/95 to-[#0d0d10]/60 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10">
@@ -1922,34 +1924,36 @@ export default function DashboardPage() {
                     </div>
                   )}
 
-                  {/* ── Vehicle AI Report Card ── */}
-                  {vehicleAiReport !== null && !vehicleAiReportLoading && (
+                  {/* ── Vehicle AI Report Card for Paid Users OR Locked Teaser Card for Preview Users ── */}
+                  {(vehicleAiReport !== null || isLocked) && !vehicleAiReportLoading && (
                     <div className="relative rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl animate-in fade-in duration-500 overflow-hidden">
                       <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
                         <h3 className="text-sm font-bold text-white">AI Vehicle Intelligence Report</h3>
                         <div className="flex items-center gap-3">
-                          <button
-                            type="button"
-                            onClick={() => handleCopyVehicleReport(vehicleAiReport)}
-                            className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 px-3 py-1.5 rounded-lg transition-all"
-                          >
-                            {copiedVehicleReport ? (
-                              <>
-                                <Check className="size-3.5 text-zinc-300" />
-                                <span className="text-zinc-300 font-medium">Copied!</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="size-3.5 text-zinc-400" />
-                                <span>Copy Report</span>
-                              </>
-                            )}
-                          </button>
+                          {!isLocked && (
+                            <button
+                              type="button"
+                              onClick={() => handleCopyVehicleReport(vehicleAiReport || '')}
+                              className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 px-3 py-1.5 rounded-lg transition-all"
+                            >
+                              {copiedVehicleReport ? (
+                                <>
+                                  <Check className="size-3.5 text-zinc-300" />
+                                  <span className="text-zinc-300 font-medium">Copied!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="size-3.5 text-zinc-400" />
+                                  <span>Copy Report</span>
+                                </>
+                              )}
+                            </button>
+                          )}
                           <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">Groq · Llama 3.3 70B</span>
                         </div>
                       </div>
-                      <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
-                        <AIReportSection text={vehicleAiReport} />
+                      <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50 space-y-3" : ""}>
+                        <AIReportSection text={vehicleAiReport || "### AI Vehicle Intelligence Report\n- **Vehicle Registration**: Verified in RTO database.\n- **Class & Compliance**: Registered utility motor vehicle.\n- **Risk Score**: Low risk profile."} />
                       </div>
                       {isLocked && (
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d10] via-[#0d0d10]/95 to-[#0d0d10]/60 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10">
