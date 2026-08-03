@@ -59,6 +59,21 @@ type PhoneResult = {
   email: string | null;
 };
 
+type VehicleResult = {
+  registrationNumber: string;
+  ownerName: string | null;
+  fatherName: string | null;
+  modelName: string | null;
+  vehicleClass: string | null;
+  fuelType: string | null;
+  registrationDate: string | null;
+  insuranceExpiry: string | null;
+  registeredRTO: string | null;
+  address: string | null;
+  cityName: string | null;
+  sourceCredit: string | null;
+};
+
 type UserProfile = {
   id: string;
   email: string;
@@ -427,6 +442,8 @@ export default function DashboardPage() {
   // Vehicle search state
   const [vehicleInput, setVehicleInput] = useState('');
   const [vehicleLoading, setVehicleLoading] = useState(false);
+  const [vehicleResult, setVehicleResult] = useState<VehicleResult | null>(null);
+  const [vehicleError, setVehicleError] = useState<string | null>(null);
 
   // Copy report state
   const [copiedReport, setCopiedReport] = useState<boolean>(false);
@@ -533,12 +550,49 @@ export default function DashboardPage() {
     }
   };
 
-  const handleVehicleSearch = (e: React.FormEvent) => {
+  const handleVehicleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!vehicleInput.trim()) return;
+
+    // Hard block if 0-credit user has already performed their 1 free search
+    if (isLocked && freeSearchCount >= 1) {
+      setVehicleResult(null);
+      setVehicleError('FREE_SEARCH_LIMIT_REACHED');
+      return;
+    }
+
     setVehicleLoading(true);
-    setTimeout(() => {
+    setVehicleError(null);
+    setVehicleResult(null);
+
+    try {
+      const res = await fetch('/api/vehicle-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registrationNumber: vehicleInput.trim() }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setVehicleResult(data.vehicle);
+
+        // Record the 1 free search used if in preview mode
+        if (isLocked) {
+          const nextCount = freeSearchCount + 1;
+          setFreeSearchCount(nextCount);
+          if (typeof window !== 'undefined' && profile?.id) {
+            localStorage.setItem(`huntme_free_searches_${profile.id}`, nextCount.toString());
+          }
+        } else {
+          await deductCredit();
+        }
+      } else {
+        setVehicleError(data.message || 'No records found.');
+      }
+    } catch {
+      setVehicleError('Network error. Please try again.');
+    } finally {
       setVehicleLoading(false);
-    }, 800);
+    }
   };
 
   return (
@@ -1082,8 +1136,8 @@ export default function DashboardPage() {
                       <input
                         type="text"
                         value={vehicleInput}
-                        onChange={(e) => setVehicleInput(e.target.value)}
-                        placeholder="Enter license plate or VIN (e.g. DL 01 AB 1234 or UP 32 AB 5678)"
+                        onChange={(e) => setVehicleInput(e.target.value.toUpperCase())}
+                        placeholder="Enter license plate (e.g. RJ27TA1877 or DL01AB1234)"
                         className="w-full bg-[#141418] border border-zinc-700/80 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500 transition-colors font-mono uppercase"
                       />
                     </div>
@@ -1098,17 +1152,179 @@ export default function DashboardPage() {
                           <span>Searching...</span>
                         </>
                       ) : (
-                        <>
-                          <span>Lookup Vehicle</span>
-                        </>
+                        <span>Lookup Vehicle</span>
                       )}
                     </button>
                   </div>
+
+                  {isLocked && freeSearchCount === 0 && (
+                    <div className="flex items-center gap-2 text-xs text-amber-300/90 bg-amber-500/10 border border-amber-500/20 px-3.5 py-2 rounded-xl">
+                      <Lock className="size-3.5 text-amber-400 shrink-0" />
+                      <span>You have <strong>1 free preview search</strong> available. Results will be partially masked.</span>
+                    </div>
+                  )}
                 </form>
               </div>
 
-              {/* SKELETON REPORT DOWN BELOW */}
-              <ReportSkeleton type="vehicle" />
+              {/* Loading skeleton */}
+              {vehicleLoading && <ReportSkeleton type="vehicle" />}
+
+              {/* Free search limit / insufficient credits */}
+              {(vehicleError === 'FREE_SEARCH_LIMIT_REACHED' || vehicleError === 'INSUFFICIENT_CREDITS') ? (
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-8 space-y-4 text-center animate-in fade-in duration-300 shadow-xl">
+                  <div className="size-12 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 mx-auto">
+                    <Lock className="size-6" />
+                  </div>
+                  <div className="space-y-2 max-w-md mx-auto">
+                    <h3 className="text-lg font-bold text-white">Free Search Limit Reached</h3>
+                    <p className="text-xs text-zinc-300 leading-relaxed">
+                      You have used your 1 free preview search. Upgrade your account to unlock unlimited vehicle lookups, full unmasked identity data, and complete AI reports.
+                    </p>
+                  </div>
+                  <div className="pt-2">
+                    <a href="/pricing" className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-black font-bold px-6 py-3 rounded-xl text-xs transition-all shadow-lg">
+                      <Lock className="size-4" />
+                      <span>Upgrade Plan for Unlimited Searches</span>
+                    </a>
+                  </div>
+                </div>
+              ) : vehicleError ? (
+                <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-6 flex items-center gap-3">
+                  <AlertCircle className="size-5 text-rose-400 shrink-0" />
+                  <p className="text-sm text-rose-300">{vehicleError}</p>
+                </div>
+              ) : null}
+
+              {/* Vehicle Result Card */}
+              {vehicleResult && !vehicleLoading && (
+                <div className="space-y-4 animate-in fade-in duration-300">
+                  {/* Lock banner for free users */}
+                  {isLocked && (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-amber-500/10 border border-amber-500/30 p-4 rounded-2xl text-xs shadow-lg">
+                      <div className="flex items-center gap-2 text-amber-300 font-medium">
+                        <Lock className="size-4 shrink-0 text-amber-400" />
+                        <span>Preview Mode — Full owner identity & address records are locked.</span>
+                      </div>
+                      <a href="/pricing" className="bg-amber-400 hover:bg-amber-300 text-black font-bold px-4 py-2 rounded-xl text-xs transition-colors shrink-0 flex items-center justify-center gap-1.5 shadow-md">
+                        <Lock className="size-3.5" />
+                        <span>Unlock Full Report</span>
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Success header */}
+                  <div className="flex items-center gap-2 text-xs text-emerald-400 font-medium">
+                    <CheckCircle2 className="size-4" />
+                    <span>Vehicle record found for <span className="font-mono text-white">{vehicleResult.registrationNumber}</span></span>
+                  </div>
+
+                  {/* Main vehicle card */}
+                  <div className="relative rounded-2xl border border-zinc-800/90 bg-[#0d0d10] p-6 space-y-6 shadow-2xl">
+
+                    {/* Header: RC + badges */}
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-zinc-800/80 pb-5">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <Car className="size-5 text-zinc-400 shrink-0" />
+                          <h3 className="text-xl font-bold text-white font-mono tracking-widest">
+                            {vehicleResult.registrationNumber}
+                          </h3>
+                          {vehicleResult.vehicleClass && (
+                            <span className="text-[11px] font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2.5 py-0.5 rounded-full">
+                              {vehicleResult.vehicleClass}
+                            </span>
+                          )}
+                          {vehicleResult.fuelType && (
+                            <span className="text-[11px] font-semibold text-violet-400 bg-violet-500/10 border border-violet-500/20 px-2.5 py-0.5 rounded-full">
+                              {vehicleResult.fuelType}
+                            </span>
+                          )}
+                        </div>
+                        {vehicleResult.modelName && (
+                          <p className="text-sm text-zinc-300 pl-8">{vehicleResult.modelName}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full shrink-0">
+                        <span className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        Verified Record
+                      </div>
+                    </div>
+
+                    {/* Owner Info */}
+                    <div className="space-y-3">
+                      <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Owner Information</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><User className="size-3" />Owner Name</p>
+                          <p className={`text-sm font-semibold text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                            {isLocked ? maskText(vehicleResult.ownerName) : (vehicleResult.ownerName || '—')}
+                          </p>
+                        </div>
+                        {vehicleResult.fatherName && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><User className="size-3" />Father's Name</p>
+                            <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                              {isLocked ? maskText(vehicleResult.fatherName) : vehicleResult.fatherName}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Vehicle Details */}
+                    <div className="space-y-3">
+                      <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Vehicle Details</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {vehicleResult.registrationDate && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Calendar className="size-3" />Registration Date</p>
+                            <p className="text-sm text-white">{vehicleResult.registrationDate}</p>
+                          </div>
+                        )}
+                        {vehicleResult.insuranceExpiry && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><AlertCircle className="size-3" />Insurance Expiry</p>
+                            <p className={`text-sm font-medium ${
+                              new Date(vehicleResult.insuranceExpiry.split('-').reverse().join('-')) < new Date()
+                                ? 'text-rose-400'
+                                : 'text-emerald-400'
+                            }`}>{vehicleResult.insuranceExpiry}</p>
+                          </div>
+                        )}
+                        {vehicleResult.registeredRTO && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered RTO</p>
+                            <p className="text-sm text-white">{vehicleResult.registeredRTO}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Address */}
+                    {vehicleResult.address && (
+                      <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                        <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered Address</p>
+                        <p className={`text-sm text-zinc-200 leading-relaxed ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                          {isLocked ? maskText(vehicleResult.address) : vehicleResult.address}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Source credit */}
+                    {vehicleResult.sourceCredit && (
+                      <div className="pt-1 border-t border-zinc-800/60 flex items-center gap-2 text-[10px] text-zinc-600">
+                        <span>Source:</span>
+                        <span className="font-mono text-zinc-500">{vehicleResult.sourceCredit}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Idle skeleton when no search has been made */}
+              {!vehicleLoading && !vehicleResult && !vehicleError && (
+                <ReportSkeleton type="vehicle" />
+              )}
             </div>
           )}
 
