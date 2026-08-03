@@ -445,6 +445,44 @@ export default function DashboardPage() {
   const [vehicleResult, setVehicleResult] = useState<VehicleResult | null>(null);
   const [vehicleError, setVehicleError] = useState<string | null>(null);
 
+  // Vehicle AI report state
+  const [vehicleAiReport, setVehicleAiReport] = useState<string | null>(null);
+  const [vehicleAiReportLoading, setVehicleAiReportLoading] = useState(false);
+  const [vehicleAiReportError, setVehicleAiReportError] = useState<string | null>(null);
+
+  // Copy vehicle report state
+  const [copiedVehicleReport, setCopiedVehicleReport] = useState<boolean>(false);
+
+  const handleCopyVehicleReport = (reportText: string) => {
+    if (!reportText) return;
+    navigator.clipboard.writeText(reportText);
+    setCopiedVehicleReport(true);
+    setTimeout(() => setCopiedVehicleReport(false), 2000);
+  };
+
+  const handleGenerateVehicleReport = async (vehicle: VehicleResult) => {
+    setVehicleAiReportLoading(true);
+    setVehicleAiReport(null);
+    setVehicleAiReportError(null);
+    try {
+      const res = await fetch('/api/generate-vehicle-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ vehicleData: vehicle }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setVehicleAiReport(data.report);
+      } else {
+        setVehicleAiReportError(data.message || 'Failed to generate report.');
+      }
+    } catch {
+      setVehicleAiReportError('Network error. Please try again.');
+    } finally {
+      setVehicleAiReportLoading(false);
+    }
+  };
+
   // Copy report state
   const [copiedReport, setCopiedReport] = useState<boolean>(false);
 
@@ -564,6 +602,10 @@ export default function DashboardPage() {
     setVehicleLoading(true);
     setVehicleError(null);
     setVehicleResult(null);
+    // Reset AI report on every new search
+    setVehicleAiReport(null);
+    setVehicleAiReportError(null);
+    setVehicleAiReportLoading(false);
 
     try {
       const res = await fetch('/api/vehicle-lookup', {
@@ -585,6 +627,9 @@ export default function DashboardPage() {
         } else {
           await deductCredit();
         }
+
+        // Auto-generate AI report immediately
+        handleGenerateVehicleReport(data.vehicle);
       } else {
         setVehicleError(data.message || 'No records found.');
       }
@@ -1314,6 +1359,83 @@ export default function DashboardPage() {
 
 
                   </div>
+
+                  {/* ── Vehicle AI Report Error ── */}
+                  {vehicleAiReportError && (
+                    <div className="rounded-2xl border border-rose-500/20 bg-rose-500/5 p-5 flex items-center gap-3">
+                      <AlertCircle className="size-4 text-rose-400 shrink-0" />
+                      <p className="text-xs text-rose-300">{vehicleAiReportError}</p>
+                    </div>
+                  )}
+
+                  {/* ── Vehicle AI Report Loading Skeleton ── */}
+                  {vehicleAiReportLoading && (
+                    <div className="rounded-2xl border border-zinc-700/40 bg-[#0d0d10] p-6 space-y-4 animate-pulse">
+                      <div className="flex items-center gap-2">
+                        <RefreshCw className="size-4 text-zinc-400 animate-spin" />
+                        <span className="text-sm font-bold text-white">Generating AI Vehicle Intelligence Report...</span>
+                      </div>
+                      {[1,2,3,4,5].map(i => (
+                        <div key={i} className="space-y-2">
+                          <div className="h-3 w-40 bg-zinc-800 rounded" />
+                          <div className="h-2.5 w-full bg-zinc-800/60 rounded" />
+                          <div className="h-2.5 w-4/5 bg-zinc-800/40 rounded" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* ── Vehicle AI Report Card ── */}
+                  {vehicleAiReport && !vehicleAiReportLoading && (
+                    <div className="relative rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl animate-in fade-in duration-500 overflow-hidden">
+                      <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
+                        <h3 className="text-sm font-bold text-white">AI Vehicle Intelligence Report</h3>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleCopyVehicleReport(vehicleAiReport)}
+                            className="flex items-center gap-1.5 text-xs font-semibold text-zinc-300 hover:text-white bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/60 px-3 py-1.5 rounded-lg transition-all"
+                          >
+                            {copiedVehicleReport ? (
+                              <>
+                                <Check className="size-3.5 text-emerald-400" />
+                                <span className="text-emerald-400 font-medium">Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="size-3.5 text-zinc-400" />
+                                <span>Copy Report</span>
+                              </>
+                            )}
+                          </button>
+                          <span className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 border border-zinc-700/50 px-2 py-0.5 rounded-full">NVIDIA NIM · Llama 3.1</span>
+                        </div>
+                      </div>
+                      <div className={isLocked ? "blur-[2.5px] select-none pointer-events-none max-h-72 overflow-hidden opacity-50" : ""}>
+                        <AIReportSection text={vehicleAiReport} />
+                      </div>
+                      {isLocked && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d10] via-[#0d0d10]/95 to-[#0d0d10]/60 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10">
+                          <div className="size-10 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                            <Lock className="size-5" />
+                          </div>
+                          <div className="space-y-1 max-w-sm">
+                            <h4 className="text-sm font-bold text-white">AI Vehicle Intelligence Locked</h4>
+                            <p className="text-xs text-zinc-400">
+                              Upgrade to a paid plan to unlock complete vehicle OSINT analysis, owner profiling, Google Dorks, compliance intelligence, and risk scores.
+                            </p>
+                          </div>
+                          <a
+                            href="/pricing"
+                            className="bg-amber-400 hover:bg-amber-300 text-black font-bold px-5 py-2.5 rounded-xl text-xs transition-colors flex items-center gap-2 shadow-lg"
+                          >
+                            <Lock className="size-3.5" />
+                            <span>Unlock Full Intelligence Report</span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
