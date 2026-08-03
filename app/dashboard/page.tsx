@@ -470,15 +470,31 @@ export default function DashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ vehicleData: vehicle }),
       });
-      const data = await res.json();
-      if (data.success) {
-        setVehicleAiReport(data.report);
-      } else {
+
+      // Non-streaming error response (JSON)
+      if (!res.ok || res.headers.get('content-type')?.includes('application/json')) {
+        const data = await res.json();
         setVehicleAiReportError(data.message || 'Failed to generate report.');
+        setVehicleAiReportLoading(false);
+        return;
+      }
+
+      // ── Streaming path — read token by token ──
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+
+      // Show the card immediately (empty string = streaming started)
+      setVehicleAiReport('');
+      setVehicleAiReportLoading(false);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        setVehicleAiReport(prev => (prev ?? '') + chunk);
       }
     } catch {
       setVehicleAiReportError('Network error. Please try again.');
-    } finally {
       setVehicleAiReportLoading(false);
     }
   };
@@ -1386,7 +1402,7 @@ export default function DashboardPage() {
                   )}
 
                   {/* ── Vehicle AI Report Card ── */}
-                  {vehicleAiReport && !vehicleAiReportLoading && (
+                  {vehicleAiReport !== null && !vehicleAiReportLoading && (
                     <div className="relative rounded-2xl border border-zinc-700/50 bg-[#0d0d10] p-6 space-y-5 shadow-2xl animate-in fade-in duration-500 overflow-hidden">
                       <div className="flex items-center justify-between border-b border-zinc-800/80 pb-4">
                         <h3 className="text-sm font-bold text-white">AI Vehicle Intelligence Report</h3>
