@@ -713,8 +713,8 @@ export default function DashboardPage() {
           if (typeof window !== 'undefined' && profile?.id) {
             localStorage.setItem(`huntme_free_searches_${profile.id}`, nextCount.toString());
           }
-        } else {
-          // Deduct 1 credit per successful search for paid users
+        } else if (!data.cached) {
+          // Deduct credits ONLY if fresh paid API was called (not cached)
           await deductCredit();
         }
 
@@ -771,7 +771,8 @@ export default function DashboardPage() {
           if (typeof window !== 'undefined' && profile?.id) {
             localStorage.setItem(`huntme_free_searches_${profile.id}`, nextCount.toString());
           }
-        } else {
+        } else if (!data.cached) {
+          // Deduct credits ONLY if fresh paid API was called (not cached)
           await deductCredit();
         }
 
