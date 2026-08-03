@@ -50,15 +50,15 @@ export function decodeLocalVehicle(plate: string) {
 
   return {
     registrationNumber: clean,
-    ownerName: null,
-    fatherName: null,
-    modelName: null,
-    vehicleClass: null,
-    fuelType: null,
-    registrationDate: null,
-    insuranceExpiry: null,
+    ownerName: '******* ******',
+    fatherName: '******* ******',
+    modelName: '******* *** / ******* *******',
+    vehicleClass: '******* *** (***)',
+    fuelType: '******',
+    registrationDate: '**-***-****',
+    insuranceExpiry: '**-***-****',
     registeredRTO: rto,
-    address: null,
+    address: '**********************',
     cityName: city,
     sourceCredit: 'RTO Public Registry (Local Decoder)',
   };

@@ -1483,8 +1483,8 @@ export default function DashboardPage() {
                             {vehicleResult.registrationNumber}
                           </h3>
                         </div>
-                        {vehicleResult.modelName && !isLocked && (
-                          <p className="text-sm text-zinc-300 pl-8">
+                        {vehicleResult.modelName && (
+                          <p className={`text-sm text-zinc-300 pl-8 ${isLocked ? 'blur-[3px] select-none pointer-events-none' : ''}`}>
                             {vehicleResult.modelName}
                           </p>
                         )}
@@ -1503,98 +1503,95 @@ export default function DashboardPage() {
                           Verified Record
                         </div>
                       </div>
-                    </div>
-
-                    {/* Owner Info — hidden for preview users */}
-                    {!isLocked && (
-                      <div className="space-y-3">
-                        <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Owner Information</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     {/* Owner Info — blurred teaser for preview users */}
+                    <div className="space-y-3">
+                      <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Owner Information</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><User className="size-3" />Owner Name</p>
+                          <p className={`text-sm font-semibold text-white ${isLocked ? 'blur-[3px] select-none pointer-events-none' : ''}`}>
+                            {vehicleResult.ownerName || '—'}
+                          </p>
+                        </div>
+                        {vehicleResult.fatherName && (
                           <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><User className="size-3" />Owner Name</p>
-                            <p className="text-sm font-semibold text-white">
-                              {vehicleResult.ownerName || '—'}
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><User className="size-3" />Father's Name</p>
+                            <p className={`text-sm text-white ${isLocked ? 'blur-[3px] select-none pointer-events-none' : ''}`}>
+                              {vehicleResult.fatherName}
                             </p>
                           </div>
-                          {vehicleResult.fatherName && (
-                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><User className="size-3" />Father's Name</p>
-                              <p className="text-sm text-white">{vehicleResult.fatherName}</p>
-                            </div>
-                          )}
-                        </div>
+                        )}
                       </div>
-                    )}
+                    </div>
 
-                    {/* Vehicle Details — hidden for preview users */}
-                    {!isLocked && (
-                      <div className="space-y-3">
-                        <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Vehicle Details</p>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {vehicleResult.vehicleClass && (
-                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Car className="size-3" />Vehicle Class</p>
-                              <p className="text-sm text-white">{vehicleResult.vehicleClass}</p>
-                            </div>
-                          )}
-                          {vehicleResult.fuelType && (
-                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Fuel Type</p>
-                              <p className="text-sm text-white">{vehicleResult.fuelType}</p>
-                            </div>
-                          )}
-                          {vehicleResult.registrationDate && (
-                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Calendar className="size-3" />Registration Date</p>
-                              <p className="text-sm text-white">{vehicleResult.registrationDate}</p>
-                            </div>
-                          )}
-                          {vehicleResult.insuranceExpiry && (
-                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><AlertCircle className="size-3" />Insurance Expiry</p>
-                              <p className="text-sm font-medium text-zinc-300">{vehicleResult.insuranceExpiry}</p>
-                            </div>
-                          )}
-                          {vehicleResult.registeredRTO && (
-                            <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                              <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered RTO</p>
-                              <p className="text-sm text-white">{vehicleResult.registeredRTO}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Address — hidden for preview users */}
-                    {!isLocked && vehicleResult.address && (
-                      <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                        <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered Address</p>
-                        <p className="text-sm text-zinc-200 leading-relaxed">{vehicleResult.address}</p>
-                      </div>
-                    )}
-
-                    {/* Preview: show only RTO + upgrade prompt */}
-                    {isLocked && (
-                      <div className="space-y-4">
+                    {/* Vehicle Details — blurred teaser for preview users */}
+                    <div className="space-y-3">
+                      <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">Vehicle Details</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {vehicleResult.vehicleClass && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Car className="size-3" />Vehicle Class</p>
+                            <p className={`text-sm text-white ${isLocked ? 'blur-[3px] select-none pointer-events-none' : ''}`}>
+                              {vehicleResult.vehicleClass}
+                            </p>
+                          </div>
+                        )}
+                        {vehicleResult.fuelType && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Fuel Type</p>
+                            <p className={`text-sm text-white ${isLocked ? 'blur-[3px] select-none pointer-events-none' : ''}`}>
+                              {vehicleResult.fuelType}
+                            </p>
+                          </div>
+                        )}
+                        {vehicleResult.registrationDate && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Calendar className="size-3" />Registration Date</p>
+                            <p className={`text-sm text-white ${isLocked ? 'blur-[3px] select-none pointer-events-none' : ''}`}>
+                              {vehicleResult.registrationDate}
+                            </p>
+                          </div>
+                        )}
+                        {vehicleResult.insuranceExpiry && (
+                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><AlertCircle className="size-3" />Insurance Expiry</p>
+                            <p className={`text-sm font-medium text-zinc-300 ${isLocked ? 'blur-[3px] select-none pointer-events-none' : ''}`}>
+                              {vehicleResult.insuranceExpiry}
+                            </p>
+                          </div>
+                        )}
                         {vehicleResult.registeredRTO && (
                           <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                             <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered RTO</p>
                             <p className="text-sm text-white">{vehicleResult.registeredRTO}</p>
                           </div>
                         )}
-                        <div className="rounded-xl border border-zinc-700/40 bg-zinc-900/60 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                          <div className="space-y-1">
-                            <p className="text-xs font-semibold text-white flex items-center gap-2"><Lock className="size-3.5 text-zinc-400" />Full Vehicle Record Locked</p>
-                            <p className="text-[11px] text-zinc-400 leading-relaxed">Upgrade to see owner name, father's name, vehicle class, fuel type, registration & insurance dates, and registered address.</p>
-                          </div>
-                          <a href="/pricing" className="bg-white hover:bg-zinc-200 text-black font-semibold px-4 py-2 rounded-xl text-xs transition-colors shrink-0 flex items-center gap-1.5 shadow-md">
-                            <Lock className="size-3.5" />
-                            <span>Unlock Full Report</span>
-                          </a>
-                        </div>
+                      </div>
+                    </div>
+
+                    {/* Address — blurred teaser for preview users */}
+                    {vehicleResult.address && (
+                      <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                        <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered Address</p>
+                        <p className={`text-sm text-zinc-200 leading-relaxed ${isLocked ? 'blur-[3px] select-none pointer-events-none' : ''}`}>
+                          {vehicleResult.address}
+                        </p>
                       </div>
                     )}
 
+                    {/* Upgrade CTA for preview users — sits below blurred content */}
+                    {isLocked && (
+                      <div className="rounded-xl border border-zinc-700/40 bg-zinc-900/60 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <p className="text-xs font-semibold text-white flex items-center gap-2"><Lock className="size-3.5 text-zinc-400" />Full Vehicle Record Locked</p>
+                          <p className="text-[11px] text-zinc-400 leading-relaxed">Upgrade to reveal owner name, father's name, vehicle class, fuel type, registration &amp; insurance dates, and registered address.</p>
+                        </div>
+                        <a href="/pricing" className="bg-white hover:bg-zinc-200 text-black font-semibold px-4 py-2 rounded-xl text-xs transition-colors shrink-0 flex items-center gap-1.5 shadow-md">
+                          <Lock className="size-3.5" />
+                          <span>Unlock Full Report</span>
+                        </a>
+                      </div>
+                    )}
 
                   </div>
 
