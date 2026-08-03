@@ -154,60 +154,86 @@ STRICT FORMATTING RULES:
 - Do not use em dashes anywhere in the response.
 - Every candidate name MUST 100% strictly satisfy the start letter, end letter, and length constraints.`;
 
-    const isGroq = !!GROQ_API_KEY;
-    const apiUrl = isGroq ? GROQ_API_URL : 'https://integrate.api.nvidia.com/v1/chat/completions';
-    const primaryModel = isGroq ? MODEL_PRIMARY : 'meta/llama-3.3-70b-instruct';
-    const fallbackModel = isGroq ? MODEL_FALLBACK : 'meta/llama-3.1-8b-instruct';
-
-    const fetchStream = async (model: string) => {
-      return await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model,
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an advanced pattern analysis and probabilistic reasoning model. Every prediction MUST 100% strictly satisfy the character length, first letter, and last letter constraints. Do not use markdown headers (# or ## or ###). Do not use emojis. Do not use em dashes.',
-            },
-            { role: 'user', content: prompt },
-          ],
-          temperature: 0.1,
-          max_tokens: 3500,
-          stream: true,
-        }),
-      });
+    const tryGroq = async (model: string) => {
+      if (!GROQ_API_KEY) return null;
+      try {
+        const r = await fetch(GROQ_API_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${GROQ_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              {
+                role: 'system',
+                content: 'You are an advanced pattern analysis and probabilistic reasoning model for owner name reconstruction.',
+              },
+              { role: 'user', content: prompt },
+            ],
+            temperature: 0.3,
+            max_tokens: 2000,
+            stream: true,
+          }),
+        });
+        return r.ok ? r : null;
+      } catch {
+        return null;
+      }
     };
 
-    let groqRes = await fetchStream(primaryModel);
+    const tryNVIDIA = async (model: string) => {
+      const nvidiaKey = process.env.NVIDIA_NIM_API_KEY;
+      if (!nvidiaKey) return null;
+      try {
+        const r = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${nvidiaKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              {
+                role: 'system',
+                content: 'You are an advanced pattern analysis and probabilistic reasoning model for owner name reconstruction.',
+              },
+              { role: 'user', content: prompt },
+            ],
+            temperature: 0.3,
+            max_tokens: 2000,
+            stream: true,
+          }),
+        });
+        return r.ok ? r : null;
+      } catch {
+        return null;
+      }
+    };
 
-    if (!groqRes.ok) {
-      console.warn(`[predict-name] Primary model ${primaryModel} failed. Trying fallback ${fallbackModel}...`);
-      groqRes = await fetchStream(fallbackModel);
+    let groqRes = await tryGroq(MODEL_PRIMARY);
+    if (!groqRes) groqRes = await tryGroq(MODEL_FALLBACK);
+    if (!groqRes) groqRes = await tryNVIDIA('meta/llama-3.3-70b-instruct');
+    if (!groqRes) groqRes = await tryNVIDIA('meta/llama-3.1-8b-instruct');
+
+    if (groqRes && groqRes.body) {
+      const textStream = createStreamFromGroq(groqRes.body);
+      return new Response(textStream, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+          'Cache-Control': 'no-cache',
+          'X-Accel-Buffering': 'no',
+        },
+      });
     }
 
-    if (!groqRes.ok) {
-      const err = await groqRes.text();
-      console.error('[predict-name] Groq API error:', err);
-      return NextResponse.json(
-        { success: false, message: 'AI service returned an error. Check Groq API key.' },
-        { status: groqRes.status }
-      );
-    }
-
-    const textStream = createStreamFromGroq(groqRes.body!);
-
-    return new Response(textStream, {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-        'Cache-Control': 'no-cache',
-        'X-Accel-Buffering': 'no',
-      },
-    });
+    return NextResponse.json(
+      { success: false, message: 'AI prediction service temporarily unavailable. Please try again shortly.' },
+      { status: 503 }
+    );
 
   } catch (err: any) {
     console.error('[predict-name] Error:', err?.message);

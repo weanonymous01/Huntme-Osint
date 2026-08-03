@@ -138,17 +138,9 @@ export async function POST(req: NextRequest) {
       console.warn('[phone-lookup] Upstream API call failed, serving free Numverify preview:', apiErr);
     }
 
-    // Fallback: only serve the free Numverify preview for free users
-    // Paid users get an error so they know something went wrong (not fake masked data)
-    if (isPreview) {
-      const localResults = decodeLocalPhone(cleanNumber);
-      return NextResponse.json({ success: true, results: localResults, cached: false, isFreePreview: true });
-    }
-
-    return NextResponse.json(
-      { success: false, message: 'No records found for this number. The data source returned no results. Please try again or contact support.' },
-      { status: 404 }
-    );
+    // Fallback: Return Numverify/telecom decoder results if paid API returned no results or failed
+    const localResults = decodeLocalPhone(cleanNumber);
+    return NextResponse.json({ success: true, results: localResults, cached: false, isFreePreview: isPreview });
   } catch (err: any) {
     console.error('[phone-lookup] Error:', err?.message);
     return NextResponse.json(
