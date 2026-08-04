@@ -1060,11 +1060,9 @@ export default function DashboardPage() {
           <div className="rounded-xl border border-zinc-800/90 bg-[#121214] p-3.5 space-y-1.5">
             <div className="flex items-center justify-between text-xs text-zinc-400 font-medium">
               <span>API Credits</span>
-              {profile && (
-                <span className="text-[10px] text-zinc-500 font-mono capitalize">{profile.plan_type}</span>
-              )}
             </div>
             <p className="text-lg font-bold text-white tracking-tight">
+
               {profileLoading ? (
                 <span className="text-zinc-600">loading...</span>
               ) : (

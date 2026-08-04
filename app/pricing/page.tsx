@@ -25,20 +25,17 @@ export default function PricingPage() {
           {/* Pricing Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto pt-4 items-stretch">
             
-            {/* Plan 1: Pro Monthly */}
+            {/* Plan 1: Pro */}
             <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d0e] p-8 flex flex-col justify-between shadow-2xl transition-all duration-300 hover:border-zinc-700">
               <div>
                 {/* Plan Header */}
                 <div className="space-y-4">
                   <h3 className="text-xs font-semibold text-zinc-400 tracking-widest uppercase">
-                    PRO MONTHLY
+                    PRO
                   </h3>
                   <div className="flex items-baseline gap-2">
                     <span className="text-5xl font-bold tracking-tight text-white">
                       ₹79
-                    </span>
-                    <span className="text-sm text-zinc-400 font-normal">
-                      /month
                     </span>
                   </div>
                   <p className="text-xs text-zinc-300 font-medium leading-relaxed">
@@ -57,7 +54,7 @@ export default function PricingPage() {
                   <ul className="space-y-3.5 text-sm">
                     <li className="flex items-center gap-3 text-zinc-200">
                       <Check className="size-4 text-zinc-400 shrink-0" />
-                      <span className="font-semibold text-white">100 Credits/month</span>
+                      <span className="font-semibold text-white">100 Credits</span>
                     </li>
                     <li className="flex items-center gap-3 text-zinc-300">
                       <Check className="size-4 text-zinc-400 shrink-0" />
@@ -99,7 +96,7 @@ export default function PricingPage() {
               </div>
             </div>
 
-            {/* Plan 2: Premium Monthly (Highlighted) */}
+            {/* Plan 2: Premium (Highlighted) */}
             <div className="rounded-2xl border border-zinc-700 bg-[#0d0d0e] p-8 flex flex-col justify-between shadow-2xl transition-all duration-300 hover:border-zinc-600 relative">
               
               {/* Most Popular Badge */}
@@ -111,14 +108,11 @@ export default function PricingPage() {
                 {/* Plan Header */}
                 <div className="space-y-4 pt-1">
                   <h3 className="text-xs font-semibold text-zinc-300 tracking-widest uppercase flex items-center gap-2">
-                    PREMIUM MONTHLY
+                    PREMIUM
                   </h3>
                   <div className="flex items-baseline gap-2">
                     <span className="text-5xl font-bold tracking-tight text-white">
                       ₹499
-                    </span>
-                    <span className="text-sm text-zinc-400 font-normal">
-                      /month
                     </span>
                   </div>
                   <p className="text-xs text-zinc-300 font-medium leading-relaxed">
@@ -137,8 +131,9 @@ export default function PricingPage() {
                   <ul className="space-y-3.5 text-sm">
                     <li className="flex items-center gap-3 text-zinc-200">
                       <Check className="size-4 text-white shrink-0" />
-                      <span className="font-bold text-white">1,000 Credits/month</span>
+                      <span className="font-bold text-white">1,000 Credits</span>
                     </li>
+
                     <li className="flex items-center gap-3 text-zinc-200">
                       <Check className="size-4 text-white shrink-0" />
                       <span className="font-semibold text-white">Everything in Pro</span>
