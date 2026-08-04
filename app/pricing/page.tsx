@@ -151,7 +151,16 @@ export default function PricingPage() {
                       <Check className="size-4 text-zinc-400 shrink-0" />
                       <span>Early Access to New Features</span>
                     </li>
+                    <li className="flex items-center gap-3 text-zinc-300">
+                      <Check className="size-4 text-zinc-400 shrink-0" />
+                      <span>1:1 Investigation Training</span>
+                    </li>
+                    <li className="flex items-center gap-3 text-zinc-300">
+                      <Check className="size-4 text-zinc-400 shrink-0" />
+                      <span>Priority Data Sources Points</span>
+                    </li>
                   </ul>
+
                 </div>
               </div>
 
