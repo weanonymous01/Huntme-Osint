@@ -70,9 +70,10 @@ export default function TermsPage() {
             <h2 className="text-lg font-bold text-white">5. Contact Information</h2>
             <p className="text-zinc-400 text-sm">
               For questions regarding these Terms of Service, please contact our legal team at{' '}
-              <a href="mailto:hello@huntme.in" className="text-white underline">
-                hello@huntme.in
+              <a href="mailto:your.weanonymous@gmail.com" className="text-white underline">
+                your.weanonymous@gmail.com
               </a>.
+
             </p>
           </section>
         </div>

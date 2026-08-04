@@ -51,9 +51,10 @@ export default function RefundPage() {
             </h2>
             <p className="text-zinc-400 text-sm">
               To request a refund or report a payment issue, email your transaction ID and account email to{' '}
-              <a href="mailto:hello@huntme.in" className="text-white underline font-semibold">
-                hello@huntme.in
+              <a href="mailto:your.weanonymous@gmail.com" className="text-white underline font-semibold">
+                your.weanonymous@gmail.com
               </a>. Our support team reviews all requests within 24 hours.
+
             </p>
           </section>
         </div>

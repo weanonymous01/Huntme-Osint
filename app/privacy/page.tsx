@@ -58,9 +58,10 @@ export default function PrivacyPage() {
             <h2 className="text-lg font-bold text-white">4. Your Privacy Rights</h2>
             <p className="text-zinc-400 text-sm">
               You have the right to request deletion of your account and associated search logs at any time. For data deletion inquiries or privacy questions, contact us at{' '}
-              <a href="mailto:hello@huntme.in" className="text-white underline">
-                hello@huntme.in
+              <a href="mailto:your.weanonymous@gmail.com" className="text-white underline">
+                your.weanonymous@gmail.com
               </a>.
+
             </p>
           </section>
         </div>

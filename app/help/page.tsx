@@ -49,31 +49,24 @@ export default function HelpPage() {
             <p className="text-xs text-zinc-400 leading-relaxed">
               Have a billing question or custom enterprise requirement? Email our 24/7 technical support team.
             </p>
-            <a href="mailto:hello@huntme.in" className="inline-block text-xs font-semibold text-white underline pt-1">
-              hello@huntme.in →
+            <a href="mailto:your.weanonymous@gmail.com" className="inline-block text-xs font-semibold text-white underline pt-1">
+              your.weanonymous@gmail.com →
             </a>
+
           </div>
         </div>
 
         {/* Contact Info Card */}
         <div className="rounded-2xl border border-zinc-800 bg-[#0d0d0e] p-8 sm:p-10 space-y-6">
           <h2 className="text-xl font-bold text-white">Get in Touch</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm">
             <div className="flex items-start gap-3 text-zinc-300">
               <Mail className="size-5 text-zinc-400 shrink-0 mt-0.5" />
               <div>
-                <p className="font-semibold text-white">Email</p>
-                <a href="mailto:hello@huntme.in" className="text-zinc-400 hover:text-white transition-colors">
-                  hello@huntme.in
+                <p className="font-semibold text-white">Admin Email</p>
+                <a href="mailto:your.weanonymous@gmail.com" className="text-zinc-400 hover:text-white transition-colors">
+                  your.weanonymous@gmail.com
                 </a>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3 text-zinc-300">
-              <Phone className="size-5 text-zinc-400 shrink-0 mt-0.5" />
-              <div>
-                <p className="font-semibold text-white">Phone</p>
-                <p className="text-zinc-400">+91 11 4050 8900</p>
               </div>
             </div>
 
@@ -85,6 +78,7 @@ export default function HelpPage() {
               </div>
             </div>
           </div>
+
         </div>
       </main>
 

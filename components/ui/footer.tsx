@@ -158,11 +158,11 @@ export function Footer() {
             <div className="space-y-2 text-xs sm:text-sm text-zinc-400 leading-relaxed">
               <p>DLF Cyber City, Phase 2, Gurugram, Haryana 122002, India</p>
               <p>
-                <a href="mailto:hello@huntme.in" className="hover:text-white transition-colors">
-                  hello@huntme.in
+                <a href="mailto:your.weanonymous@gmail.com" className="hover:text-white transition-colors">
+                  your.weanonymous@gmail.com
                 </a>
               </p>
-              <p>+91 11 4050 8900</p>
+
             </div>
           </div>
         </div>
