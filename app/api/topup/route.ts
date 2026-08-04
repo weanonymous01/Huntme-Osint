@@ -79,6 +79,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    let lastDbError: string | null = null;
+
     // ── 4. Try RPC Function first (Bypasses RLS in Postgres even if service key is missing) ──
     try {
       const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc('topup_user_credits', {
@@ -87,7 +89,10 @@ export async function POST(req: NextRequest) {
         p_plan: planName,
       });
 
-      if (!rpcError && rpcData && rpcData.success) {
+      if (rpcError) {
+        lastDbError = rpcError.message || rpcError.details || JSON.stringify(rpcError);
+        console.warn('[topup] RPC error notice:', lastDbError);
+      } else if (rpcData && rpcData.success) {
         console.log(`[topup] RPC SUCCESS: Added ${creditsToAdd} credits to ${cleanEmail}`);
         return NextResponse.json({
           success: true,
@@ -100,18 +105,24 @@ export async function POST(req: NextRequest) {
             planType: rpcData.planType,
           },
         });
+      } else if (rpcData && !rpcData.success) {
+        lastDbError = rpcData.message || 'RPC returned unsuccessful';
       }
-    } catch (rpcErr) {
-      console.warn('[topup] RPC function check fallback:', rpcErr);
+    } catch (rpcErr: any) {
+      lastDbError = rpcErr?.message || 'RPC execution thrown exception';
+      console.warn('[topup] RPC exception fallback:', rpcErr);
     }
 
     // ── 5. Direct Supabase Admin Query Fallback ──
-    const { data: existingProfile } = await supabaseAdmin
+    const { data: existingProfile, error: profileSelectErr } = await supabaseAdmin
       .from('profiles')
       .select('*')
       .ilike('email', cleanEmail)
       .maybeSingle();
 
+    if (profileSelectErr) {
+      lastDbError = profileSelectErr.message || JSON.stringify(profileSelectErr);
+    }
 
     if (existingProfile) {
       const currentCredits = existingProfile.api_credits || 0;
@@ -132,7 +143,7 @@ export async function POST(req: NextRequest) {
       if (updateErr) {
         console.error('[topup] Profile update database error:', updateErr);
         return NextResponse.json(
-          { success: false, message: 'Database error updating user profile credits.' },
+          { success: false, message: `Database update error: ${updateErr.message}` },
           { status: 500 }
         );
       }
@@ -244,16 +255,19 @@ export async function POST(req: NextRequest) {
               autoCreatedAccount: true,
             },
           });
+        } else if (profileInsertErr) {
+          lastDbError = profileInsertErr.message;
         }
       }
     } catch (autoCreateErr: any) {
+      lastDbError = autoCreateErr?.message;
       console.error('[topup] Auto-create user error:', autoCreateErr?.message);
     }
 
     return NextResponse.json(
       {
         success: false,
-        message: `Failed to provision credits for ${cleanEmail}. Please run the topup_user_credits SQL script in your Supabase SQL Editor or set SUPABASE_SERVICE_ROLE_KEY in Vercel.`,
+        message: `Failed to provision credits for ${cleanEmail}. Database error: ${lastDbError || 'RPC function missing or RLS blocked query. Please run the SQL script in Supabase SQL Editor or set SUPABASE_SERVICE_ROLE_KEY in Vercel.'}`,
       },
       { status: 500 }
     );
