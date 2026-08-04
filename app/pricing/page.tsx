@@ -87,7 +87,8 @@ export default function PricingPage() {
               {/* Action Button */}
               <div className="pt-8">
                 <a
-                  href="/login"
+                  href="https://payments.cashfree.com/forms/Huntme-pro"
+                  target="_self"
                   className="w-full bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/80 text-white font-medium py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-all text-sm shadow-md"
                 >
                   <span>Get Started</span>
@@ -157,13 +158,15 @@ export default function PricingPage() {
               {/* Action Button */}
               <div className="pt-8">
                 <a
-                  href="/login"
+                  href="https://payments.cashfree.com/forms/huntme-premimum"
+                  target="_self"
                   className="w-full bg-white hover:bg-zinc-200 text-black font-semibold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors text-sm shadow-xl"
                 >
                   <span>Upgrade to Premium</span>
                   <ArrowRight className="size-4" />
                 </a>
               </div>
+
             </div>
 
           </div>
