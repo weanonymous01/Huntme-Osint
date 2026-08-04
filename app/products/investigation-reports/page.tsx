@@ -29,12 +29,8 @@ export default function InvestigationReportsPage() {
             <p className="text-xl text-muted-foreground leading-relaxed">
               Every search generates a comprehensive, professional report equipped with AI analysis, structured findings, timeline mapping, and instant PDF export.
             </p>
-            <div className="flex items-center gap-3 pt-4">
-              <Button size="lg" className="gap-2">
-                <Download className="size-4" /> Download Sample PDF
-              </Button>
-            </div>
           </div>
+
 
           {/* Report Features */}
           <div className="space-y-8">
