@@ -27,8 +27,10 @@ import {
   X,
   Download,
   LogOut,
-  Mail
+  Mail,
+  Loader2
 } from 'lucide-react';
+
 import { exportVehiclePdf, exportPhonePdf } from '@/lib/exportPdf';
 
 function maskWord(w: string): string {
@@ -389,6 +391,9 @@ export default function DashboardPage() {
       if (!user) {
         setProfile(null);
         setProfileLoading(false);
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
         return;
       }
 
@@ -461,20 +466,38 @@ export default function DashboardPage() {
       setProfileLoading(false);
     };
 
-    // Initial session load
+    // Initial session load & strict protection guard
     supabase.auth.getSession().then(({ data: { session } }) => {
-      loadProfileForUser(session?.user || null);
+      if (!session?.user) {
+        setProfile(null);
+        setProfileLoading(false);
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+      } else {
+        loadProfileForUser(session.user);
+      }
     });
 
     // Listen to real-time auth changes (sign in, sign out, user switch)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      loadProfileForUser(session?.user || null);
+      if (_event === 'SIGNED_OUT' || !session?.user) {
+        setProfile(null);
+        setProfileLoading(false);
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+      } else {
+        loadProfileForUser(session.user);
+      }
     });
 
     return () => {
       subscription.unsubscribe();
     };
   }, []);
+
+
 
   // Deduct 5 credits per search and refresh profile if credits >= 5
   const deductCredit = async () => {
@@ -1006,7 +1029,23 @@ export default function DashboardPage() {
     }
   };
 
+  // Strict session protection guard: if profile is loading or profile is null, block dashboard UI and show loading/redirect screen
+
+  if (profileLoading || !profile) {
+    return (
+      <div className="min-h-screen bg-[#070708] text-white flex flex-col items-center justify-center p-4">
+        <div className="flex flex-col items-center space-y-4">
+          <Loader2 className="size-8 animate-spin text-zinc-400" />
+          <p className="text-sm font-medium text-zinc-400 tracking-wide font-mono">
+            Verifying active session...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
+
     <div className="min-h-screen bg-[#070708] text-white flex selection:bg-zinc-800 selection:text-white font-sans">
       {/* Left Sidebar */}
       <aside className="w-64 border-r border-zinc-800/80 bg-[#0a0a0c] flex flex-col justify-between p-5 shrink-0 hidden md:flex h-screen sticky top-0 overflow-y-auto">
