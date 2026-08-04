@@ -13,11 +13,8 @@ export default function HelpPage() {
       <main className="grow py-16 px-4 sm:px-6 md:py-24 max-w-5xl mx-auto w-full space-y-12">
         {/* Header Title */}
         <div className="space-y-4 text-center max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-800/80 border border-zinc-700/60 text-xs font-mono text-zinc-300">
-            <HelpCircle className="size-3.5" />
-            <span>Support & Documentation</span>
-          </div>
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white">
+
             Help Center & Support
           </h1>
           <p className="text-base sm:text-lg text-zinc-400 leading-relaxed">

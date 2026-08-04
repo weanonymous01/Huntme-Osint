@@ -13,11 +13,8 @@ export default function TermsPage() {
       <main className="grow py-16 px-4 sm:px-6 md:py-24 max-w-4xl mx-auto w-full space-y-12">
         {/* Header Title */}
         <div className="space-y-4 text-center sm:text-left border-b border-zinc-800/80 pb-8">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-800/80 border border-zinc-700/60 text-xs font-mono text-zinc-300">
-            <Scale className="size-3.5" />
-            <span>Legal Compliance & Terms</span>
-          </div>
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-white">
+
             Terms of Service
           </h1>
           <p className="text-sm sm:text-base text-zinc-400">
