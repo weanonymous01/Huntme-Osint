@@ -601,11 +601,14 @@ print(f"Entities Found: {len(data['entities'])}")`;
             <div className="pt-2 text-sm text-zinc-400">
               Can't find what you're looking for?{" "}
               <a
-                href="/company/about"
+                href="https://superprofile.bio/bookings/weanonymous?sessionId=669cabd1bffec60013ed7996"
+                target="_blank"
+                rel="noreferrer"
                 className="font-semibold text-white hover:underline"
               >
                 Contact our customer support team
               </a>
+
             </div>
           </div>
 
