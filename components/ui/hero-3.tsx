@@ -20,11 +20,14 @@ export function HeroSection() {
 			<div className="relative z-10 flex max-w-2xl flex-col gap-5 px-4">
 				<a
 					className={cn(
-						"group flex w-fit items-center gap-3 rounded-sm border bg-card p-1 shadow-xs",
+						"group flex w-fit items-center gap-3 rounded-sm border bg-card p-1 shadow-xs hover:border-zinc-500 transition-all",
 						"fade-in slide-in-from-bottom-10 animate-in fill-mode-backwards transition-all delay-500 duration-500 ease-out"
 					)}
-					href="#link"
+					href="https://superprofile.bio/bookings/weanonymous?sessionId=669cabd1bffec60013ed7996"
+					target="_blank"
+					rel="noreferrer"
 				>
+
 					<div className="rounded-xs border bg-card px-1.5 py-0.5 shadow-sm">
 						<p className="font-mono text-xs">NOW</p>
 					</div>
