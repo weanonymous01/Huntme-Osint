@@ -253,18 +253,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         success: false,
-        message: `Failed to provision credits for ${cleanEmail}. Please check database connection.`,
+        message: `Failed to provision credits for ${cleanEmail}. Please run the topup_user_credits SQL script in your Supabase SQL Editor or set SUPABASE_SERVICE_ROLE_KEY in Vercel.`,
       },
       { status: 500 }
     );
   } catch (err: any) {
     console.error('[topup] Server error:', err?.message);
     return NextResponse.json(
-      { success: false, message: 'Internal server error.' },
+      { success: false, message: `Internal server error: ${err?.message || 'Unknown error'}` },
       { status: 500 }
     );
   }
 }
+
 
 
 export async function GET(req: NextRequest) {
