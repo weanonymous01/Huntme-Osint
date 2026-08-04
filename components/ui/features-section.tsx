@@ -508,11 +508,12 @@ print(f"Entities Found: {len(data['entities'])}")`;
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
               <a
-                href="/products/rest-api"
+                href="/login"
                 className="bg-white text-black font-semibold px-5 py-2.5 rounded-lg hover:bg-zinc-200 transition-colors flex items-center gap-2 text-sm"
               >
                 Get Started <ArrowRight className="size-4" />
               </a>
+
               <a
                 href="/products/rest-api"
                 className="border border-zinc-800 bg-transparent text-white font-medium px-5 py-2.5 rounded-lg hover:bg-zinc-900 transition-colors text-sm"
