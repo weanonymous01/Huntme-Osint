@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // ── 5. Pre-login support for Auth users ──
+    // ── 5. Pre-login support for existing Auth users ──
     try {
       const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers();
       const authUser = authUsers?.users?.find(
@@ -168,12 +168,67 @@ export async function POST(req: NextRequest) {
       console.warn('[topup] Auth user lookup warning:', e);
     }
 
+    // ── 6. Auto-Create Account for New Paid User (Zero-Failure Policy for Webhooks / Make) ──
+    try {
+      console.log(`[topup] Email ${cleanEmail} not found. Auto-creating Supabase account & pre-provisioning ${creditsToAdd} credits...`);
+      
+      const { data: createdAuth, error: createAuthErr } = await supabaseAdmin.auth.admin.createUser({
+        email: cleanEmail,
+        email_confirm: true,
+        user_metadata: { full_name: cleanEmail.split('@')[0] },
+      });
+
+      let userId = createdAuth?.user?.id;
+
+      if (createAuthErr || !userId) {
+        console.warn('[topup] createUser notice:', createAuthErr?.message);
+        // If user already exists in auth, re-try listing auth users
+        const { data: reList } = await supabaseAdmin.auth.admin.listUsers();
+        const existingAuth = reList?.users?.find(u => u.email?.toLowerCase() === cleanEmail);
+        userId = existingAuth?.id;
+      }
+
+      if (userId) {
+        const { data: newProfile, error: profileInsertErr } = await supabaseAdmin
+          .from('profiles')
+          .upsert({
+            id: userId,
+            email: cleanEmail,
+            full_name: cleanEmail.split('@')[0],
+            plan_type: planName,
+            api_credits: creditsToAdd,
+            max_credits: Math.max(100, creditsToAdd),
+          })
+          .select()
+          .single();
+
+        if (newProfile && !profileInsertErr) {
+          console.log(`[topup] SUCCESS: Auto-created account & added ${creditsToAdd} credits for ${cleanEmail}`);
+          return NextResponse.json({
+            success: true,
+            message: `Account auto-created and added ${creditsToAdd} credits for ${cleanEmail}. User can sign in with this email to access their credits.`,
+            user: {
+              id: newProfile.id,
+              email: newProfile.email,
+              previousCredits: 0,
+              addedCredits: creditsToAdd,
+              newCredits: newProfile.api_credits,
+              planType: newProfile.plan_type,
+              autoCreatedAccount: true,
+            },
+          });
+        }
+      }
+    } catch (autoCreateErr: any) {
+      console.error('[topup] Auto-create user error:', autoCreateErr?.message);
+    }
+
     return NextResponse.json(
       {
         success: false,
-        message: `User with email "${cleanEmail}" was not found. Please ensure the user registers an account first.`,
+        message: `Failed to provision credits for ${cleanEmail}. Please check database connection.`,
       },
-      { status: 404 }
+      { status: 500 }
     );
   } catch (err: any) {
     console.error('[topup] Server error:', err?.message);
@@ -183,6 +238,7 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
