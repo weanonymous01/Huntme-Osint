@@ -44,13 +44,18 @@ print("Discovered Entities:", data["entities"])`;
               Integrate real-time OSINT intelligence into security platforms, investigation software, SIEM/SOAR workflows, and internal enterprise tools using standard HTTP requests and clean JSON responses.
             </p>
             <div className="flex items-center gap-3 pt-4">
-              <Button size="lg" className="gap-2">
-                Get API Key <ArrowRight className="size-4" />
+              <Button size="lg" className="gap-2" asChild>
+                <a href="/login">
+                  Get API Key <ArrowRight className="size-4" />
+                </a>
               </Button>
-              <Button size="lg" variant="outline">
-                Read API Documentation
+              <Button size="lg" variant="outline" asChild>
+                <a href="/login">
+                  Read API Documentation
+                </a>
               </Button>
             </div>
+
           </div>
 
           {/* Workflow */}

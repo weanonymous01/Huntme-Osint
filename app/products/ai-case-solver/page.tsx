@@ -29,10 +29,13 @@ export default function AiCaseSolverPage() {
               AI automatically analyzes collected information to connect related entities, summarize complex findings, detect hidden relationships, and organize case evidence.
             </p>
             <div className="flex items-center gap-3 pt-4">
-              <Button size="lg" className="gap-2">
-                Try AI Assistant <ArrowRight className="size-4" />
+              <Button size="lg" className="gap-2" asChild>
+                <a href="/login">
+                  Try AI Assistant <ArrowRight className="size-4" />
+                </a>
               </Button>
             </div>
+
           </div>
 
           {/* Capabilities Grid */}

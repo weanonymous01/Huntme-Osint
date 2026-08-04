@@ -31,13 +31,18 @@ export default function PhoneOsintPage() {
               Search publicly available information related to any phone number. Transform raw phone numbers into rich, actionable intelligence profiles.
             </p>
             <div className="flex items-center gap-3 pt-4">
-              <Button size="lg" className="gap-2">
-                Start Phone Search <ArrowRight className="size-4" />
+              <Button size="lg" className="gap-2" asChild>
+                <a href="/login">
+                  Start Phone Search <ArrowRight className="size-4" />
+                </a>
               </Button>
-              <Button size="lg" variant="outline">
-                View API Specs
+              <Button size="lg" variant="outline" asChild>
+                <a href="/login">
+                  View API Specs
+                </a>
               </Button>
             </div>
+
           </div>
 
           {/* Possible Results Grid */}

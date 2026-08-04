@@ -20,10 +20,13 @@ export default function EnterpriseInfraPage() {
               Built for high-availability security operations, sub-100ms latency, 99.99% uptime SLAs, and strict SOC-2 & GDPR compliance boundaries.
             </p>
             <div className="flex items-center gap-3 pt-4">
-              <Button size="lg" className="gap-2">
-                Contact Enterprise Team <ArrowRight className="size-4" />
+              <Button size="lg" className="gap-2" asChild>
+                <a href="/login">
+                  Contact Enterprise Team <ArrowRight className="size-4" />
+                </a>
               </Button>
             </div>
+
           </div>
 
           {/* Pillars */}

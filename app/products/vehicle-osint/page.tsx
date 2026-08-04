@@ -29,13 +29,18 @@ export default function VehicleOsintPage() {
               Search vehicle registration information from lawful public sources. Instantly query license plate data, VIN records, and historical vehicle telemetry.
             </p>
             <div className="flex items-center gap-3 pt-4">
-              <Button size="lg" className="gap-2">
-                Lookup License Plate <ArrowRight className="size-4" />
+              <Button size="lg" className="gap-2" asChild>
+                <a href="/login">
+                  Lookup License Plate <ArrowRight className="size-4" />
+                </a>
               </Button>
-              <Button size="lg" variant="outline">
-                View API Specs
+              <Button size="lg" variant="outline" asChild>
+                <a href="/login">
+                  View API Specs
+                </a>
               </Button>
             </div>
+
           </div>
 
           {/* Possible Results Grid */}
