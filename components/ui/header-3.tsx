@@ -306,30 +306,26 @@ const companyLinks: LinkItem[] = [
 const companyLinks2: LinkItem[] = [
 	{
 		title: 'Terms of Service',
-		href: '#',
+		href: '/terms',
 		icon: FileText,
 	},
 	{
 		title: 'Privacy Policy',
-		href: '#',
+		href: '/privacy',
 		icon: Shield,
 	},
 	{
 		title: 'Refund Policy',
-		href: '#',
+		href: '/refund',
 		icon: RotateCcw,
 	},
 	{
-		title: 'Blog',
-		href: '#',
-		icon: Leaf,
-	},
-	{
 		title: 'Help Center',
-		href: '#',
+		href: '/help',
 		icon: HelpCircle,
 	},
 ];
+
 
 
 function useScroll(threshold: number) {

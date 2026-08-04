@@ -115,39 +115,40 @@ export function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Other Pages (lg:col-span-3) */}
+          {/* Column 3: Legal & Support Pages (lg:col-span-3) */}
           <div className="lg:col-span-3 space-y-3">
             <h4 className="font-bold text-sm text-white tracking-wide">
-              Other Pages
+              Legal & Support
             </h4>
             <ul className="space-y-2 text-xs sm:text-sm">
+              <li>
+                <a href="/terms" className="hover:text-white transition-colors">
+                  Terms of Service
+                </a>
+              </li>
+              <li>
+                <a href="/privacy" className="hover:text-white transition-colors">
+                  Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a href="/refund" className="hover:text-white transition-colors">
+                  Refund Policy
+                </a>
+              </li>
+              <li>
+                <a href="/help" className="hover:text-white transition-colors">
+                  Help Center
+                </a>
+              </li>
               <li>
                 <a href="/company/about" className="hover:text-white transition-colors">
                   About Us
                 </a>
               </li>
-              <li>
-                <a href="/products/rest-api" className="hover:text-white transition-colors">
-                  REST API
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Terms & Conditions
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:text-white transition-colors">
-                  Privacy Policy
-                </a>
-              </li>
-              <li>
-                <a href="/products/rest-api" className="hover:text-white transition-colors">
-                  Documentation
-                </a>
-              </li>
             </ul>
           </div>
+
 
           {/* Column 4: Contact Details (lg:col-span-3) */}
           <div className="lg:col-span-3 space-y-3">
