@@ -1,5 +1,7 @@
 'use client';
+// Updated navigation header without Blog
 import React from 'react';
+
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { MenuToggleIcon } from '@/components/ui/menu-toggle-icon';
