@@ -105,3 +105,75 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- ==========================================================
+-- RPC FUNCTION: Security Definer Topup (Bypasses RLS safely for webhooks)
+-- ==========================================================
+
+CREATE OR REPLACE FUNCTION public.topup_user_credits(
+  p_email TEXT,
+  p_credits INT,
+  p_plan TEXT DEFAULT 'monthly'
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_profile RECORD;
+  v_user_id UUID;
+  v_new_credits INT;
+  v_new_max INT;
+BEGIN
+  -- 1. Search in public.profiles by email (case-insensitive)
+  SELECT * INTO v_profile FROM public.profiles WHERE LOWER(email) = LOWER(p_email) LIMIT 1;
+
+  IF v_profile.id IS NOT NULL THEN
+    v_new_credits := COALESCE(v_profile.api_credits, 0) + p_credits;
+    v_new_max := GREATEST(COALESCE(v_profile.max_credits, 100), v_new_credits);
+
+    UPDATE public.profiles
+    SET api_credits = v_new_credits,
+        max_credits = v_new_max,
+        plan_type = CASE WHEN plan_type = 'lifetime' THEN 'lifetime' ELSE p_plan END
+    WHERE id = v_profile.id;
+
+    RETURN jsonb_build_object(
+      'success', true,
+      'message', 'Credits added successfully',
+      'email', v_profile.email,
+      'previousCredits', v_profile.api_credits,
+      'addedCredits', p_credits,
+      'newCredits', v_new_credits,
+      'planType', CASE WHEN v_profile.plan_type = 'lifetime' THEN 'lifetime' ELSE p_plan END
+    );
+  END IF;
+
+  -- 2. If not found in profiles, search auth.users
+  SELECT id INTO v_user_id FROM auth.users WHERE LOWER(email) = LOWER(p_email) LIMIT 1;
+
+  IF v_user_id IS NOT NULL THEN
+    INSERT INTO public.profiles (id, email, api_credits, max_credits, plan_type)
+    VALUES (v_user_id, LOWER(p_email), p_credits, GREATEST(100, p_credits), p_plan)
+    ON CONFLICT (id) DO UPDATE
+    SET api_credits = public.profiles.api_credits + EXCLUDED.api_credits,
+        max_credits = GREATEST(public.profiles.max_credits, public.profiles.api_credits + EXCLUDED.api_credits);
+
+    RETURN jsonb_build_object(
+      'success', true,
+      'message', 'Profile created and credits added for Auth user',
+      'email', LOWER(p_email),
+      'previousCredits', 0,
+      'addedCredits', p_credits,
+      'newCredits', p_credits,
+      'planType', p_plan
+    );
+  END IF;
+
+  RETURN jsonb_build_object(
+    'success', false,
+    'message', 'User email not found'
+  );
+END;
+$$;
+

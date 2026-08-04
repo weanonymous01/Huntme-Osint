@@ -79,12 +79,39 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ── 4. Database Transaction via Supabase Admin ──
+    // ── 4. Try RPC Function first (Bypasses RLS in Postgres even if service key is missing) ──
+    try {
+      const { data: rpcData, error: rpcError } = await supabaseAdmin.rpc('topup_user_credits', {
+        p_email: cleanEmail,
+        p_credits: creditsToAdd,
+        p_plan: planName,
+      });
+
+      if (!rpcError && rpcData && rpcData.success) {
+        console.log(`[topup] RPC SUCCESS: Added ${creditsToAdd} credits to ${cleanEmail}`);
+        return NextResponse.json({
+          success: true,
+          message: `Successfully added ${creditsToAdd} credits to ${cleanEmail}.`,
+          user: {
+            email: cleanEmail,
+            previousCredits: rpcData.previousCredits ?? 0,
+            addedCredits: creditsToAdd,
+            newCredits: rpcData.newCredits,
+            planType: rpcData.planType,
+          },
+        });
+      }
+    } catch (rpcErr) {
+      console.warn('[topup] RPC function check fallback:', rpcErr);
+    }
+
+    // ── 5. Direct Supabase Admin Query Fallback ──
     const { data: existingProfile } = await supabaseAdmin
       .from('profiles')
       .select('*')
       .ilike('email', cleanEmail)
       .maybeSingle();
+
 
     if (existingProfile) {
       const currentCredits = existingProfile.api_credits || 0;
