@@ -85,9 +85,15 @@ export function Header() {
 									<div className="p-2">
 										<p className="text-muted-foreground text-sm">
 											Interested?{' '}
-											<a href="#" className="text-foreground font-medium hover:underline">
+											<a
+												href="https://superprofile.bio/bookings/weanonymous?sessionId=669cabd1bffec60013ed7996"
+												target="_blank"
+												rel="noreferrer"
+												className="text-foreground font-medium hover:underline"
+											>
 												Schedule a demo
 											</a>
+
 										</p>
 									</div>
 								</NavigationMenuContent>
