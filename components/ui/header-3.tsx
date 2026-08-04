@@ -132,7 +132,13 @@ export function Header() {
 						<a href="/login">Sign In</a>
 					</Button>
 					<Button asChild>
-						<a href="/company/about">Book a Call</a>
+						<a
+							href="https://superprofile.bio/bookings/weanonymous?sessionId=669cabd1bffec60013ed7996"
+							target="_blank"
+							rel="noreferrer"
+						>
+							Book a Call
+						</a>
 					</Button>
 				</div>
 				<Button
@@ -174,9 +180,16 @@ export function Header() {
 						<a href="/login">Sign In</a>
 					</Button>
 					<Button className="w-full" asChild>
-						<a href="/company/about">Book a Call</a>
+						<a
+							href="https://superprofile.bio/bookings/weanonymous?sessionId=669cabd1bffec60013ed7996"
+							target="_blank"
+							rel="noreferrer"
+						>
+							Book a Call
+						</a>
 					</Button>
 				</div>
+
 			</MobileMenu>
 		</header>
 	);

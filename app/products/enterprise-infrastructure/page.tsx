@@ -21,11 +21,16 @@ export default function EnterpriseInfraPage() {
             </p>
             <div className="flex items-center gap-3 pt-4">
               <Button size="lg" className="gap-2" asChild>
-                <a href="/login">
+                <a
+                  href="https://superprofile.bio/bookings/weanonymous?sessionId=669cabd1bffec60013ed7996"
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   Contact Enterprise Team <ArrowRight className="size-4" />
                 </a>
               </Button>
             </div>
+
 
           </div>
 
