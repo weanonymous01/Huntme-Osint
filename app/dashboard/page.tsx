@@ -499,11 +499,11 @@ export default function DashboardPage() {
 
 
 
-  // Deduct 5 credits per search and refresh profile if credits >= 5
+  // Deduct 10 credits per search and refresh profile if credits >= 10
   const deductCredit = async () => {
     if (!profile) return;
-    if (profile.api_credits < 5) return; // Free trial search allowed, no negative credits
-    const newCredits = Math.max(0, profile.api_credits - 5);
+    if (profile.api_credits < 10) return; // Free trial search allowed, no negative credits
+    const newCredits = Math.max(0, profile.api_credits - 10);
     await supabase
       .from('profiles')
       .update({ api_credits: newCredits })
@@ -890,7 +890,7 @@ export default function DashboardPage() {
     { id: 'settings' as const, label: 'Settings', icon: Settings },
   ];
 
-  const isLocked = !profileLoading && (profile?.api_credits ?? 0) < 5;
+  const isLocked = !profileLoading && (profile?.api_credits ?? 0) < 10;
   const maxFreeSearches = profile?.email === 'skyboundkrypton@gmail.com' ? 100 : 1;
   const remainingFreeSearches = Math.max(0, maxFreeSearches - freeSearchCount);
 
@@ -1371,12 +1371,12 @@ export default function DashboardPage() {
                   <div className="space-y-2 max-w-md mx-auto">
                     <h3 className="text-lg font-bold text-white">
                       {(profile?.api_credits ?? 0) > 0 
-                        ? `Insufficient Credits (${profile?.api_credits} / 5 Credits)`
+                        ? `Insufficient Credits (${profile?.api_credits} / 10 Credits)`
                         : 'Free Search Limit Reached (1/1 Used)'}
                     </h3>
                     <p className="text-xs text-zinc-300 leading-relaxed">
                       {(profile?.api_credits ?? 0) > 0
-                        ? `Each Phone OSINT Lookup requires 5 credits. You currently have ${profile?.api_credits} credits remaining. Upgrade your plan or top up credits to run full investigations.`
+                        ? `Each Phone OSINT Lookup requires 10 credits. You currently have ${profile?.api_credits} credits remaining. Upgrade your plan or top up credits to run full investigations.`
                         : 'You have used your 1 free preview search. Upgrade your account to unlock unlimited searches, full unmasked identity data, and complete AI reports.'}
                     </p>
                   </div>
@@ -1711,9 +1711,15 @@ export default function DashboardPage() {
                     <Lock className="size-6" />
                   </div>
                   <div className="space-y-2 max-w-md mx-auto">
-                    <h3 className="text-lg font-bold text-white">Free Search Limit Reached</h3>
+                    <h3 className="text-lg font-bold text-white">
+                      {(profile?.api_credits ?? 0) > 0 
+                        ? `Insufficient Credits (${profile?.api_credits} / 10 Credits)`
+                        : 'Free Search Limit Reached (1/1 Used)'}
+                    </h3>
                     <p className="text-xs text-zinc-300 leading-relaxed">
-                      You have used your 1 free preview search. Upgrade your account to unlock unlimited vehicle lookups, full unmasked identity data, and complete AI reports.
+                      {(profile?.api_credits ?? 0) > 0
+                        ? `Each Vehicle OSINT Lookup requires 10 credits. You currently have ${profile?.api_credits} credits remaining. Upgrade your plan or top up credits to run full investigations.`
+                        : 'You have used your 1 free preview search. Upgrade your account to unlock unlimited vehicle lookups, full unmasked identity data, and complete AI reports.'}
                     </p>
                   </div>
                   <div className="pt-2">
