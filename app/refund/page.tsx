@@ -37,10 +37,10 @@ export default function RefundPage() {
           <section className="space-y-3 bg-[#0d0d0e] p-6 rounded-2xl border border-zinc-800/90">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <AlertCircle className="size-5 text-zinc-400" />
-              2. Refund Eligibility & Failed Top-ups
+              2. Credit Deduction & Refund Eligibility
             </h2>
             <p>
-              Digital query credits that have been consumed for live database searches are non-refundable. However, if a payment is completed but credits fail to deliver due to a technical error, we will issue an immediate manual credit top-up or full refund within 5–7 business days upon request.
+              Digital query credits that have been consumed for successful live database searches are non-refundable. However, queries for phone numbers or targets that do not exist in our database <strong className="text-white">will not consume your credits</strong>. If a payment is completed but credits fail to deliver due to a technical error, we will issue an immediate manual credit top-up or full refund within 5–7 business days upon request.
             </p>
           </section>
 

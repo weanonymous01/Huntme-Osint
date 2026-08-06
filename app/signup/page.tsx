@@ -6,6 +6,7 @@ import { Footer } from '@/components/ui/footer';
 import { Mail, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg viewBox="0 0 24 24" className="size-4" {...props}>
@@ -177,13 +178,25 @@ export default function SignupPage() {
                 />
                 <label htmlFor="agreeTerms" className="cursor-pointer select-none leading-normal">
                   I agree to the{' '}
-                  <a href="#" className="text-zinc-300 hover:underline">
+                  <Link
+                    href="/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-white hover:underline font-semibold"
+                  >
                     Terms of Service
-                  </a>{' '}
+                  </Link>{' '}
                   and{' '}
-                  <a href="#" className="text-zinc-300 hover:underline">
+                  <Link
+                    href="/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="text-white hover:underline font-semibold"
+                  >
                     Privacy Policy
-                  </a>
+                  </Link>
                 </label>
               </div>
 
