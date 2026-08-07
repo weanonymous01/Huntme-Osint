@@ -56,7 +56,8 @@ export async function POST(req: NextRequest) {
 
     // ── 2. PREVIEW MODE (Numverify Free Tier + Masking for 0-credit users) ──
     const numverifyKey = process.env.NUMVERIFY_API_KEY || '2e3798cc22af8a1506d82e1212ac6a60';
-    const apiKey = process.env.PHONE_LOOKUP_API_KEY || 'pk_b950c9c00da656dd92948775a1827e713ee7';
+    const activeApiKey = 'pk_b950c9c00da656dd92948775a1827e713ee7';
+    const envApiKey = process.env.PHONE_LOOKUP_API_KEY;
     const apiBase = process.env.PHONE_LOOKUP_API_BASE || 'https://myapi.lovable.app/api/public/p';
 
     if (isPreview) {
@@ -101,107 +102,133 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // ── 3. CALL UPSTREAM PAID API FOR CREDITED USERS — wait until data is fetched ──
-    try {
-      const url = `${apiBase}/${apiKey}?num=${encodeURIComponent(tenDigitNumber)}`;
-      console.log(`[phone-lookup] Fetching paid intelligence for: ${tenDigitNumber}`);
+    // ── 3. CALL UPSTREAM PAID API FOR CREDITED USERS ──
+    // Keys to try (always prioritize known verified key pk_b950c9...)
+    const candidateKeys = [activeApiKey];
+    if (envApiKey && envApiKey !== activeApiKey && !envApiKey.startsWith('pk_e1472833')) {
+      candidateKeys.push(envApiKey);
+    }
 
-      const externalRes = await fetch(url, {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-        cache: 'no-store',
-        signal: AbortSignal.timeout(30000), // Wait up to 30s for upstream API
-      });
+    const maxRetries = 3;
+    let lastErrorMsg: string | null = null;
+    let isExplicitNoData = false;
 
-      if (externalRes.ok) {
-        const raw = await externalRes.json();
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      for (const keyToUse of candidateKeys) {
+        try {
+          const url = `${apiBase}/${keyToUse}?num=${encodeURIComponent(tenDigitNumber)}`;
+          console.log(`[phone-lookup] (Attempt ${attempt}/${maxRetries}) Fetching from: ${url}`);
 
-        // Handle various response data formats
-        const rawList = Array.isArray(raw?.data?.result)
-          ? raw.data.result
-          : Array.isArray(raw?.result)
-          ? raw.result
-          : Array.isArray(raw?.data)
-          ? raw.data
-          : raw?.data?.result
-          ? [raw.data.result]
-          : null;
+          const externalRes = await fetch(url, {
+            method: 'GET',
+            headers: { Accept: 'application/json' },
+            cache: 'no-store',
+            signal: AbortSignal.timeout(35000), // Generous 35s wait for slow upstream API
+          });
 
-        if (rawList && rawList.length > 0) {
-          const seen = new Set<string>();
-          const results = rawList
-            .filter((item: any) => {
-              if (!item || typeof item !== 'object') return false;
-              const name = (item.name || '').trim();
-              const alt = (item['alternative mobile'] || item.alternativeMobile || '').trim();
-              const father = (item['father name'] || item.fatherName || '').trim();
-              const idNum = (item['id number'] || item.idNumber || '').trim();
-              const key = `${name}_${alt}_${father}_${idNum}`;
-              if (seen.has(key)) return false;
-              seen.add(key);
-              return true;
-            })
-            .map((item: any) => {
-              let cleanAddress: string | null = null;
-              if (item.address && typeof item.address === 'string') {
-                cleanAddress = item.address
-                  .replace(/!+/g, ', ')
-                  .replace(/,\s*,/g, ', ')
-                  .replace(/^[\s,]+|[\s,]+$/g, '')
-                  .trim();
-                if (!cleanAddress) cleanAddress = null;
+          if (externalRes.ok) {
+            const raw = await externalRes.json();
+
+            // Check if upstream API explicitly reports no records for this number
+            const rawError = raw?.data?.error || raw?.error || '';
+            if (
+              rawError.toUpperCase().includes('NO DATA') ||
+              rawError.toUpperCase().includes('THERE IS NO DATA') ||
+              raw?.data?.success === false
+            ) {
+              isExplicitNoData = true;
+              lastErrorMsg = 'No record found for this phone number. The intelligence database returned no matching records.';
+              break;
+            }
+
+            // Extract results list
+            const rawList = Array.isArray(raw?.data?.result)
+              ? raw.data.result
+              : Array.isArray(raw?.result)
+              ? raw.result
+              : Array.isArray(raw?.data)
+              ? raw.data
+              : raw?.data?.result
+              ? [raw.data.result]
+              : null;
+
+            if (rawList && rawList.length > 0) {
+              const seen = new Set<string>();
+              const results = rawList
+                .filter((item: any) => {
+                  if (!item || typeof item !== 'object') return false;
+                  const name = (item.name || '').trim();
+                  const alt = (item['alternative mobile'] || item.alternativeMobile || '').trim();
+                  const father = (item['father name'] || item.fatherName || '').trim();
+                  const idNum = (item['id number'] || item.idNumber || '').trim();
+                  const key = `${name}_${alt}_${father}_${idNum}`;
+                  if (seen.has(key)) return false;
+                  seen.add(key);
+                  return true;
+                })
+                .map((item: any) => {
+                  let cleanAddress: string | null = null;
+                  if (item.address && typeof item.address === 'string') {
+                    cleanAddress = item.address
+                      .replace(/!+/g, ', ')
+                      .replace(/,\s*,/g, ', ')
+                      .replace(/^[\s,]+|[\s,]+$/g, '')
+                      .trim();
+                    if (!cleanAddress) cleanAddress = null;
+                  }
+
+                  let idNum = item['id number'] || item.idNumber || null;
+                  if (idNum === 'N/A' || idNum === 'null' || !idNum) {
+                    if (item.data_id && item.data_id !== 'N/A') {
+                      idNum = item.data_id;
+                    } else {
+                      idNum = null;
+                    }
+                  }
+
+                  return {
+                    name: item.name || 'Unknown',
+                    mobile: item.mobile || tenDigitNumber,
+                    alternativeMobile: item['alternative mobile'] || item.alternativeMobile || null,
+                    fatherName: item['father name'] || item.fatherName || null,
+                    address: cleanAddress,
+                    circle: item['circle/sim'] || item.circle || null,
+                    idNumber: idNum,
+                    email: item.mail || item.email || null,
+                  };
+                });
+
+              if (results.length > 0) {
+                console.log(`[phone-lookup] Successfully fetched ${results.length} record(s) for ${tenDigitNumber}`);
+                return NextResponse.json({ success: true, results, cached: false });
               }
-
-              let idNum = item['id number'] || item.idNumber || null;
-              if (idNum === 'N/A' || idNum === 'null' || !idNum) {
-                if (item.data_id && item.data_id !== 'N/A') {
-                  idNum = item.data_id;
-                } else {
-                  idNum = null;
-                }
-              }
-
-              return {
-                name: item.name || 'Unknown',
-                mobile: item.mobile || tenDigitNumber,
-                alternativeMobile: item['alternative mobile'] || item.alternativeMobile || null,
-                fatherName: item['father name'] || item.fatherName || null,
-                address: cleanAddress,
-                circle: item['circle/sim'] || item.circle || null,
-                idNumber: idNum,
-                email: item.mail || item.email || null,
-              };
-            });
-
-          if (results.length > 0) {
-            return NextResponse.json({ success: true, results, cached: false });
+            }
           }
-        }
-
-        // If upstream API responded with explicit error or no data
-        if (raw?.data?.error || raw?.error || raw?.data?.success === false) {
-          const errorMsg = raw?.data?.error || raw?.error || 'No record found for this phone number.';
-          return NextResponse.json(
-            { success: false, message: errorMsg },
-            { status: 404 }
-          );
+        } catch (apiErr: any) {
+          console.warn(`[phone-lookup] Upstream API call error (attempt ${attempt}):`, apiErr?.message);
         }
       }
-    } catch (apiErr: any) {
-      console.warn('[phone-lookup] Upstream API call error:', apiErr);
-      if (apiErr?.name === 'TimeoutError' || apiErr?.name === 'AbortError') {
-        return NextResponse.json(
-          { success: false, message: 'Upstream data source timed out. Please try again.' },
-          { status: 504 }
-        );
+
+      if (isExplicitNoData) {
+        break;
+      }
+
+      // If still waiting for slow upstream API and more attempts remain, wait 2 seconds before retrying
+      if (attempt < maxRetries) {
+        console.log(`[phone-lookup] Waiting 2000ms before retry attempt ${attempt + 1}...`);
+        await new Promise((r) => setTimeout(r, 2000));
       }
     }
 
-    // ── 4. NO RECORDS FOUND FOR PAID USERS (Never return fake data) ──
+    // ── 4. ONLY SHOW "No record found" IF EXPLICIT NO DATA OR RETRIES EXHAUSTED ──
+    const finalMsg = isExplicitNoData
+      ? 'No record found for this phone number. The intelligence database returned no matching records.'
+      : (lastErrorMsg || 'No record found for this phone number. The intelligence database returned no matching records.');
+
     return NextResponse.json(
       {
         success: false,
-        message: 'No record found for this phone number. The intelligence database returned no matching records.',
+        message: finalMsg,
       },
       { status: 404 }
     );
