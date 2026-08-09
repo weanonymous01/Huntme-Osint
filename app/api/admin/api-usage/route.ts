@@ -22,6 +22,7 @@ let fallbackTopups: TopupRecord[] = [
     created_at: new Date().toISOString(),
   },
 ];
+let warningThreshold = 15;
 const ADMIN_MASTER_KEY = process.env.ADMIN_MASTER_KEY || 'adarsh@@bugwrite-huntme1507';
 
 function isAuthorized(req: NextRequest): boolean {
