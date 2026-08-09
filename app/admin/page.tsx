@@ -413,6 +413,8 @@ export default function AdminApiTrackerPage() {
     );
   }
 
+  const balanceStatus = upstreamApi?.status || 'healthy';
+
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans selection:bg-zinc-800 selection:text-white antialiased">
       {/* Main Container */}
