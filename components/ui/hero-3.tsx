@@ -82,10 +82,13 @@ export function HeroSection() {
 					)}
 				>
 						<img
-						alt="Huntme Dashboard"
-						className="z-2 w-full rounded-lg border border-zinc-800 object-cover shadow-2xl"
-						src="/DashBoard-huntme.png"
-					/>
+							alt="Huntme AI OSINT Investigation Dashboard and Entity Correlation Interface"
+							className="z-2 w-full rounded-lg border border-zinc-800 object-cover shadow-2xl"
+							src="/DashBoard-huntme.png"
+							width={1200}
+							height={675}
+							loading="eager"
+						/>
 				</div>
 			</div>
 		</section>

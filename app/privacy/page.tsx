@@ -1,26 +1,48 @@
-'use client';
-
 import React from 'react';
+import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Header } from '@/components/ui/header-3';
 import { Footer } from '@/components/ui/footer';
 import { Shield, Lock, Eye, Server } from 'lucide-react';
+import { constructMetadata, getBreadcrumbSchema } from '@/lib/seo';
+import { JsonLd } from '@/components/seo/JsonLd';
+
+export const metadata: Metadata = constructMetadata({
+  title: 'Privacy Policy | Huntme OSINT Platform',
+  description:
+    'Learn how Huntme protects user privacy, safeguards search queries with AES-256 encryption, and handles lawful public-source intelligence.',
+  path: '/privacy',
+  keywords: ['Huntme Privacy Policy', 'OSINT Data Security', 'Search Query Encryption'],
+});
 
 export default function PrivacyPage() {
+  const breadcrumbSchema = getBreadcrumbSchema([
+    { name: 'Home', path: '/' },
+    { name: 'Privacy Policy', path: '/privacy' },
+  ]);
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col justify-between selection:bg-zinc-800 selection:text-white">
+      <JsonLd data={breadcrumbSchema} />
       <Header />
 
       <main className="grow py-16 px-4 sm:px-6 md:py-24 max-w-4xl mx-auto w-full space-y-12">
-        {/* Header Title */}
-        <div className="space-y-4 text-center sm:text-left border-b border-zinc-800/80 pb-8">
-          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-white">
+        {/* Breadcrumb Navigation */}
+        <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground flex items-center gap-2">
+          <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
+          <span>/</span>
+          <span className="text-emerald-400 font-medium">Privacy Policy</span>
+        </nav>
 
+        {/* Header Title */}
+        <header className="space-y-4 text-center sm:text-left border-b border-zinc-800/80 pb-8">
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-white">
             Privacy Policy
           </h1>
           <p className="text-sm sm:text-base text-zinc-400">
             Last Updated: August 4, 2026 • Learn how Huntme protects user information and handles OSINT search data.
           </p>
-        </div>
+        </header>
 
         {/* Content Section */}
         <div className="space-y-8 text-sm sm:text-base text-zinc-300 leading-relaxed">
@@ -61,7 +83,6 @@ export default function PrivacyPage() {
               <a href="mailto:your.weanonymous@gmail.com" className="text-white underline">
                 your.weanonymous@gmail.com
               </a>.
-
             </p>
           </section>
         </div>

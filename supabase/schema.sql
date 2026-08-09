@@ -177,3 +177,19 @@ BEGIN
 END;
 $$;
 
+-- ==========================================================
+-- 5. Create API Topup Tracker Table (Upstream Developer API Balance)
+-- ==========================================================
+CREATE TABLE IF NOT EXISTS public.api_topup_tracker (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  credits_added INTEGER NOT NULL,
+  provider TEXT DEFAULT 'Combined Pool (Phone + Vehicle)',
+  cost_amount NUMERIC DEFAULT 0,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.api_topup_tracker ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow public read on api_topup_tracker" ON public.api_topup_tracker FOR SELECT USING (true);
+CREATE POLICY "Allow public insert on api_topup_tracker" ON public.api_topup_tracker FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public delete on api_topup_tracker" ON public.api_topup_tracker FOR DELETE USING (true);
