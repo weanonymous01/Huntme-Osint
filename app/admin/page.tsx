@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { Lock, KeyRound, Eye, EyeOff, ArrowRight, LogOut } from 'lucide-react';
+
+const ADMIN_PASSKEY = 'adarsh@@bugwrite-huntme1507';
 
 type UpstreamStats = {
   totalTopupCreditsEntered: number;
@@ -64,6 +67,12 @@ type SearchLogItem = {
 };
 
 export default function AdminApiTrackerPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [checkingAuth, setCheckingAuth] = useState<boolean>(true);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +108,17 @@ export default function AdminApiTrackerPage() {
   const [simUsers, setSimUsers] = useState<number>(12);
   const [simSearchesPerUserDay, setSimSearchesPerUserDay] = useState<number>(3);
 
+  // Check persistent session auth on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const isAuth = sessionStorage.getItem('huntme_admin_auth') === 'true';
+      if (isAuth) {
+        setIsAuthenticated(true);
+      }
+    }
+    setCheckingAuth(false);
+  }, []);
+
   // Fetch telemetry
   const fetchApiUsageData = async (isManualRefresh = false) => {
     if (isManualRefresh) setRefreshing(true);
@@ -127,12 +147,34 @@ export default function AdminApiTrackerPage() {
   };
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     fetchApiUsageData();
     const interval = setInterval(() => {
       fetchApiUsageData();
     }, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [isAuthenticated]);
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput === ADMIN_PASSKEY) {
+      setIsAuthenticated(true);
+      setAuthError(null);
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('huntme_admin_auth', 'true');
+      }
+    } else {
+      setAuthError('Incorrect passkey. Access denied.');
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setPasswordInput('');
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('huntme_admin_auth');
+    }
+  };
 
   // Quick action success notification
   const triggerSuccessNotification = (msg: string) => {
@@ -285,7 +327,91 @@ export default function AdminApiTrackerPage() {
     ? (upstreamApi.remainingUpstreamBalance / simDailySearches).toFixed(1)
     : '0';
 
-  const balanceStatus = upstreamApi?.status || 'healthy';
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen bg-[#09090b] text-white flex items-center justify-center">
+        <div className="size-6 border-2 border-zinc-700 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#08080a] text-zinc-100 flex flex-col justify-between selection:bg-zinc-800 selection:text-white antialiased">
+        <div className="grow flex items-center justify-center p-4">
+          <div className="w-full max-w-md space-y-6">
+            <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d0e] p-8 sm:p-10 shadow-2xl space-y-6">
+              <div className="text-center space-y-2">
+                <div className="size-12 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mx-auto text-zinc-300">
+                  <Lock className="size-6 text-zinc-400" />
+                </div>
+                <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                  Admin Console Locked
+                </h1>
+                <p className="text-xs text-zinc-400 leading-relaxed">
+                  Enter master authorization passkey to access system telemetry, balance tracker, and user analytics.
+                </p>
+              </div>
+
+              {authError && (
+                <div className="p-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 text-center font-medium">
+                  {authError}
+                </div>
+              )}
+
+              <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block">
+                    Master Passkey
+                  </label>
+                  <div className="relative flex items-center">
+                    <KeyRound className="absolute left-3.5 size-4 text-zinc-500 pointer-events-none" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={passwordInput}
+                      onChange={(e) => {
+                        setPasswordInput(e.target.value);
+                        if (authError) setAuthError(null);
+                      }}
+                      placeholder="Enter admin passkey..."
+                      autoFocus
+                      required
+                      className="w-full bg-[#08080a] border border-zinc-800 rounded-xl pl-10 pr-10 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-600 focus:ring-1 focus:ring-zinc-600 transition-colors font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3.5 text-zinc-500 hover:text-zinc-300 transition-colors"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-white hover:bg-zinc-200 text-black font-semibold py-3 px-4 rounded-xl transition-colors text-sm flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+                >
+                  <span>Unlock Console</span>
+                  <ArrowRight className="size-4" />
+                </button>
+              </form>
+
+              <div className="pt-2 text-center">
+                <a
+                  href="/dashboard"
+                  className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors inline-block"
+                >
+                  ← Return to User Dashboard
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#09090b] text-zinc-100 font-sans selection:bg-zinc-800 selection:text-white antialiased">
@@ -338,6 +464,16 @@ export default function AdminApiTrackerPage() {
               className="bg-white hover:bg-zinc-200 text-black font-medium px-4 py-2 rounded-lg text-xs transition-colors cursor-pointer"
             >
               Add Top-Up
+            </button>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-rose-300 border border-zinc-800 px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5"
+              title="Lock Admin Console"
+            >
+              <LogOut className="size-3.5" />
+              <span>Lock</span>
             </button>
           </div>
         </header>
