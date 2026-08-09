@@ -1,9 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { Header } from '@/components/ui/header-3';
 import { Footer } from '@/components/ui/footer';
-import { Shield, Lock, Eye, Server } from 'lucide-react';
 import { constructMetadata, getBreadcrumbSchema } from '@/lib/seo';
 import { JsonLd } from '@/components/seo/JsonLd';
 
@@ -27,13 +25,6 @@ export default function PrivacyPage() {
       <Header />
 
       <main className="grow py-16 px-4 sm:px-6 md:py-24 max-w-4xl mx-auto w-full space-y-12">
-        {/* Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground flex items-center gap-2">
-          <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
-          <span>/</span>
-          <span className="text-emerald-400 font-medium">Privacy Policy</span>
-        </nav>
-
         {/* Header Title */}
         <header className="space-y-4 text-center sm:text-left border-b border-zinc-800/80 pb-8">
           <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-white">
@@ -47,8 +38,7 @@ export default function PrivacyPage() {
         {/* Content Section */}
         <div className="space-y-8 text-sm sm:text-base text-zinc-300 leading-relaxed">
           <section className="space-y-3 bg-[#0d0d0e] p-6 rounded-2xl border border-zinc-800/90">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Lock className="size-5 text-zinc-400" />
+            <h2 className="text-lg font-bold text-white">
               1. Information We Collect
             </h2>
             <p>
@@ -57,8 +47,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3 bg-[#0d0d0e] p-6 rounded-2xl border border-zinc-800/90">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Eye className="size-5 text-zinc-400" />
+            <h2 className="text-lg font-bold text-white">
               2. How Search Data is Processed
             </h2>
             <p>
@@ -67,8 +56,7 @@ export default function PrivacyPage() {
           </section>
 
           <section className="space-y-3 bg-[#0d0d0e] p-6 rounded-2xl border border-zinc-800/90">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Server className="size-5 text-zinc-400" />
+            <h2 className="text-lg font-bold text-white">
               3. Security & Encryption
             </h2>
             <p>

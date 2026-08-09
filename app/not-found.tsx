@@ -1,11 +1,12 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Header } from '@/components/ui/header-3';
 import { Footer } from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
-import { Search, PhoneCall, Car, BrainCircuit, ArrowRight, Home } from 'lucide-react';
+import { ArrowRight, Home } from 'lucide-react';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: '404 - Page Not Found | Huntme OSINT',
   description: 'The requested intelligence record or page could not be located. Explore our OSINT investigation tools.',
   robots: {
@@ -20,19 +21,16 @@ export default function NotFound() {
       title: 'Phone Number OSINT',
       desc: 'Carrier, telecom circle & breach footprint lookup',
       href: '/products/phone-osint',
-      icon: PhoneCall,
     },
     {
       title: 'Vehicle Number OSINT',
       desc: 'License plate and RTO public registration telemetry',
       href: '/products/vehicle-osint',
-      icon: Car,
     },
     {
       title: 'AI Case Solver',
       desc: 'Entity correlation and timeline reconstruction',
       href: '/products/ai-case-solver',
-      icon: BrainCircuit,
     },
   ];
 
@@ -42,11 +40,6 @@ export default function NotFound() {
 
       <main className="grow py-16 px-4 sm:px-6 md:py-24 max-w-4xl mx-auto w-full flex flex-col items-center justify-center text-center space-y-10">
         <div className="space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-rose-500/30 bg-rose-500/10 px-3.5 py-1 text-xs font-mono text-rose-400">
-            <Search className="size-3.5" />
-            <span>404: RECORD_NOT_FOUND</span>
-          </div>
-
           <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-white">
             Target Query Not Located
           </h1>
@@ -83,10 +76,9 @@ export default function NotFound() {
                 href={item.href}
                 className="group rounded-xl border border-zinc-800/90 bg-[#0d0d0e] p-5 hover:border-zinc-700 transition-all flex flex-col gap-2"
               >
-                <div className="flex items-center gap-2 text-white font-semibold group-hover:text-emerald-400 transition-colors">
-                  <item.icon className="size-4 shrink-0" />
-                  <span>{item.title}</span>
-                </div>
+                <span className="text-white font-semibold group-hover:text-zinc-300 transition-colors">
+                  {item.title}
+                </span>
                 <p className="text-xs text-zinc-400 leading-relaxed">{item.desc}</p>
               </Link>
             ))}

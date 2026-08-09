@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { Header } from '@/components/ui/header-3';
 import { Footer } from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Shield, Globe, Cpu, CheckCircle2 } from 'lucide-react';
 import { constructMetadata, getBreadcrumbSchema } from '@/lib/seo';
 import { JsonLd } from '@/components/seo/JsonLd';
 
@@ -30,12 +29,12 @@ export default function AboutCompanyPage() {
   ]);
 
   const sellingPoints = [
-    'AI-Powered Investigations with automated entity resolution and relationship graphs',
-    'Lawful Public-Source Intelligence aggregated across verified global data registries',
-    'Structured Investigation Reports with 1-click court and compliance-ready PDF export',
-    'Clean REST API built for rapid Python and enterprise SIEM/SOAR integration',
-    'Enterprise-Ready Architecture featuring SOC-2 compliance & Row-Level Security',
-    'Sub-100ms API Latency with guaranteed 99.99% SLA availability and edge routing',
+    'AI-Powered Investigations with automated entity resolution',
+    'Lawful Public-Source Intelligence aggregated across global data sets',
+    'Structured Investigation Reports with 1-click court-ready PDF export',
+    'Clean REST API built for rapid Python requests integration',
+    'Enterprise-Ready Architecture featuring SOC-2 compliance & RBAC',
+    'Sub-100ms API Latency with guaranteed 99.99% SLA availability',
   ];
 
   return (
@@ -45,49 +44,34 @@ export default function AboutCompanyPage() {
 
       <main className="grow py-16 px-4">
         <div className="mx-auto max-w-5xl space-y-16">
-          {/* Breadcrumb Visual Navigation */}
-          <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground flex items-center gap-2">
-            <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
-            <span>/</span>
-            <span className="text-muted-foreground">Company</span>
-            <span>/</span>
-            <span className="text-emerald-400 font-medium">About Huntme</span>
-          </nav>
-
           {/* Mission */}
           <header className="flex flex-col items-start gap-4 max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-mono text-emerald-400">
-              <Globe className="size-3.5" />
-              <span>Modern Open Source Intelligence</span>
-            </div>
-
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-foreground">
-              Empowering Lawful Investigations
+              Modern OSINT Platform
             </h1>
 
             <p className="text-xl text-muted-foreground leading-relaxed">
-              Huntme combines Open Source Intelligence (OSINT), AI-driven entity resolution, and enterprise-grade APIs to transform publicly available information into actionable, structured intelligence.
+              AI-powered OSINT transforming public information into actionable investigative intelligence.
             </p>
           </header>
 
           {/* Long Term Vision Card */}
           <section className="rounded-2xl border border-border bg-card/60 p-8 sm:p-12 space-y-4">
-            <div className="text-xs font-mono font-semibold uppercase tracking-wider text-emerald-400">
-              OUR MISSION & VISION
+            <div className="text-xs font-mono font-semibold uppercase tracking-wider text-muted-foreground">
+              LONG-TERM VISION
             </div>
             <p className="text-xl sm:text-2xl font-medium text-foreground leading-relaxed">
-              "Become the global intelligence foundation for investigators, security teams, and developers by combining Open Source Intelligence, AI neural analysis, and enterprise-grade infrastructure into a single, unified platform focused strictly on lawful public-source data."
+              "Become the AI-powered investigation platform for individuals, security teams, and developers by combining Open Source Intelligence, AI analysis, and enterprise-grade APIs into a single, modern platform focused on lawful public-source intelligence."
             </p>
           </section>
 
           {/* Key Selling Points */}
           <section className="space-y-6">
-            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Key Platform Pillars</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Key Selling Points</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {sellingPoints.map((point, idx) => (
-                <div key={idx} className="flex items-start gap-3 rounded-lg border border-border/80 bg-card/40 p-4">
-                  <CheckCircle2 className="size-5 text-emerald-400 shrink-0 mt-0.5" />
-                  <span className="text-sm font-medium text-foreground">{point}</span>
+                <div key={idx} className="flex items-center gap-3 rounded-lg border border-border/80 bg-card/40 p-4">
+                  <span className="text-sm font-medium text-foreground">• {point}</span>
                 </div>
               ))}
             </div>

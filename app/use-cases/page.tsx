@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Header } from '@/components/ui/header-3';
 import { Footer } from '@/components/ui/footer';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ShieldCheck, Search, Users, AlertTriangle, FileText, Database } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { constructMetadata, getBreadcrumbSchema } from '@/lib/seo';
 import { JsonLd } from '@/components/seo/JsonLd';
 
@@ -33,32 +33,26 @@ export default function UseCasesPage() {
     {
       title: 'Investigating Unknown Contacts',
       desc: 'Identify unknown incoming callers, carrier information, line classification, and public background associations in seconds.',
-      icon: Search,
     },
     {
       title: 'Verifying Public Information',
       desc: 'Validate subject claims, vehicle registrations, business filings, and open web mentions with authoritative public datasets.',
-      icon: ShieldCheck,
     },
     {
       title: 'Digital & Cyber Investigations',
       desc: 'Correlate OSINT artifacts across phone numbers, emails, domain WHOIS records, and breach leaks to map threat networks.',
-      icon: AlertTriangle,
     },
     {
       title: 'Fraud Research & Prevention',
       desc: 'Detect fraudulent accounts, VoIP spoofing attempts, and synthetic identity fraud before financial or reputational damage occurs.',
-      icon: Users,
     },
     {
       title: 'Security Operations (SOC/SOAR)',
       desc: 'Enrich incoming security alerts and incident tickets with automated OSINT intelligence via low-latency API integration.',
-      icon: Database,
     },
     {
       title: 'Corporate Due Diligence',
       desc: 'Conduct background diligence on vendors, partners, and key personnel prior to mergers, acquisitions, or high-value partnerships.',
-      icon: FileText,
     },
   ];
 
@@ -69,20 +63,8 @@ export default function UseCasesPage() {
 
       <main className="grow py-16 px-4">
         <div className="mx-auto max-w-5xl space-y-16">
-          {/* Breadcrumb Visual Navigation */}
-          <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground flex items-center gap-2">
-            <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
-            <span>/</span>
-            <span className="text-emerald-400 font-medium">Use Cases</span>
-          </nav>
-
           {/* Hero */}
           <header className="flex flex-col items-start gap-4 max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-mono text-emerald-400">
-              <ShieldCheck className="size-3.5" />
-              <span>Real-World Investigation Scenarios</span>
-            </div>
-
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-foreground">
               Investigative Use Cases
             </h1>
@@ -108,11 +90,8 @@ export default function UseCasesPage() {
           {/* Cases Grid */}
           <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {cases.map((item, idx) => (
-              <div key={idx} className="rounded-xl border border-border/80 bg-card/40 p-6 flex flex-col gap-3 hover:border-zinc-700 transition-all">
-                <div className="flex items-center gap-2 text-white font-bold text-lg">
-                  <item.icon className="size-5 text-emerald-400" />
-                  <h2>{item.title}</h2>
-                </div>
+              <div key={idx} className="rounded-xl border border-border/80 bg-card/40 p-6 flex flex-col gap-2 hover:border-zinc-700 transition-all">
+                <h2 className="text-xl font-bold text-foreground">{item.title}</h2>
                 <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
               </div>
             ))}

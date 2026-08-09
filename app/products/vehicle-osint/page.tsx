@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Header } from '@/components/ui/header-3';
 import { Button } from '@/components/ui/button';
 import { Footer } from '@/components/ui/footer';
-import { ArrowRight, Car, Shield, FileCheck, HelpCircle } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { constructMetadata, getBreadcrumbSchema, getFaqSchema } from '@/lib/seo';
 import { JsonLd } from '@/components/seo/JsonLd';
 
@@ -68,22 +68,8 @@ export default function VehicleOsintPage() {
 
       <main className="grow py-16 px-4">
         <div className="mx-auto max-w-5xl space-y-16">
-          {/* Breadcrumb Visual Navigation */}
-          <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground flex items-center gap-2">
-            <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
-            <span>/</span>
-            <span className="text-foreground font-medium">Products</span>
-            <span>/</span>
-            <span className="text-amber-400 font-medium">Vehicle Number OSINT</span>
-          </nav>
-
           {/* Hero */}
           <header className="flex flex-col items-start gap-4 max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3.5 py-1 text-xs font-mono text-amber-400">
-              <Car className="size-3.5" />
-              <span>Vehicle Registry Telemetry</span>
-            </div>
-
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-foreground">
               Vehicle Number OSINT
             </h1>
@@ -128,22 +114,19 @@ export default function VehicleOsintPage() {
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">How Vehicle OSINT Works</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
               <div className="space-y-2">
-                <div className="size-8 rounded-full bg-amber-500/10 border border-amber-500/30 font-mono text-amber-400 flex items-center justify-center font-bold text-sm">1</div>
-                <h3 className="text-lg font-bold text-foreground">Registration Lookup</h3>
+                <h3 className="text-lg font-bold text-foreground">1. Registration Lookup</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Provide a valid license plate or registration identifier. The system normalizes state/RTO codes automatically.
                 </p>
               </div>
               <div className="space-y-2">
-                <div className="size-8 rounded-full bg-amber-500/10 border border-amber-500/30 font-mono text-amber-400 flex items-center justify-center font-bold text-sm">2</div>
-                <h3 className="text-lg font-bold text-foreground">Registry Verification</h3>
+                <h3 className="text-lg font-bold text-foreground">2. Registry Verification</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Queries state and national transport databases to extract technical specifications, fuel classification, and validity dates.
                 </p>
               </div>
               <div className="space-y-2">
-                <div className="size-8 rounded-full bg-amber-500/10 border border-amber-500/30 font-mono text-amber-400 flex items-center justify-center font-bold text-sm">3</div>
-                <h3 className="text-lg font-bold text-foreground">Timeline Mapping</h3>
+                <h3 className="text-lg font-bold text-foreground">3. Timeline Mapping</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Builds a verified chronological history of the vehicle for insurance, fraud detection, and due diligence dossiers.
                 </p>
@@ -153,10 +136,7 @@ export default function VehicleOsintPage() {
 
           {/* FAQs Section */}
           <section className="space-y-6">
-            <div className="flex items-center gap-2">
-              <HelpCircle className="size-5 text-amber-400" />
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Frequently Asked Questions</h2>
-            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Frequently Asked Questions</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {vehicleFaqs.map((faq, idx) => (
                 <div key={idx} className="rounded-xl border border-border/70 bg-card/30 p-6 space-y-2">

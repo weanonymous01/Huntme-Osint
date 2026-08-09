@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Header } from '@/components/ui/header-3';
 import { Button } from '@/components/ui/button';
 import { Footer } from '@/components/ui/footer';
-import { ArrowRight, PhoneCall, ShieldCheck, Database, Cpu, HelpCircle } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { constructMetadata, getBreadcrumbSchema, getFaqSchema } from '@/lib/seo';
 import { JsonLd } from '@/components/seo/JsonLd';
 
@@ -69,22 +69,8 @@ export default function PhoneOsintPage() {
 
       <main className="grow py-16 px-4">
         <div className="mx-auto max-w-5xl space-y-16">
-          {/* Breadcrumb Visual Navigation */}
-          <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground flex items-center gap-2">
-            <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
-            <span>/</span>
-            <span className="text-foreground font-medium">Products</span>
-            <span>/</span>
-            <span className="text-emerald-400 font-medium">Phone Number OSINT</span>
-          </nav>
-
           {/* Hero Section */}
           <header className="flex flex-col items-start gap-4 max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-mono text-emerald-400">
-              <PhoneCall className="size-3.5" />
-              <span>Real-Time Phone Telemetry</span>
-            </div>
-
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-foreground">
               Phone Number OSINT
             </h1>
@@ -129,22 +115,19 @@ export default function PhoneOsintPage() {
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground">How Phone OSINT Works</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
               <div className="space-y-2">
-                <div className="size-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-mono text-emerald-400 flex items-center justify-center font-bold text-sm">1</div>
-                <h3 className="text-lg font-bold text-foreground">Query Resolution</h3>
+                <h3 className="text-lg font-bold text-foreground">1. Query Resolution</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Enter any international or domestic phone number. Our system validates formatting and queries global telecom routing tables.
                 </p>
               </div>
               <div className="space-y-2">
-                <div className="size-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-mono text-emerald-400 flex items-center justify-center font-bold text-sm">2</div>
-                <h3 className="text-lg font-bold text-foreground">Multi-Source Extraction</h3>
+                <h3 className="text-lg font-bold text-foreground">2. Multi-Source Extraction</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Extracts carrier, circle, line classification, domain WHOIS links, and historical public directory records lawfully.
                 </p>
               </div>
               <div className="space-y-2">
-                <div className="size-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 font-mono text-emerald-400 flex items-center justify-center font-bold text-sm">3</div>
-                <h3 className="text-lg font-bold text-foreground">AI Entity Correlation</h3>
+                <h3 className="text-lg font-bold text-foreground">3. AI Entity Correlation</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Synthesizes cross-referenced findings into structured case timelines, confidence scores, and instant PDF dossiers.
                 </p>
@@ -167,10 +150,7 @@ export default function PhoneOsintPage() {
 
           {/* Phone OSINT FAQs */}
           <section className="space-y-6">
-            <div className="flex items-center gap-2">
-              <HelpCircle className="size-5 text-emerald-400" />
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Frequently Asked Questions</h2>
-            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Frequently Asked Questions</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {phoneFaqs.map((faq, idx) => (
                 <div key={idx} className="rounded-xl border border-border/70 bg-card/30 p-6 space-y-2">

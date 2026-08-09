@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Header } from '@/components/ui/header-3';
 import { Footer } from '@/components/ui/footer';
-import { HelpCircle, Mail, MapPin, Search, FileCode2, MessageSquare, ShieldQuestion } from 'lucide-react';
+import { Mail, MapPin, Search, FileCode2, MessageSquare } from 'lucide-react';
 import { constructMetadata, getBreadcrumbSchema, getFaqSchema } from '@/lib/seo';
 import { JsonLd } from '@/components/seo/JsonLd';
 
@@ -51,20 +51,8 @@ export default function HelpPage() {
       <Header />
 
       <main className="grow py-16 px-4 sm:px-6 md:py-24 max-w-5xl mx-auto w-full space-y-12">
-        {/* Breadcrumb Visual Navigation */}
-        <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground flex items-center justify-center gap-2">
-          <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
-          <span>/</span>
-          <span className="text-emerald-400 font-medium">Help Center</span>
-        </nav>
-
         {/* Header Title */}
         <header className="space-y-4 text-center max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1 text-xs font-mono text-emerald-400">
-            <HelpCircle className="size-3.5" />
-            <span>Support & Documentation</span>
-          </div>
-
           <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white">
             Help Center & Support
           </h1>
@@ -76,7 +64,7 @@ export default function HelpPage() {
         {/* Support Grid Cards */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
           <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d0e] p-6 space-y-3">
-            <Search className="size-8 text-emerald-400" />
+            <Search className="size-8 text-zinc-400" />
             <h2 className="text-lg font-bold text-white">OSINT Search Help</h2>
             <p className="text-xs text-zinc-400 leading-relaxed">
               Learn how to run phone telemetry lookups, vehicle RTO queries, and interpret AI investigation confidence scores.
@@ -84,7 +72,7 @@ export default function HelpPage() {
           </div>
 
           <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d0e] p-6 space-y-3">
-            <FileCode2 className="size-8 text-cyan-400" />
+            <FileCode2 className="size-8 text-zinc-400" />
             <h2 className="text-lg font-bold text-white">API & Credit Top-ups</h2>
             <p className="text-xs text-zinc-400 leading-relaxed">
               Need assistance with credit top-ups or integrating Huntme REST API into your SIEM platform? View our API documentation.
@@ -95,7 +83,7 @@ export default function HelpPage() {
           </div>
 
           <div className="rounded-2xl border border-zinc-800/90 bg-[#0d0d0e] p-6 space-y-3">
-            <MessageSquare className="size-8 text-amber-400" />
+            <MessageSquare className="size-8 text-zinc-400" />
             <h2 className="text-lg font-bold text-white">Direct Assistance</h2>
             <p className="text-xs text-zinc-400 leading-relaxed">
               Have a billing question or custom enterprise requirement? Email our 24/7 technical support team.

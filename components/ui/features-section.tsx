@@ -163,11 +163,6 @@ print(f"Entities Found: {len(data['entities'])}")`;
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           {/* Left Column */}
           <div className="lg:col-span-6 flex flex-col gap-6">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs font-mono text-muted-foreground w-fit shadow-xs">
-              <Code2 className="size-3.5 text-emerald-400" />
-              <span>Enterprise API</span>
-            </div>
-
             <h2 className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground leading-tight">
               Simple REST API for Developers.
             </h2>

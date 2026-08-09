@@ -1,9 +1,8 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { Header } from '@/components/ui/header-3';
 import { Footer } from '@/components/ui/footer';
-import { Check, ArrowRight, ShieldCheck, HelpCircle } from 'lucide-react';
+import { Check, ArrowRight } from 'lucide-react';
 import { constructMetadata, getBreadcrumbSchema, getFaqSchema, getSoftwareAppSchema } from '@/lib/seo';
 import { JsonLd } from '@/components/seo/JsonLd';
 
@@ -58,13 +57,6 @@ export default function PricingPage() {
 
       <main className="grow py-16 px-4 md:py-24">
         <div className="mx-auto max-w-5xl space-y-12">
-          {/* Breadcrumb Navigation */}
-          <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground flex items-center justify-center gap-2">
-            <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
-            <span>/</span>
-            <span className="text-emerald-400 font-medium">Pricing</span>
-          </nav>
-
           {/* Header Section */}
           <header className="flex flex-col items-center text-center gap-4 max-w-2xl mx-auto">
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-white">
@@ -74,12 +66,6 @@ export default function PricingPage() {
               Choose the right credit plan for AI-powered OSINT searches and enterprise investigation workflows.
             </p>
           </header>
-
-          {/* Fair Billing Guarantee Banner */}
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 max-w-3xl mx-auto flex items-center justify-center gap-3 text-emerald-400 text-sm font-medium text-center">
-            <ShieldCheck className="size-5 shrink-0" />
-            <span>Fair Billing Guarantee: Zero credit deduction if no records exist in our database for your query.</span>
-          </div>
 
           {/* Pricing Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto pt-4 items-stretch">
@@ -226,10 +212,7 @@ export default function PricingPage() {
 
           {/* Pricing FAQs Section */}
           <section className="space-y-6 pt-12">
-            <div className="flex items-center justify-center gap-2">
-              <HelpCircle className="size-5 text-emerald-400" />
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center">Frequently Asked Questions</h2>
-            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground text-center">Frequently Asked Questions</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
               {pricingFaqs.map((faq, idx) => (
                 <div key={idx} className="rounded-xl border border-border/70 bg-card/30 p-6 space-y-2">

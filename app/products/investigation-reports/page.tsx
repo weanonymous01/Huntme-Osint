@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Header } from '@/components/ui/header-3';
 import { Button } from '@/components/ui/button';
 import { Footer } from '@/components/ui/footer';
-import { ArrowRight, FileText, Download, ShieldCheck, HelpCircle } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { constructMetadata, getBreadcrumbSchema, getFaqSchema } from '@/lib/seo';
 import { JsonLd } from '@/components/seo/JsonLd';
 
@@ -65,22 +65,8 @@ export default function InvestigationReportsPage() {
 
       <main className="grow py-16 px-4">
         <div className="mx-auto max-w-5xl space-y-16">
-          {/* Breadcrumb Visual Navigation */}
-          <nav aria-label="Breadcrumb" className="text-xs text-muted-foreground flex items-center gap-2">
-            <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
-            <span>/</span>
-            <span className="text-foreground font-medium">Products</span>
-            <span>/</span>
-            <span className="text-purple-400 font-medium">Investigation Reports</span>
-          </nav>
-
           {/* Hero */}
           <header className="flex flex-col items-start gap-4 max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-3.5 py-1 text-xs font-mono text-purple-400">
-              <FileText className="size-3.5" />
-              <span>Standardized Investigation Dossiers</span>
-            </div>
-
             <h1 className="text-4xl sm:text-6xl font-bold tracking-tight text-foreground">
               Investigation Reports
             </h1>
@@ -122,10 +108,7 @@ export default function InvestigationReportsPage() {
 
           {/* FAQs Section */}
           <section className="space-y-6">
-            <div className="flex items-center gap-2">
-              <HelpCircle className="size-5 text-purple-400" />
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Frequently Asked Questions</h2>
-            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground">Frequently Asked Questions</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {reportFaqs.map((faq, idx) => (
                 <div key={idx} className="rounded-xl border border-border/70 bg-card/30 p-6 space-y-2">
