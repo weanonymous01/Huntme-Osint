@@ -20,20 +20,20 @@ export function Footer() {
           </div>
 
 
-          {/* Column 2: Sitemap (lg:col-span-2) */}
-          <div className="lg:col-span-2 space-y-3">
+          {/* Column 2: Products & Solutions (lg:col-span-3) */}
+          <div className="lg:col-span-3 space-y-3">
             <h4 className="font-bold text-sm text-white tracking-wide">
-              Sitemap
+              Products & Modules
             </h4>
             <ul className="space-y-2 text-xs sm:text-sm">
               <li>
                 <a href="/products/phone-osint" className="hover:text-white transition-colors">
-                  Phone OSINT
+                  Phone Number OSINT
                 </a>
               </li>
               <li>
                 <a href="/products/vehicle-osint" className="hover:text-white transition-colors">
-                  Vehicle OSINT
+                  Vehicle Registration OSINT
                 </a>
               </li>
               <li>
@@ -42,18 +42,28 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="/target-users" className="hover:text-white transition-colors">
-                  Target Users
+                <a href="/products/investigation-reports" className="hover:text-white transition-colors">
+                  Investigation Reports
                 </a>
               </li>
               <li>
-                <a href="/pricing" className="hover:text-white transition-colors">
-                  Pricing
+                <a href="/products/rest-api" className="hover:text-white transition-colors">
+                  Developer REST API
+                </a>
+              </li>
+              <li>
+                <a href="/products/enterprise-infrastructure" className="hover:text-white transition-colors">
+                  Enterprise Infrastructure
+                </a>
+              </li>
+              <li>
+                <a href="/target-users" className="hover:text-white transition-colors">
+                  Target Personas
                 </a>
               </li>
               <li>
                 <a href="/use-cases" className="hover:text-white transition-colors">
-                  Use Cases
+                  Investigation Use Cases
                 </a>
               </li>
             </ul>
