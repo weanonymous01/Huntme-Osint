@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 export const SITE_CONFIG = {
   name: 'Huntme',
   fullName: 'Huntme | AI-Powered OSINT Intelligence Platform',
-  domain: process.env.NEXT_PUBLIC_SITE_URL || 'https://huntme.in',
+  domain: process.env.NEXT_PUBLIC_SITE_URL || 'https://huntme.bugwrite.com',
   description:
     'Search publicly available phone telemetry, vehicle registration records, and AI-powered investigation timelines with enterprise-grade Open Source Intelligence (OSINT).',
   tagline: 'Intelligence Made Simple - Enterprise-Grade AI OSINT Platform',
