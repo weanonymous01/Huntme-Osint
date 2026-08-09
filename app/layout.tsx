@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     apple: '/icon.png',
   },
   verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || '_GH-wDeEdPYm35qHUnvTx5AVzYK9JY1gtfsuZfmKs7E',
     other: {
       'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION || '',
     },
