@@ -22,10 +22,22 @@ let fallbackTopups: TopupRecord[] = [
     created_at: new Date().toISOString(),
   },
 ];
-let warningThreshold = 15;
+const ADMIN_MASTER_KEY = process.env.ADMIN_MASTER_KEY || 'adarsh@@bugwrite-huntme1507';
+
+function isAuthorized(req: NextRequest): boolean {
+  const keyHeader = req.headers.get('x-admin-key');
+  const authHeader = req.headers.get('authorization')?.replace('Bearer ', '');
+  return keyHeader === ADMIN_MASTER_KEY || authHeader === ADMIN_MASTER_KEY;
+}
 
 export async function GET(req: NextRequest) {
   try {
+    if (!isAuthorized(req)) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized: Invalid master admin authorization key.' },
+        { status: 401 }
+      );
+    }
     const { searchParams } = new URL(req.url);
     const planFilter = searchParams.get('plan') || 'monthly'; // 'monthly' | 'all' | 'lifetime' | 'free'
     const searchQuery = (searchParams.get('q') || '').trim().toLowerCase();
@@ -245,6 +257,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    if (!isAuthorized(req)) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized: Invalid master admin authorization key.' },
+        { status: 401 }
+      );
+    }
     const body = await req.json().catch(() => ({}));
     const { action, credits, provider, cost, notes, id, threshold } = body;
 

@@ -3,8 +3,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Lock, KeyRound, Eye, EyeOff, ArrowRight, LogOut } from 'lucide-react';
 
-const ADMIN_PASSKEY = 'adarsh@@bugwrite-huntme1507';
-
 type UpstreamStats = {
   totalTopupCreditsEntered: number;
   totalUpstreamCreditsSpent: number;
@@ -69,8 +67,10 @@ type SearchLogItem = {
 export default function AdminApiTrackerPage() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [checkingAuth, setCheckingAuth] = useState<boolean>(true);
+  const [adminKey, setAdminKey] = useState<string>('');
   const [passwordInput, setPasswordInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [submittingAuth, setSubmittingAuth] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   const [loading, setLoading] = useState(true);
@@ -108,71 +108,113 @@ export default function AdminApiTrackerPage() {
   const [simUsers, setSimUsers] = useState<number>(12);
   const [simSearchesPerUserDay, setSimSearchesPerUserDay] = useState<number>(3);
 
-  // Check persistent session auth on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const isAuth = sessionStorage.getItem('huntme_admin_auth') === 'true';
-      if (isAuth) {
-        setIsAuthenticated(true);
-      }
-    }
-    setCheckingAuth(false);
-  }, []);
+  // Helper for authenticated headers
+  const getHeaders = (overrideKey?: string) => {
+    const key = overrideKey || adminKey || (typeof window !== 'undefined' ? sessionStorage.getItem('huntme_admin_key') || '' : '');
+    return {
+      'Content-Type': 'application/json',
+      'x-admin-key': key,
+    };
+  };
 
   // Fetch telemetry
-  const fetchApiUsageData = async (isManualRefresh = false) => {
+  const fetchApiUsageData = async (isManualRefresh = false, overrideKey?: string): Promise<boolean> => {
     if (isManualRefresh) setRefreshing(true);
     setError(null);
+    const headers = getHeaders(overrideKey);
     try {
-      const res = await fetch('/api/admin/api-usage?plan=monthly', { cache: 'no-store' });
+      const res = await fetch('/api/admin/api-usage?plan=monthly', {
+        headers: {
+          'x-admin-key': headers['x-admin-key'],
+        },
+        cache: 'no-store',
+      });
       const json = await res.json();
-      if (json.success && json.data) {
-        setUpstreamApi(json.data.upstreamApi);
-        setMonthlySummary(json.data.monthlyUsersSummary);
-        setUsers(json.data.users);
-        setTopupHistory(json.data.topupHistory);
-        setRecentLogs(json.data.recentSearchLogs);
-        if (json.data.upstreamApi?.warningThreshold) {
-          setThresholdInput(json.data.upstreamApi.warningThreshold);
+      if (res.status === 401 || !json.success) {
+        if (res.status === 401) {
+          setIsAuthenticated(false);
+          setAuthError('Unauthorized: Invalid master admin authorization key.');
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('huntme_admin_key');
+          }
+        } else {
+          setError(json.message || 'Failed to load data');
         }
-      } else {
-        setError(json.message || 'Failed to load data');
+        return false;
       }
+      setUpstreamApi(json.data.upstreamApi);
+      setMonthlySummary(json.data.monthlyUsersSummary);
+      setUsers(json.data.users);
+      setTopupHistory(json.data.topupHistory);
+      setRecentLogs(json.data.recentSearchLogs);
+      if (json.data.upstreamApi?.warningThreshold) {
+        setThresholdInput(json.data.upstreamApi.warningThreshold);
+      }
+      return true;
     } catch (err: any) {
       setError(err?.message || 'Network error connecting to database');
+      return false;
     } finally {
       setLoading(false);
       if (isManualRefresh) setRefreshing(false);
     }
   };
 
+  // Check persistent session auth on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedKey = sessionStorage.getItem('huntme_admin_key');
+      if (savedKey) {
+        setAdminKey(savedKey);
+        fetchApiUsageData(false, savedKey).then((success) => {
+          if (success) {
+            setIsAuthenticated(true);
+          }
+          setCheckingAuth(false);
+        });
+        return;
+      }
+    }
+    setCheckingAuth(false);
+  }, []);
+
   useEffect(() => {
     if (!isAuthenticated) return;
-    fetchApiUsageData();
     const interval = setInterval(() => {
       fetchApiUsageData();
     }, 30000);
     return () => clearInterval(interval);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, adminKey]);
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (passwordInput === ADMIN_PASSKEY) {
-      setIsAuthenticated(true);
-      setAuthError(null);
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('huntme_admin_auth', 'true');
+    if (!passwordInput.trim()) return;
+    setSubmittingAuth(true);
+    setAuthError(null);
+    try {
+      const success = await fetchApiUsageData(false, passwordInput.trim());
+      if (success) {
+        setIsAuthenticated(true);
+        setAdminKey(passwordInput.trim());
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('huntme_admin_key', passwordInput.trim());
+        }
+      } else {
+        setAuthError('Incorrect master passkey. Access denied.');
       }
-    } else {
-      setAuthError('Incorrect passkey. Access denied.');
+    } catch {
+      setAuthError('Error validating passkey with server.');
+    } finally {
+      setSubmittingAuth(false);
     }
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setAdminKey('');
     setPasswordInput('');
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('huntme_admin_auth');
+      sessionStorage.removeItem('huntme_admin_key');
     }
   };
 
@@ -192,7 +234,7 @@ export default function AdminApiTrackerPage() {
     try {
       const res = await fetch('/api/admin/api-usage', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify({
           action: 'add_topup',
           credits: amount,
@@ -227,7 +269,7 @@ export default function AdminApiTrackerPage() {
     try {
       const res = await fetch('/api/admin/api-usage', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify({
           action: 'set_baseline',
           credits: baselineInput,
@@ -256,7 +298,7 @@ export default function AdminApiTrackerPage() {
     try {
       const res = await fetch('/api/admin/api-usage', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify({ action: 'delete_topup', id }),
       });
       const data = await res.json();
@@ -274,7 +316,7 @@ export default function AdminApiTrackerPage() {
     try {
       await fetch('/api/admin/api-usage', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders(),
         body: JSON.stringify({ action: 'set_threshold', threshold: val }),
       });
       setThresholdInput(val);
@@ -391,9 +433,10 @@ export default function AdminApiTrackerPage() {
 
                 <button
                   type="submit"
-                  className="w-full bg-white hover:bg-zinc-200 text-black font-semibold py-3 px-4 rounded-xl transition-colors text-sm flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+                  disabled={submittingAuth}
+                  className="w-full bg-white hover:bg-zinc-200 text-black font-semibold py-3 px-4 rounded-xl transition-colors text-sm flex items-center justify-center gap-2 cursor-pointer shadow-lg disabled:opacity-50"
                 >
-                  <span>Unlock Console</span>
+                  <span>{submittingAuth ? 'Verifying...' : 'Unlock Console'}</span>
                   <ArrowRight className="size-4" />
                 </button>
               </form>
