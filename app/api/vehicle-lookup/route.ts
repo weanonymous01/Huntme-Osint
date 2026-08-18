@@ -1,9 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { decodeLocalVehicle } from '@/lib/rtoDecoder';
+import { getAuthenticatedUser, hasSufficientCredits, deductUserCreditsServer } from '@/lib/serverAuth';
+import { checkRateLimit } from '@/lib/rateLimiter';
 
 export async function POST(req: NextRequest) {
   try {
+    // ── 0. RATE LIMITING PROTECTION ──
+    const rateLimit = checkRateLimit(req, undefined, { limit: 15, windowMs: 60 * 1000 });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: 'Rate limit exceeded. Please wait a few seconds before searching again.',
+        },
+        {
+          status: 429,
+          headers: { 'Retry-After': Math.ceil(rateLimit.resetInMs / 1000).toString() },
+        }
+      );
+    }
+
     const { registrationNumber, isPreview } = await req.json();
 
     if (!registrationNumber || typeof registrationNumber !== 'string') {
@@ -16,8 +33,14 @@ export async function POST(req: NextRequest) {
     // Normalize: uppercase, remove spaces/hyphens
     const cleanRC = registrationNumber.toUpperCase().replace(/[\s\-]/g, '');
 
-    // ── 1. CHECK SUPABASE CACHE — skip if cache has masked data (free preview) ──
-    if (!isPreview) {
+    // ── 1. AUTHENTICATE & VERIFY SERVER-SIDE CREDITS ──
+    const user = await getAuthenticatedUser(req);
+    const userHasCredits = hasSufficientCredits(user, 10);
+
+    const shouldRunPreview = isPreview || !user || !userHasCredits;
+
+    // ── 2. CHECK SUPABASE CACHE — for paid users ──
+    if (!shouldRunPreview) {
       try {
         const { data: cached } = await supabaseAdmin
           .from('vehicle_searches')
@@ -31,14 +54,11 @@ export async function POST(req: NextRequest) {
           const cachedOwner = cached.vehicle_json.vehicle.ownerName || '';
           const isRealData = cachedOwner && !cachedOwner.includes('*');
           if (isRealData) {
-            console.log(`[vehicle-lookup] CACHE HIT (real data) for plate: ${cleanRC}`);
             return NextResponse.json({
               success: true,
               vehicle: cached.vehicle_json.vehicle,
               cached: true,
             });
-          } else {
-            console.log(`[vehicle-lookup] Cache hit but data is masked, bypassing cache for paid lookup.`);
           }
         }
       } catch (cacheErr) {
@@ -46,12 +66,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── 2. PREVIEW MODE FALLBACK (Zero Upstream API Cost!) ──
-    const apiKey = process.env.VEHICLE_LOOKUP_API_KEY || 'pk_13a64642dc07cdbb2d9342e5294d6668b5a7';
-    const apiBase = process.env.VEHICLE_LOOKUP_API_BASE || 'https://myapi.lovable.app/api/public/p';
-
-    if (isPreview || !apiKey || !apiBase) {
-      console.log(`[vehicle-lookup] PREVIEW/FREE OSINT ENGINE for plate: ${cleanRC} (0 API credits used!)`);
+    // ── 3. PREVIEW MODE FALLBACK (Zero Upstream API Cost!) ──
+    if (shouldRunPreview) {
       const localVehicle = decodeLocalVehicle(cleanRC);
       return NextResponse.json({
         success: true,
@@ -61,12 +77,23 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // ── 3. CALL UPSTREAM PAID API FOR CREDITED USERS ──
+    // ── 4. CALL UPSTREAM PAID API FOR AUTHENTICATED CREDITED USERS ──
+    const apiKey = process.env.VEHICLE_LOOKUP_API_KEY;
+    const apiBase = process.env.VEHICLE_LOOKUP_API_BASE || 'https://myapi.lovable.app/api/public/p';
+
+    if (!apiKey) {
+      return NextResponse.json(
+        { success: false, message: 'Vehicle lookup provider key is not configured on server.' },
+        { status: 500 }
+      );
+    }
+
     try {
       const externalRes = await fetch(`${apiBase}/${apiKey}?rc=${encodeURIComponent(cleanRC)}`, {
         method: 'GET',
-        headers: { 'Accept': 'application/json' },
+        headers: { Accept: 'application/json' },
         cache: 'no-store',
+        signal: AbortSignal.timeout(18000),
       });
 
       if (externalRes.ok) {
@@ -89,21 +116,27 @@ export async function POST(req: NextRequest) {
             cityName: source['City Name'] || null,
             sourceCredit: raw?.source_by || raw?.credit || null,
           };
-          return NextResponse.json({ success: true, vehicle: vehicleData, cached: false });
+
+          // Deduct credits on server securely
+          const remainingCredits = await deductUserCreditsServer(user.id, 10);
+
+          return NextResponse.json({
+            success: true,
+            vehicle: vehicleData,
+            cached: false,
+            remainingCredits,
+          });
         }
       }
     } catch (apiErr) {
-      console.warn('[vehicle-lookup] Upstream API call failed, serving free OSINT decoder:', apiErr);
-    }
-
-    // Fallback: free preview users get local decoder; paid users get a real error
-    if (isPreview) {
-      const localVehicle = decodeLocalVehicle(cleanRC);
-      return NextResponse.json({ success: true, vehicle: localVehicle, cached: false, isFreePreview: true });
+      console.warn('[vehicle-lookup] Upstream API call failed:', apiErr);
     }
 
     return NextResponse.json(
-      { success: false, message: 'No vehicle records found for this plate number. The data source returned no results. Please try again.' },
+      {
+        success: false,
+        message: 'No vehicle records found for this plate number. The data source returned no results. Please try again.',
+      },
       { status: 404 }
     );
   } catch (err: any) {

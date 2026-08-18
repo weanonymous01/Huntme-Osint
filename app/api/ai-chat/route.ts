@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthenticatedUser } from '@/lib/serverAuth';
+import { checkRateLimit } from '@/lib/rateLimiter';
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const NVIDIA_API_KEY = process.env.NVIDIA_NIM_API_KEY;
@@ -8,6 +10,24 @@ const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit check
+    const rateLimit = checkRateLimit(req, undefined, { limit: 25, windowMs: 60 * 1000 });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, message: 'Rate limit exceeded. Please wait a moment.' },
+        { status: 429 }
+      );
+    }
+
+    // Require authenticated user
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Please log in to use AI assistant.' },
+        { status: 401 }
+      );
+    }
+
     const { reportData, question } = await req.json();
 
     if (!question || !question.trim()) {

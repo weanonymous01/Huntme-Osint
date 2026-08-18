@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getAuthenticatedUser } from '@/lib/serverAuth';
+import { checkRateLimit } from '@/lib/rateLimiter';
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
@@ -55,10 +57,28 @@ function extractWordConstraint(maskedWord: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit check
+    const rateLimit = checkRateLimit(req, undefined, { limit: 20, windowMs: 60 * 1000 });
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { success: false, message: 'Rate limit exceeded. Please wait a moment.' },
+        { status: 429 }
+      );
+    }
+
+    // Require authenticated user
+    const user = await getAuthenticatedUser(req);
+    if (!user) {
+      return NextResponse.json(
+        { success: false, message: 'Unauthorized. Please log in to use AI prediction.' },
+        { status: 401 }
+      );
+    }
+
     const apiKey = GROQ_API_KEY || process.env.NVIDIA_NIM_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
-        { success: false, message: 'Groq API Key is missing.' },
+        { success: false, message: 'AI prediction service is not configured on server.' },
         { status: 500 }
       );
     }

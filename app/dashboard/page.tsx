@@ -499,16 +499,18 @@ export default function DashboardPage() {
 
 
 
-  // Deduct 10 credits per search and refresh profile if credits >= 10
-  const deductCredit = async () => {
-    if (!profile) return;
-    if (profile.api_credits < 10) return; // Free trial search allowed, no negative credits
-    const newCredits = Math.max(0, profile.api_credits - 10);
-    await supabase
-      .from('profiles')
-      .update({ api_credits: newCredits })
-      .eq('id', profile.id);
-    setProfile(prev => prev ? { ...prev, api_credits: newCredits } : prev);
+  // Securely get Supabase authentication headers with Bearer token
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      return {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      };
+    } catch {
+      return { 'Content-Type': 'application/json' };
+    }
   };
 
   // Saved Reports state
@@ -570,9 +572,10 @@ export default function DashboardPage() {
     }
 
     try {
+      const headers = await getAuthHeaders();
       const res = await fetch('/api/ai-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ reportData: targetReportData, question: q }),
       });
       const data = await res.json();
@@ -755,9 +758,10 @@ export default function DashboardPage() {
     setVehicleAiReport(null);
     setVehicleAiReportError(null);
     try {
+      const headers = await getAuthHeaders();
       const res = await fetch('/api/generate-vehicle-report', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ vehicleData: vehicle }),
       });
 
@@ -799,9 +803,10 @@ export default function DashboardPage() {
     setNamePredictionError(null);
     namePredictionReportRef.current = null;
     try {
+      const headers = await getAuthHeaders();
       const res = await fetch('/api/predict-name', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           maskedName: vehicle.ownerName,
           fatherName: vehicle.fatherName,
@@ -863,9 +868,10 @@ export default function DashboardPage() {
     setAiReport(null);
     setAiReportError(null);
     try {
+      const headers = await getAuthHeaders();
       const res = await fetch('/api/generate-report', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ phoneData: result }),
       });
       const data = await res.json();
@@ -925,15 +931,21 @@ export default function DashboardPage() {
     setAiReportLoading(false);
 
     try {
+      const headers = await getAuthHeaders();
       const res = await fetch('/api/phone-lookup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ phoneNumber: targetPhone, isPreview: isLocked }),
       });
       const data = await res.json();
       if (data.success) {
         setPhoneResults(data.results);
         
+        // Sync server-deducted credits
+        if (typeof data.remainingCredits === 'number') {
+          setProfile(prev => prev ? { ...prev, api_credits: data.remainingCredits } : prev);
+        }
+
         // Record the 1 free search used if in preview mode
         if (isLocked) {
           const nextCount = freeSearchCount + 1;
@@ -943,9 +955,6 @@ export default function DashboardPage() {
             localStorage.setItem(`huntme_free_searches_${userKey}`, nextCount.toString());
             localStorage.setItem(`huntme_free_searches_${profile.id}`, nextCount.toString());
           }
-        } else if (!data.cached) {
-          // Deduct credits ONLY if fresh paid API was called (not cached)
-          await deductCredit();
         }
 
         // Auto-generate AI report and save search ONLY for paid users (!isLocked)
@@ -987,14 +996,20 @@ export default function DashboardPage() {
     setNamePredictionLoading(false);
 
     try {
+      const headers = await getAuthHeaders();
       const res = await fetch('/api/vehicle-lookup', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ registrationNumber: vehicleInput.trim(), isPreview: isLocked }),
       });
       const data = await res.json();
       if (data.success) {
         setVehicleResult(data.vehicle);
+
+        // Sync server-deducted credits
+        if (typeof data.remainingCredits === 'number') {
+          setProfile(prev => prev ? { ...prev, api_credits: data.remainingCredits } : prev);
+        }
 
         // Record the 1 free search used if in preview mode
         if (isLocked) {
@@ -1005,9 +1020,6 @@ export default function DashboardPage() {
             localStorage.setItem(`huntme_free_searches_${userKey}`, nextCount.toString());
             localStorage.setItem(`huntme_free_searches_${profile.id}`, nextCount.toString());
           }
-        } else if (!data.cached) {
-          // Deduct credits ONLY if fresh paid API was called (not cached)
-          await deductCredit();
         }
 
         // For preview/free users: no real data, skip AI features entirely
