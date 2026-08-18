@@ -346,17 +346,13 @@ export default function DashboardPage() {
         }
       }
 
-      // 2. Update Supabase public.profiles table via upsert
+      // 2. Update Supabase public.profiles table (only full_name field)
       await supabase
         .from('profiles')
-        .upsert({
-          id: profile.id,
-          email: profile.email,
+        .update({
           full_name: updatedName,
-          plan_type: profile.plan_type,
-          api_credits: profile.api_credits,
-          max_credits: profile.max_credits,
-        });
+        })
+        .eq('id', profile.id);
 
       // 3. Update Supabase auth user metadata
       await supabase.auth.updateUser({

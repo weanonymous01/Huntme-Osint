@@ -1,5 +1,5 @@
 -- ==========================================================
--- HUNTME OSINT PLATFORM - SUPABASE DATABASE SCHEMA
+-- HUNTME OSINT PLATFORM - SECURE SUPABASE DATABASE SCHEMA
 -- ==========================================================
 
 -- 1. Create Profiles Table (Linked to Supabase Auth)
@@ -60,22 +60,59 @@ ALTER TABLE public.phone_searches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.vehicle_searches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.investigation_reports ENABLE ROW LEVEL SECURITY;
 
--- Profiles Policy: Users can view, insert & update their own profile
+-- Profiles Policy: Users can view & update their own profile info
+DROP POLICY IF EXISTS "Allow individual read on profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Allow individual insert on profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Allow individual update on profiles" ON public.profiles;
+
 CREATE POLICY "Allow individual read on profiles" ON public.profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Allow individual insert on profiles" ON public.profiles FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Allow individual update on profiles" ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
 -- Phone Searches Policy: Users can view & insert their own searches
+DROP POLICY IF EXISTS "Allow user read on phone_searches" ON public.phone_searches;
+DROP POLICY IF EXISTS "Allow user insert on phone_searches" ON public.phone_searches;
+
 CREATE POLICY "Allow user read on phone_searches" ON public.phone_searches FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Allow user insert on phone_searches" ON public.phone_searches FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Vehicle Searches Policy: Users can view & insert their own searches
+DROP POLICY IF EXISTS "Allow user read on vehicle_searches" ON public.vehicle_searches;
+DROP POLICY IF EXISTS "Allow user insert on vehicle_searches" ON public.vehicle_searches;
+
 CREATE POLICY "Allow user read on vehicle_searches" ON public.vehicle_searches FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Allow user insert on vehicle_searches" ON public.vehicle_searches FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Reports Policy: Users can view & insert their own reports
+DROP POLICY IF EXISTS "Allow user read on investigation_reports" ON public.investigation_reports;
+DROP POLICY IF EXISTS "Allow user insert on investigation_reports" ON public.investigation_reports;
+
 CREATE POLICY "Allow user read on investigation_reports" ON public.investigation_reports FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Allow user insert on investigation_reports" ON public.investigation_reports FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- ==========================================================
+-- SECURITY GUARD: Prevent Client-Side Tampering of Credits & Plan
+-- ==========================================================
+
+CREATE OR REPLACE FUNCTION public.protect_profile_credits()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- If triggered by an authenticated or anon user from the browser, forbid altering credits, max_credits, plan_type, or email
+  IF (auth.role() = 'authenticated' OR auth.role() = 'anon') THEN
+    NEW.api_credits := OLD.api_credits;
+    NEW.max_credits := OLD.max_credits;
+    NEW.plan_type := OLD.plan_type;
+    NEW.email := OLD.email;
+    NEW.id := OLD.id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS tr_protect_profile_credits ON public.profiles;
+CREATE TRIGGER tr_protect_profile_credits
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.protect_profile_credits();
 
 -- ==========================================================
 -- TRIGGER: Automatically Create Profile on Signup
@@ -102,12 +139,13 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-CREATE OR REPLACE TRIGGER on_auth_user_created
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ==========================================================
--- RPC FUNCTION: Security Definer Topup (Bypasses RLS safely for webhooks)
+-- RPC FUNCTION: Security Definer Topup (Bypasses RLS safely for server webhooks)
 -- ==========================================================
 
 CREATE OR REPLACE FUNCTION public.topup_user_credits(
@@ -190,6 +228,11 @@ CREATE TABLE IF NOT EXISTS public.api_topup_tracker (
 );
 
 ALTER TABLE public.api_topup_tracker ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public read on api_topup_tracker" ON public.api_topup_tracker FOR SELECT USING (true);
-CREATE POLICY "Allow public insert on api_topup_tracker" ON public.api_topup_tracker FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public delete on api_topup_tracker" ON public.api_topup_tracker FOR DELETE USING (true);
+
+-- Block public manipulation of topup tracker: Only service_role can write
+DROP POLICY IF EXISTS "Allow public read on api_topup_tracker" ON public.api_topup_tracker;
+DROP POLICY IF EXISTS "Allow public insert on api_topup_tracker" ON public.api_topup_tracker;
+DROP POLICY IF EXISTS "Allow public delete on api_topup_tracker" ON public.api_topup_tracker;
+
+-- Authenticated admins can view if needed; server service_role handles all mutations
+CREATE POLICY "Allow authenticated read on api_topup_tracker" ON public.api_topup_tracker FOR SELECT TO authenticated USING (true);

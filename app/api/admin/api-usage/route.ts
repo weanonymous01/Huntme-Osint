@@ -23,12 +23,16 @@ let fallbackTopups: TopupRecord[] = [
   },
 ];
 let warningThreshold = 15;
-const ADMIN_MASTER_KEY = process.env.ADMIN_MASTER_KEY || 'adarsh@@bugwrite-huntme1507';
 
 function isAuthorized(req: NextRequest): boolean {
+  const masterKey = process.env.ADMIN_MASTER_KEY || process.env.ADMIN_TOPUP_SECRET;
+  if (!masterKey || masterKey.length < 8) {
+    console.warn('[admin/api-usage] ADMIN_MASTER_KEY is not configured in server environment.');
+    return false;
+  }
   const keyHeader = req.headers.get('x-admin-key');
   const authHeader = req.headers.get('authorization')?.replace('Bearer ', '');
-  return keyHeader === ADMIN_MASTER_KEY || authHeader === ADMIN_MASTER_KEY;
+  return keyHeader === masterKey || authHeader === masterKey;
 }
 
 export async function GET(req: NextRequest) {
