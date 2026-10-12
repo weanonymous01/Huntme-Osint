@@ -1,5 +1,10 @@
 import type { Metadata } from 'next';
-import DemoOne from '@/components/ui/demo';
+import { Header } from '@/components/ui/header-3';
+import Hero from '@/components/Hero';
+import TrustedBy from '@/components/TrustedBy';
+import ProductRail from '@/components/ProductRail';
+import Closer from '@/components/Closer';
+import { Footer } from '@/components/ui/footer';
 import { constructMetadata, getSoftwareAppSchema, getFaqSchema } from '@/lib/seo';
 import { JsonLd } from '@/components/seo/JsonLd';
 
@@ -51,10 +56,17 @@ export default function Home() {
   const faqSchema = getFaqSchema(homepageFaqs);
 
   return (
-    <>
+    <div className="min-h-screen w-full flex flex-col bg-[#09090b] text-white selection:bg-[#1C4D8D] selection:text-white">
       <JsonLd data={softwareSchema} />
       <JsonLd data={faqSchema} />
-      <DemoOne />
-    </>
+      <Header />
+      <main className="w-full flex-1">
+        <Hero />
+        <TrustedBy />
+        <ProductRail />
+        <Closer />
+      </main>
+      <Footer />
+    </div>
   );
 }

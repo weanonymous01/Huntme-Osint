@@ -32,11 +32,6 @@ export function Footer() {
                 </a>
               </li>
               <li>
-                <a href="/products/vehicle-osint" className="hover:text-white transition-colors">
-                  Vehicle Registration OSINT
-                </a>
-              </li>
-              <li>
                 <a href="/products/ai-case-solver" className="hover:text-white transition-colors">
                   AI Case Solver
                 </a>

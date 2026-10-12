@@ -39,7 +39,7 @@ import {
 type LinkItem = {
 	title: string;
 	href: string;
-	icon: LucideIcon;
+	icon?: LucideIcon;
 	description?: string;
 };
 
@@ -60,8 +60,8 @@ export function Header() {
 
 	return (
 		<header
-			className={cn('sticky top-0 z-50 w-full border-b border-transparent', {
-				'bg-background/95 supports-[backdrop-filter]:bg-background/50 border-border backdrop-blur-lg':
+			className={cn('sticky top-0 z-50 w-full bg-background/95 backdrop-blur-lg border-b border-border/40 transition-colors', {
+				'border-border shadow-xs':
 					scrolled,
 			})}
 		>
@@ -73,7 +73,7 @@ export function Header() {
 					<NavigationMenu className="hidden md:flex">
 						<NavigationMenuList>
 							<NavigationMenuItem>
-								<NavigationMenuTrigger className="bg-transparent">Product</NavigationMenuTrigger>
+								<NavigationMenuTrigger className="bg-transparent text-white hover:text-white hover:bg-white/10">Product</NavigationMenuTrigger>
 								<NavigationMenuContent className="bg-background p-1 pr-1.5">
 									<ul className="bg-popover grid w-[520px] grid-cols-2 gap-2 rounded-md border p-2 shadow">
 										{productLinks.map((item, i) => (
@@ -99,7 +99,7 @@ export function Header() {
 								</NavigationMenuContent>
 							</NavigationMenuItem>
 							<NavigationMenuItem>
-								<NavigationMenuTrigger className="bg-transparent">Company</NavigationMenuTrigger>
+								<NavigationMenuTrigger className="bg-transparent text-white hover:text-white hover:bg-white/10">Company</NavigationMenuTrigger>
 								<NavigationMenuContent className="bg-background p-1 pr-1.5 pb-1.5">
 									<div className="grid w-[520px] grid-cols-2 gap-2">
 										<ul className="bg-popover space-y-1.5 rounded-md border p-2 shadow">
@@ -114,9 +114,8 @@ export function Header() {
 												<li key={i}>
 													<NavigationMenuLink
 														href={item.href}
-														className="flex p-2 hover:bg-accent flex-row rounded-md items-center gap-x-2 text-sm text-foreground"
+														className="flex p-2 hover:bg-accent flex-row rounded-md items-center text-sm text-foreground"
 													>
-														<item.icon className="text-foreground size-4 shrink-0" />
 														<span className="font-medium">{item.title}</span>
 													</NavigationMenuLink>
 												</li>
@@ -126,7 +125,7 @@ export function Header() {
 								</NavigationMenuContent>
 							</NavigationMenuItem>
 							<NavigationMenuLink className="px-4" asChild>
-								<a href="/pricing" className="hover:bg-accent rounded-md p-2">
+								<a href="/pricing" className="hover:bg-accent rounded-md p-2 text-white font-medium">
 									Pricing
 								</a>
 							</NavigationMenuLink>
@@ -235,7 +234,6 @@ function MobileMenu({ open, children, className, ...props }: MobileMenuProps) {
 function ListItem({
 	title,
 	description,
-	icon: Icon,
 	className,
 	href,
 	...props
@@ -243,22 +241,17 @@ function ListItem({
 	return (
 		<NavigationMenuLink
 			className={cn(
-				'w-full flex flex-row items-center gap-x-3 rounded-md p-2 hover:bg-accent focus:bg-accent transition-colors data-[active=true]:bg-accent/50',
+				'w-full flex flex-col items-start rounded-md p-2 hover:bg-accent focus:bg-accent transition-colors data-[active=true]:bg-accent/50',
 				className
 			)}
 			{...props}
 			asChild
 		>
-			<a href={href} className="flex flex-row items-center gap-x-3 w-full">
-				<div className="bg-background/50 flex aspect-square size-10 shrink-0 items-center justify-center rounded-md border shadow-xs">
-					<Icon className="text-foreground size-5" />
-				</div>
-				<div className="flex flex-col items-start justify-center text-left min-w-0">
-					<span className="font-medium text-sm text-foreground leading-snug">{title}</span>
-					{description && (
-						<span className="text-muted-foreground text-xs leading-snug">{description}</span>
-					)}
-				</div>
+			<a href={href} className="flex flex-col items-start justify-center text-left min-w-0 w-full">
+				<span className="font-medium text-sm text-foreground leading-snug">{title}</span>
+				{description && (
+					<span className="text-muted-foreground text-xs leading-snug mt-0.5">{description}</span>
+				)}
 			</a>
 		</NavigationMenuLink>
 	);
@@ -270,12 +263,6 @@ const productLinks: LinkItem[] = [
 		href: '/products/phone-osint',
 		description: 'Lookup names, emails, carrier & social records',
 		icon: PhoneCall,
-	},
-	{
-		title: 'Vehicle Number OSINT',
-		href: '/products/vehicle-osint',
-		description: 'License plate & VIN public registration lookup',
-		icon: Car,
 	},
 	{
 		title: 'AI Case Solver',
