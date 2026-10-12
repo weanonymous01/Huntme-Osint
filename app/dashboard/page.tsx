@@ -886,7 +886,6 @@ export default function DashboardPage() {
 
   const navItems = [
     { id: 'phone' as const, label: 'Phone Intelligence', icon: PhoneCall },
-    { id: 'vehicle' as const, label: 'Vehicle Intelligence', icon: Car },
     { id: 'ai' as const, label: 'AI Assistant', icon: BrainCircuit },
     { id: 'reports' as const, label: 'Reports', icon: FileText },
     { id: 'settings' as const, label: 'Settings', icon: Settings },
@@ -2449,7 +2448,7 @@ export default function DashboardPage() {
                       <div className="space-y-1 max-w-sm mx-auto">
                         <h3 className="text-sm font-bold text-white">No Reports Generated Yet</h3>
                         <p className="text-xs text-zinc-400 leading-relaxed">
-                          You haven't run any OSINT investigations yet. Perform a lookup in Phone or Vehicle Intelligence to auto-create reports.
+                          You haven't run any OSINT investigations yet. Perform a lookup in Phone Intelligence to auto-create reports.
                         </p>
                       </div>
                       <div className="flex items-center justify-center gap-3">
@@ -2458,12 +2457,6 @@ export default function DashboardPage() {
                           className="bg-white hover:bg-zinc-200 text-black font-semibold px-4 py-2 rounded-xl text-xs transition-colors"
                         >
                           Go to Phone Intelligence
-                        </button>
-                        <button
-                          onClick={() => setActiveTab('vehicle')}
-                          className="bg-zinc-800 hover:bg-zinc-700 text-white font-semibold px-4 py-2 rounded-xl text-xs transition-colors"
-                        >
-                          Go to Vehicle Intelligence
                         </button>
                       </div>
                     </div>
