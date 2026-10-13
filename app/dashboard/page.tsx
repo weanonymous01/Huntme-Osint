@@ -1662,11 +1662,11 @@ export default function DashboardPage() {
                           </p>
                         </div>
 
-                        {/* 4. ID / Document Number */}
+                        {/* 4. National ID */}
                         <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                           <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5">
                             <FileText className="size-3 text-zinc-400" />
-                            ID / Document Number
+                            National ID
                           </p>
                           {r.idNumber ? (
                             <p className={`text-sm font-mono text-white font-semibold ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
@@ -1678,7 +1678,7 @@ export default function DashboardPage() {
                         </div>
 
                         {/* 5. Registered Email */}
-                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                        <div className="sm:col-span-1 lg:col-span-2 rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
                           <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5">
                             <Mail className="size-3 text-zinc-400" />
                             Email Address
@@ -1690,17 +1690,6 @@ export default function DashboardPage() {
                           ) : (
                             <p className="text-xs text-zinc-500 italic">Not Disclosed</p>
                           )}
-                        </div>
-
-                        {/* 6. OSINT Record Reference */}
-                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5">
-                            <Sparkles className="size-3 text-zinc-400" />
-                            Record Reference ID
-                          </p>
-                          <p className="text-xs font-mono text-zinc-300 truncate" title={r.recordId || 'VERIFIED-RECORD'}>
-                            {r.recordId || (r.idNumber ? `REF-${r.idNumber.slice(-6)}` : 'ACTIVE-RECORD')}
-                          </p>
                         </div>
                       </div>
 

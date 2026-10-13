@@ -151,7 +151,7 @@ export function exportPhonePdf(phoneResult: any, aiReport?: string | null) {
   // Key Details Table Grid
   doc.setDrawColor(210, 210, 220);
   doc.setFillColor(245, 246, 248);
-  doc.roundedRect(14, y, pageWidth - 28, 40, 2, 2, 'FD');
+  doc.roundedRect(14, y, pageWidth - 28, 48, 2, 2, 'FD');
 
   doc.setFontSize(9);
   doc.setTextColor(40, 40, 50);
@@ -171,12 +171,18 @@ export function exportPhonePdf(phoneResult: any, aiReport?: string | null) {
   doc.setFont('helvetica', 'bold'); doc.text('Father Name:', c2, y + 16);
   doc.setFont('helvetica', 'normal'); doc.text(String(phoneResult.fatherName || 'N/A'), c2 + 32, y + 16);
 
-  doc.setFont('helvetica', 'bold'); doc.text('Address:', c1, y + 24);
+  doc.setFont('helvetica', 'bold'); doc.text('National ID:', c1, y + 24);
+  doc.setFont('helvetica', 'normal'); doc.text(String(phoneResult.idNumber || 'N/A'), c1 + 32, y + 24);
+
+  doc.setFont('helvetica', 'bold'); doc.text('Email:', c2, y + 24);
+  doc.setFont('helvetica', 'normal'); doc.text(String(phoneResult.email || 'N/A'), c2 + 32, y + 24);
+
+  doc.setFont('helvetica', 'bold'); doc.text('Address:', c1, y + 32);
   doc.setFont('helvetica', 'normal');
   const addr = doc.splitTextToSize(String(phoneResult.address || 'N/A'), pageWidth - 70);
-  doc.text(addr, c1 + 32, y + 24);
+  doc.text(addr, c1 + 32, y + 32);
 
-  y += 48;
+  y += 56;
 
   if (aiReport) {
     if (y > 240) { doc.addPage(); y = 20; }
