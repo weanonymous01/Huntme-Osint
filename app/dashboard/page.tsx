@@ -1286,24 +1286,15 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2.5 sm:gap-4">
             {/* API Status Badge */}
             <div
-              className="hidden sm:flex items-center gap-2 text-xs font-medium text-zinc-400 bg-[#121215] border border-zinc-800/90 px-3 py-1.5 rounded-lg transition-colors cursor-help"
+              className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-zinc-400 bg-[#121215] border border-zinc-800/90 px-3 py-1.5 rounded-lg transition-colors cursor-help"
               title={
                 apiHealth === 'operational'
-                  ? `Search API is operational${apiLatency ? ` (${apiLatency}ms)` : ''} — checked every 5 mins`
+                  ? `Search API is healthy${apiLatency ? ` (${apiLatency}ms)` : ''} — checked every 5 mins`
                   : apiHealth === 'checking'
                   ? 'Verifying API status...'
                   : 'Search API is currently unreachable'
               }
             >
-              <span
-                className={cn(
-                  'size-2 rounded-full transition-colors',
-                  apiHealth === 'operational' && 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)] animate-pulse',
-                  apiHealth === 'checking' && 'bg-amber-400 animate-pulse',
-                  apiHealth === 'degraded' && 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]',
-                  apiHealth === 'offline' && 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]'
-                )}
-              />
               <span>
                 API Status:{' '}
                 <strong
@@ -1315,7 +1306,7 @@ export default function DashboardPage() {
                     apiHealth === 'offline' && 'text-rose-400'
                   )}
                 >
-                  {apiHealth === 'operational' && 'Operational'}
+                  {apiHealth === 'operational' && 'Healthy'}
                   {apiHealth === 'checking' && 'Checking...'}
                   {apiHealth === 'degraded' && 'Degraded'}
                   {apiHealth === 'offline' && 'Offline'}
@@ -1407,30 +1398,20 @@ export default function DashboardPage() {
             {/* Mobile API Status Card */}
             <div className="flex items-center justify-between text-xs text-zinc-400 bg-[#121214] border border-zinc-800/90 px-3.5 py-2.5 rounded-xl">
               <span>Search API Status</span>
-              <div className="flex items-center gap-1.5 font-semibold">
-                <span
-                  className={cn(
-                    'size-2 rounded-full',
-                    apiHealth === 'operational' && 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)] animate-pulse',
-                    apiHealth === 'checking' && 'bg-amber-400 animate-pulse',
-                    apiHealth === 'degraded' && 'bg-amber-500',
-                    apiHealth === 'offline' && 'bg-rose-500'
-                  )}
-                />
-                <span
-                  className={cn(
-                    apiHealth === 'operational' && 'text-emerald-400',
-                    apiHealth === 'checking' && 'text-amber-300',
-                    apiHealth === 'degraded' && 'text-amber-400',
-                    apiHealth === 'offline' && 'text-rose-400'
-                  )}
-                >
-                  {apiHealth === 'operational' && 'Operational'}
-                  {apiHealth === 'checking' && 'Checking...'}
-                  {apiHealth === 'degraded' && 'Degraded'}
-                  {apiHealth === 'offline' && 'Offline'}
-                </span>
-              </div>
+              <strong
+                className={cn(
+                  'font-semibold transition-colors',
+                  apiHealth === 'operational' && 'text-emerald-400',
+                  apiHealth === 'checking' && 'text-amber-300',
+                  apiHealth === 'degraded' && 'text-amber-400',
+                  apiHealth === 'offline' && 'text-rose-400'
+                )}
+              >
+                {apiHealth === 'operational' && 'Healthy'}
+                {apiHealth === 'checking' && 'Checking...'}
+                {apiHealth === 'degraded' && 'Degraded'}
+                {apiHealth === 'offline' && 'Offline'}
+              </strong>
             </div>
           </div>
         )}
