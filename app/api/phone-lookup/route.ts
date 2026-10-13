@@ -124,8 +124,8 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 4. CALL UPSTREAM PAID API FOR AUTHENTICATED CREDITED USERS ONLY ──
-    const apiKey = process.env.PHONE_LOOKUP_API_KEY;
-    const apiBase = process.env.PHONE_LOOKUP_API_BASE || 'https://myapi.lovable.app/api/public/p';
+    const apiKey = process.env.PHONE_LOOKUP_API_KEY || 'qaE8D9mnEsbNmisqhENDVbTG0k4ZV5yFNJB1/GL1OUE=';
+    const apiBase = process.env.PHONE_LOOKUP_API_BASE || 'https://workwithadarsh15-cody-search-api.hf.space/search';
 
     if (!apiKey) {
       return NextResponse.json(
@@ -135,24 +135,45 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const url = `${apiBase}/${apiKey}?num=${encodeURIComponent(tenDigitNumber)}`;
-      const externalRes = await fetch(url, {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-        cache: 'no-store',
-        signal: AbortSignal.timeout(18000), // 18s single timeout
-      });
+      let externalRes: Response;
+      const isCodyApi = apiBase.includes('hf.space') || apiBase.includes('/search');
+
+      if (isCodyApi) {
+        // Cody Search API: GET https://workwithadarsh15-cody-search-api.hf.space/search?field=mobile&q=...&limit=20
+        const endpoint = apiBase.endsWith('/search') ? apiBase : `${apiBase}/search`;
+        const searchUrl = `${endpoint}?field=mobile&q=${encodeURIComponent(tenDigitNumber)}&limit=20`;
+        externalRes = await fetch(searchUrl, {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+            'X-API-Key': apiKey,
+          },
+          cache: 'no-store',
+          signal: AbortSignal.timeout(30000),
+        });
+      } else {
+        // Legacy provider fallback
+        const legacyUrl = `${apiBase}/${apiKey}?num=${encodeURIComponent(tenDigitNumber)}`;
+        externalRes = await fetch(legacyUrl, {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+          cache: 'no-store',
+          signal: AbortSignal.timeout(18000),
+        });
+      }
 
       if (externalRes.ok) {
         const raw = await externalRes.json();
 
         // Check if upstream API explicitly reports no records
         const rawError = raw?.data?.error || raw?.error || '';
-        if (
+        const isExplicitNoData =
           rawError.toUpperCase().includes('NO DATA') ||
           rawError.toUpperCase().includes('THERE IS NO DATA') ||
-          raw?.data?.success === false
-        ) {
+          raw?.data?.success === false ||
+          (typeof raw?.count === 'number' && raw.count === 0 && Array.isArray(raw?.results) && raw.results.length === 0);
+
+        if (isExplicitNoData) {
           return NextResponse.json(
             {
               success: false,
@@ -162,8 +183,10 @@ export async function POST(req: NextRequest) {
           );
         }
 
-        // Extract results list
-        const rawList = Array.isArray(raw?.data?.result)
+        // Extract results list from Cody Search API or legacy structure
+        const rawList = Array.isArray(raw?.results)
+          ? raw.results
+          : Array.isArray(raw?.data?.result)
           ? raw.data.result
           : Array.isArray(raw?.result)
           ? raw.result
@@ -179,9 +202,9 @@ export async function POST(req: NextRequest) {
             .filter((item: any) => {
               if (!item || typeof item !== 'object') return false;
               const name = (item.name || '').trim();
-              const alt = (item['alternative mobile'] || item.alternativeMobile || '').trim();
-              const father = (item['father name'] || item.fatherName || '').trim();
-              const idNum = (item['id number'] || item.idNumber || '').trim();
+              const alt = (item.alt || item['alternative mobile'] || item.alternativeMobile || '').trim();
+              const father = (item.fname || item['father name'] || item.fatherName || '').trim();
+              const idNum = (item.id || item['id number'] || item.idNumber || '').trim();
               const key = `${name}_${alt}_${father}_${idNum}`;
               if (seen.has(key)) return false;
               seen.add(key);
@@ -198,7 +221,8 @@ export async function POST(req: NextRequest) {
                 if (!cleanAddress) cleanAddress = null;
               }
 
-              let idNum = item['id number'] || item.idNumber || null;
+              let idNum = item.id || item['id number'] || item.idNumber || null;
+              if (typeof idNum === 'string') idNum = idNum.trim();
               if (idNum === 'N/A' || idNum === 'null' || !idNum) {
                 if (item.data_id && item.data_id !== 'N/A') {
                   idNum = item.data_id;
@@ -210,12 +234,12 @@ export async function POST(req: NextRequest) {
               return {
                 name: item.name || 'Unknown',
                 mobile: item.mobile || tenDigitNumber,
-                alternativeMobile: item['alternative mobile'] || item.alternativeMobile || null,
-                fatherName: item['father name'] || item.fatherName || null,
+                alternativeMobile: item.alt || item['alternative mobile'] || item.alternativeMobile || null,
+                fatherName: item.fname || item['father name'] || item.fatherName || null,
                 address: cleanAddress,
-                circle: item['circle/sim'] || item.circle || null,
+                circle: item.circle || item['circle/sim'] || null,
                 idNumber: idNum,
-                email: item.mail || item.email || null,
+                email: item.email || item.mail || null,
               };
             });
 
