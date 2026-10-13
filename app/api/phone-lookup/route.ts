@@ -213,12 +213,19 @@ export async function POST(req: NextRequest) {
             .map((item: any) => {
               let cleanAddress: string | null = null;
               if (item.address && typeof item.address === 'string') {
-                cleanAddress = item.address
-                  .replace(/!+/g, ', ')
-                  .replace(/,\s*,/g, ', ')
-                  .replace(/^[\s,]+|[\s,]+$/g, '')
-                  .trim();
-                if (!cleanAddress) cleanAddress = null;
+                const parts = item.address
+                  .split(/[!]+/)
+                  .map((p: string) => p.trim())
+                  .filter((p: string) => p.length > 0);
+                
+                // Deduplicate adjacent identical tokens
+                const deduped: string[] = [];
+                for (const part of parts) {
+                  if (deduped.length === 0 || deduped[deduped.length - 1].toLowerCase() !== part.toLowerCase()) {
+                    deduped.push(part);
+                  }
+                }
+                cleanAddress = deduped.join(', ').trim() || null;
               }
 
               let idNum = item.id || item['id number'] || item.idNumber || null;
@@ -240,6 +247,7 @@ export async function POST(req: NextRequest) {
                 circle: item.circle || item['circle/sim'] || null,
                 idNumber: idNum,
                 email: item.email || item.mail || null,
+                recordId: item._id || null,
               };
             });
 

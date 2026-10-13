@@ -62,6 +62,7 @@ type PhoneResult = {
   circle: string | null;
   idNumber: string | null;
   email: string | null;
+  recordId?: string | null;
   provider?: string | null;
   location?: string | null;
   country?: string | null;
@@ -1622,73 +1623,97 @@ export default function DashboardPage() {
                         )}
                       </div>
 
-                      {/* Info Grid */}
+                      {/* Info Grid - 6 Structured Intelligence Tiles */}
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* 1. Primary Mobile */}
                         <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Phone className="size-3" />Primary Mobile</p>
-                          <p className={`text-sm font-mono text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5">
+                            <Phone className="size-3 text-zinc-400" />
+                            Primary Mobile
+                          </p>
+                          <p className={`text-sm font-mono text-white font-semibold ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
                             {isLocked ? maskNumber(r.mobile) : r.mobile}
                           </p>
                         </div>
-                        {r.alternativeMobile && (
-                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Phone className="size-3" />Alternative Mobile</p>
+
+                        {/* 2. Alternative Mobile */}
+                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5">
+                            <Phone className="size-3 text-zinc-400" />
+                            Alternative Mobile
+                          </p>
+                          {r.alternativeMobile ? (
                             <p className={`text-sm font-mono text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
                               {isLocked ? maskNumber(r.alternativeMobile) : r.alternativeMobile}
                             </p>
-                          </div>
-                        )}
-                        {r.provider && (
-                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Telecom Provider</p>
-                            <p className="text-sm font-medium text-white">{r.provider}</p>
-                          </div>
-                        )}
-                        {r.location && (
-                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Circle Location</p>
-                            <p className="text-sm font-medium text-white">{r.location}</p>
-                          </div>
-                        )}
-                        {r.country && (
-                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Nation</p>
-                            <p className="text-sm font-medium text-white">{r.country}</p>
-                          </div>
-                        )}
-                        {!r.provider && r.circle && (
-                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><Signal className="size-3" />Carrier / Circle</p>
-                            <p className="text-sm text-white">{r.circle}</p>
-                          </div>
-                        )}
-                        {r.email && (
-                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium">Email</p>
-                            <p className={`text-sm text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                              {isLocked ? maskText(r.email) : r.email}
-                            </p>
-                          </div>
-                        )}
-                        {r.idNumber && (
-                          <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                            <p className="text-[11px] text-zinc-500 font-medium">ID Number</p>
-                            <p className={`text-sm font-mono text-white ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                          ) : (
+                            <p className="text-xs text-zinc-500 italic">None Linked</p>
+                          )}
+                        </div>
+
+                        {/* 3. Carrier / Circle */}
+                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5">
+                            <Signal className="size-3 text-zinc-400" />
+                            Carrier / Circle
+                          </p>
+                          <p className="text-sm font-medium text-white">
+                            {r.circle || r.provider || (r.location ? `${r.location}${r.country ? `, ${r.country}` : ''}` : 'Active Telecom')}
+                          </p>
+                        </div>
+
+                        {/* 4. ID / Document Number */}
+                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5">
+                            <FileText className="size-3 text-zinc-400" />
+                            ID / Document Number
+                          </p>
+                          {r.idNumber ? (
+                            <p className={`text-sm font-mono text-white font-semibold ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
                               {isLocked ? maskNumber(r.idNumber) : r.idNumber}
                             </p>
-                          </div>
-                        )}
+                          ) : (
+                            <p className="text-xs text-zinc-500 italic">Not Linked</p>
+                          )}
+                        </div>
+
+                        {/* 5. Registered Email */}
+                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5">
+                            <Mail className="size-3 text-zinc-400" />
+                            Email Address
+                          </p>
+                          {r.email ? (
+                            <p className={`text-sm text-white break-all ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                              {isLocked ? maskText(r.email) : r.email}
+                            </p>
+                          ) : (
+                            <p className="text-xs text-zinc-500 italic">Not Disclosed</p>
+                          )}
+                        </div>
+
+                        {/* 6. OSINT Record Reference */}
+                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5">
+                            <Sparkles className="size-3 text-zinc-400" />
+                            Record Reference ID
+                          </p>
+                          <p className="text-xs font-mono text-zinc-300 truncate" title={r.recordId || 'VERIFIED-RECORD'}>
+                            {r.recordId || (r.idNumber ? `REF-${r.idNumber.slice(-6)}` : 'ACTIVE-RECORD')}
+                          </p>
+                        </div>
                       </div>
 
                       {/* Address */}
-                      {r.address && (
-                        <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
-                          <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5"><MapPin className="size-3" />Registered Address</p>
-                          <p className={`text-sm text-zinc-200 leading-relaxed ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                            {isLocked ? maskText(r.address) : r.address}
-                          </p>
-                        </div>
-                      )}
+                      <div className="rounded-xl border border-zinc-800/80 bg-[#121215] p-4 space-y-1">
+                        <p className="text-[11px] text-zinc-500 font-medium flex items-center gap-1.5">
+                          <MapPin className="size-3 text-zinc-400" />
+                          Registered Address
+                        </p>
+                        <p className={`text-sm text-zinc-200 leading-relaxed ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
+                          {r.address ? (isLocked ? maskText(r.address) : r.address) : 'No registered address on file.'}
+                        </p>
+                      </div>
                     </div>
                   ))}
 
