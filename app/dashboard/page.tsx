@@ -196,6 +196,46 @@ function AIReportSection({ text }: { text: string }) {
   );
 }
 
+// Empty State component displayed when no query has been entered
+function NoSearchEmptyState({
+  title = "No search query entered",
+  description = "Enter a 10-digit mobile number above to find reports or user details.",
+}: {
+  title?: string;
+  description?: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-zinc-800/80 bg-[#0d0d10] py-16 sm:py-20 px-6 text-center animate-in fade-in duration-300 shadow-xl">
+      <div className="size-20 sm:size-24 rounded-full bg-[#181a24] border border-zinc-700/50 flex items-center justify-center mx-auto mb-5 shadow-inner">
+        <svg
+          className="size-10 sm:size-12 text-[#8896AB]"
+          viewBox="0 0 48 48"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* Head */}
+          <circle cx="21" cy="14" r="6.5" fill="currentColor" opacity="0.85" />
+          {/* Torso */}
+          <path
+            d="M8 35.5C8 28.6 13.8 23 21 23C23.6 23 26 23.8 28 25.1C26.8 26.6 26 28.5 26 30.5C26 33.6 27.6 36.3 30 37.9C28.4 38.6 26.7 39 25 39H11.5C9.6 39 8 37.4 8 35.5Z"
+            fill="currentColor"
+            opacity="0.85"
+          />
+          {/* Magnifying Glass */}
+          <circle cx="34" cy="31" r="5.5" stroke="currentColor" strokeWidth="2.8" />
+          <path d="M38 35L42.5 39.5" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" />
+        </svg>
+      </div>
+      <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight mb-2">
+        {title}
+      </h3>
+      <p className="text-xs sm:text-sm text-zinc-400 max-w-sm mx-auto leading-relaxed">
+        {description}
+      </p>
+    </div>
+  );
+}
+
 // Reusable Skeleton Report Component
 function ReportSkeleton({ type }: { type: 'phone' | 'vehicle' }) {
   return (
@@ -1622,9 +1662,12 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {/* Show skeleton only if no search has been made yet */}
+              {/* Show empty state when no search has been made yet */}
               {!phoneLoading && !phoneResults && !phoneError && (
-                <ReportSkeleton type="phone" />
+                <NoSearchEmptyState
+                  title="No search query entered"
+                  description="Enter a 10-digit mobile number above to find reports or user details."
+                />
               )}
             </div>
           )}
@@ -2026,9 +2069,12 @@ export default function DashboardPage() {
                 </div>
               )}
 
-              {/* Idle skeleton when no search has been made */}
+              {/* Idle empty state when no search has been made */}
               {!vehicleLoading && !vehicleResult && !vehicleError && (
-                <ReportSkeleton type="vehicle" />
+                <NoSearchEmptyState
+                  title="No search query entered"
+                  description="Enter a registration number above to find vehicle details."
+                />
               )}
             </div>
           )}
