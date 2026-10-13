@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 import {
   PhoneCall,
   Car,
@@ -90,11 +90,6 @@ type UserProfile = {
   api_credits: number;
   max_credits: number;
 };
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 // Render AI report markdown sections with styled headings and dork blocks
 function AIReportSection({ text }: { text: string }) {
@@ -511,7 +506,7 @@ export default function DashboardPage() {
 
   // Saved Reports state
   // Interactive AI Chat Assistant state
-  const [selectedAiReportId, setSelectedAiReportId] = useState<string>('demo_vehicle');
+  const [selectedAiReportId, setSelectedAiReportId] = useState<string>('demo_phone');
   const [aiChatMessages, setAiChatMessages] = useState<Array<{ id: string; sender: 'user' | 'ai'; text: string; provider?: string; timestamp: string }>>([
     {
       id: 'welcome_1',
@@ -2061,8 +2056,8 @@ export default function DashboardPage() {
                   className="w-full bg-[#141418] border border-zinc-700/80 rounded-xl px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-zinc-500 transition-colors shadow-inner"
                 >
                   <optgroup label="Preset Demo Cases">
-                    <option value="demo_vehicle">Demo Case: MH01AB1234 (Sample Commercial Vehicle — RTO Mumbai)</option>
                     <option value="demo_phone">Demo Case: Sample Subject — 9876543210 (Telecom Demo)</option>
+                    <option value="demo_vehicle">Demo Case: MH01AB1234 (Sample Commercial Vehicle — RTO Mumbai)</option>
                   </optgroup>
                   {savedReports.length > 0 && (
                     <optgroup label="Your Saved Investigation Reports">
