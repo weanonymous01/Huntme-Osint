@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 
 import { exportVehiclePdf, exportPhonePdf } from '@/lib/exportPdf';
+import { cn } from '@/lib/utils';
 
 function maskWord(w: string): string {
   if (!w || w.length === 0) return '';
@@ -741,6 +742,73 @@ export default function DashboardPage() {
     }
   }, []);
 
+  // API Health Check state (hits https://workwithadarsh15-cody-search-api.hf.space/health every 5 mins)
+  type ApiHealthStatus = 'operational' | 'degraded' | 'offline' | 'checking';
+  const [apiHealth, setApiHealth] = useState<ApiHealthStatus>('checking');
+  const [apiLatency, setApiLatency] = useState<number | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkHealth = async () => {
+      const start = Date.now();
+      try {
+        let isHealthy = false;
+        // Try direct call to Hugging Face Space health endpoint first
+        try {
+          const directRes = await fetch('https://workwithadarsh15-cody-search-api.hf.space/health', {
+            cache: 'no-store',
+            signal: AbortSignal.timeout(8000),
+          });
+          if (directRes.ok) {
+            const json = await directRes.json();
+            if (json.status === 'healthy' || json.status === 'ok') {
+              isHealthy = true;
+            }
+          }
+        } catch {
+          // Direct fetch might be blocked by adblocker/extension, fallback to internal proxy
+        }
+
+        if (!isHealthy) {
+          const proxyRes = await fetch('/api/health-check', {
+            cache: 'no-store',
+            signal: AbortSignal.timeout(10000),
+          });
+          if (proxyRes.ok) {
+            const data = await proxyRes.json();
+            if (data.status === 'healthy') {
+              isHealthy = true;
+            }
+          }
+        }
+
+        if (isMounted) {
+          if (isHealthy) {
+            setApiHealth('operational');
+            setApiLatency(Date.now() - start);
+          } else {
+            setApiHealth('degraded');
+          }
+        }
+      } catch {
+        if (isMounted) {
+          setApiHealth('offline');
+          setApiLatency(null);
+        }
+      }
+    };
+
+    checkHealth();
+    // Re-check every 5 minutes (300,000 ms)
+    const intervalId = setInterval(checkHealth, 5 * 60 * 1000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+    };
+  }, []);
+
   // Mobile navigation drawer state
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
 
@@ -1217,9 +1285,42 @@ export default function DashboardPage() {
 
           <div className="flex items-center gap-2.5 sm:gap-4">
             {/* API Status Badge */}
-            <div className="hidden sm:flex items-center gap-2 text-xs font-medium text-zinc-400 bg-[#121215] border border-zinc-800/90 px-3 py-1.5 rounded-lg">
-              <span className="size-2 rounded-full bg-zinc-400 animate-pulse" />
-              <span>API Status: <strong className="text-white">Operational</strong></span>
+            <div
+              className="hidden sm:flex items-center gap-2 text-xs font-medium text-zinc-400 bg-[#121215] border border-zinc-800/90 px-3 py-1.5 rounded-lg transition-colors cursor-help"
+              title={
+                apiHealth === 'operational'
+                  ? `Search API is operational${apiLatency ? ` (${apiLatency}ms)` : ''} — checked every 5 mins`
+                  : apiHealth === 'checking'
+                  ? 'Verifying API status...'
+                  : 'Search API is currently unreachable'
+              }
+            >
+              <span
+                className={cn(
+                  'size-2 rounded-full transition-colors',
+                  apiHealth === 'operational' && 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)] animate-pulse',
+                  apiHealth === 'checking' && 'bg-amber-400 animate-pulse',
+                  apiHealth === 'degraded' && 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]',
+                  apiHealth === 'offline' && 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]'
+                )}
+              />
+              <span>
+                API Status:{' '}
+                <strong
+                  className={cn(
+                    'transition-colors',
+                    apiHealth === 'operational' && 'text-emerald-400',
+                    apiHealth === 'checking' && 'text-amber-300',
+                    apiHealth === 'degraded' && 'text-amber-400',
+                    apiHealth === 'offline' && 'text-rose-400'
+                  )}
+                >
+                  {apiHealth === 'operational' && 'Operational'}
+                  {apiHealth === 'checking' && 'Checking...'}
+                  {apiHealth === 'degraded' && 'Degraded'}
+                  {apiHealth === 'offline' && 'Offline'}
+                </strong>
+              </span>
             </div>
 
             {/* Mobile Credits Badge */}
@@ -1301,6 +1402,35 @@ export default function DashboardPage() {
                   </a>
                 </div>
               )}
+            </div>
+
+            {/* Mobile API Status Card */}
+            <div className="flex items-center justify-between text-xs text-zinc-400 bg-[#121214] border border-zinc-800/90 px-3.5 py-2.5 rounded-xl">
+              <span>Search API Status</span>
+              <div className="flex items-center gap-1.5 font-semibold">
+                <span
+                  className={cn(
+                    'size-2 rounded-full',
+                    apiHealth === 'operational' && 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.7)] animate-pulse',
+                    apiHealth === 'checking' && 'bg-amber-400 animate-pulse',
+                    apiHealth === 'degraded' && 'bg-amber-500',
+                    apiHealth === 'offline' && 'bg-rose-500'
+                  )}
+                />
+                <span
+                  className={cn(
+                    apiHealth === 'operational' && 'text-emerald-400',
+                    apiHealth === 'checking' && 'text-amber-300',
+                    apiHealth === 'degraded' && 'text-amber-400',
+                    apiHealth === 'offline' && 'text-rose-400'
+                  )}
+                >
+                  {apiHealth === 'operational' && 'Operational'}
+                  {apiHealth === 'checking' && 'Checking...'}
+                  {apiHealth === 'degraded' && 'Degraded'}
+                  {apiHealth === 'offline' && 'Offline'}
+                </span>
+              </div>
             </div>
           </div>
         )}
