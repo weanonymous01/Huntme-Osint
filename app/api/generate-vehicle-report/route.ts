@@ -377,11 +377,10 @@ Rate: HIGH / MEDIUM / LOW
       }
     };
 
-    // Try providers in order: Groq 70B -> Groq 8B -> NVIDIA 70B -> NVIDIA 8B
-    let aiRes = await tryGroq('llama-3.3-70b-versatile');
-    if (!aiRes) aiRes = await tryGroq('llama-3.1-8b-instant');
-    if (!aiRes) aiRes = await tryNVIDIA('meta/llama-3.3-70b-instruct');
-    if (!aiRes) aiRes = await tryNVIDIA('meta/llama-3.1-8b-instruct');
+    // Try providers in order: Groq GPT-OSS 120B -> NVIDIA Llama 3.2 11B -> Groq Qwen 27B
+    let aiRes = await tryGroq('openai/gpt-oss-120b');
+    if (!aiRes) aiRes = await tryNVIDIA('meta/llama-3.2-11b-vision-instruct');
+    if (!aiRes) aiRes = await tryGroq('qwen/qwen3.8-27b');
 
     if (aiRes && aiRes.body) {
       const textStream = createStreamFromNVIDIA(aiRes.body);

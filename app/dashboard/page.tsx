@@ -1708,9 +1708,20 @@ export default function DashboardPage() {
 
                   {/* AI Report Error */}
                   {aiReportError && (
-                    <div className="rounded-2xl border border-zinc-800 bg-[#121215] p-5 flex items-center gap-3">
-                      <AlertCircle className="size-4 text-zinc-400 shrink-0" />
-                      <p className="text-xs text-zinc-300">{aiReportError}</p>
+                    <div className="rounded-2xl border border-zinc-800 bg-[#121215] p-5 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <AlertCircle className="size-4 text-zinc-400 shrink-0" />
+                        <p className="text-xs text-zinc-300">{aiReportError}</p>
+                      </div>
+                      {phoneResults && phoneResults.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleGenerateReport(phoneResults[0])}
+                          className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-xs text-white border border-zinc-700 transition-colors shrink-0"
+                        >
+                          Retry Generation
+                        </button>
+                      )}
                     </div>
                   )}
 

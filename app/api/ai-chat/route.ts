@@ -50,7 +50,7 @@ ${contextText.slice(0, 4000)}
 [USER QUESTION]
 ${question}`;
 
-    // ── Tier 1: Groq 70B ──
+    // ── Tier 1: Groq GPT-OSS 120B (Fast & High Intelligence) ──
     if (GROQ_API_KEY) {
       try {
         const groqRes = await fetch(GROQ_API_URL, {
@@ -60,7 +60,7 @@ ${question}`;
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
+            model: 'openai/gpt-oss-120b',
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt },
@@ -73,48 +73,16 @@ ${question}`;
         if (groqRes.ok) {
           const data = await groqRes.json();
           const answer = data.choices?.[0]?.message?.content;
-          if (answer) {
-            return NextResponse.json({ success: true, answer, provider: 'Groq Llama 3.3 70B' });
+          if (answer && !answer.includes("I'm sorry, but I can't help with that")) {
+            return NextResponse.json({ success: true, answer, provider: 'Groq GPT-OSS 120B' });
           }
         }
       } catch (e) {
-        console.warn('[ai-chat] Groq 70B failed, trying Tier 2...');
+        console.warn('[ai-chat] Groq 120B failed, trying Tier 2...');
       }
     }
 
-    // ── Tier 2: Groq 8B ──
-    if (GROQ_API_KEY) {
-      try {
-        const groqRes8b = await fetch(GROQ_API_URL, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${GROQ_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'llama3-8b-8192',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPrompt },
-            ],
-            temperature: 0.3,
-            max_tokens: 1000,
-          }),
-        });
-
-        if (groqRes8b.ok) {
-          const data = await groqRes8b.json();
-          const answer = data.choices?.[0]?.message?.content;
-          if (answer) {
-            return NextResponse.json({ success: true, answer, provider: 'Groq Llama 3 8B' });
-          }
-        }
-      } catch (e) {
-        console.warn('[ai-chat] Groq 8B failed, trying Tier 3...');
-      }
-    }
-
-    // ── Tier 3: NVIDIA NIM 70B ──
+    // ── Tier 2: NVIDIA NIM Llama 3.2 11B ──
     if (NVIDIA_API_KEY) {
       try {
         const nvidRes = await fetch(NVIDIA_API_URL, {
@@ -124,7 +92,7 @@ ${question}`;
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'meta/llama-3.1-70b-instruct',
+            model: 'meta/llama-3.2-11b-vision-instruct',
             messages: [
               { role: 'system', content: systemPrompt },
               { role: 'user', content: userPrompt },
@@ -138,11 +106,43 @@ ${question}`;
           const data = await nvidRes.json();
           const answer = data.choices?.[0]?.message?.content;
           if (answer) {
-            return NextResponse.json({ success: true, answer, provider: 'NVIDIA NIM Llama 3.1 70B' });
+            return NextResponse.json({ success: true, answer, provider: 'NVIDIA NIM Llama 3.2 11B' });
           }
         }
       } catch (e) {
-        console.warn('[ai-chat] NVIDIA NIM 70B failed, using fallback...');
+        console.warn('[ai-chat] NVIDIA NIM 11B failed, trying Tier 3...');
+      }
+    }
+
+    // ── Tier 3: Groq Qwen 3.8 27B ──
+    if (GROQ_API_KEY) {
+      try {
+        const groqResQwen = await fetch(GROQ_API_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${GROQ_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'qwen/qwen3.8-27b',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt },
+            ],
+            temperature: 0.3,
+            max_tokens: 1000,
+          }),
+        });
+
+        if (groqResQwen.ok) {
+          const data = await groqResQwen.json();
+          const answer = data.choices?.[0]?.message?.content;
+          if (answer) {
+            return NextResponse.json({ success: true, answer, provider: 'Groq Qwen 3.8 27B' });
+          }
+        }
+      } catch (e) {
+        console.warn('[ai-chat] Groq Qwen failed, using fallback...');
       }
     }
 

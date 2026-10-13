@@ -4,8 +4,8 @@ import { checkRateLimit } from '@/lib/rateLimiter';
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
-const MODEL_PRIMARY = 'llama-3.3-70b-versatile';
-const MODEL_FALLBACK = 'llama-3.1-8b-instant';
+const MODEL_PRIMARY = 'openai/gpt-oss-120b';
+const MODEL_FALLBACK = 'qwen/qwen3.8-27b';
 
 // Convert OpenAI/Groq SSE stream to plain text stream
 function createStreamFromGroq(groqBody: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
@@ -235,8 +235,7 @@ STRICT FORMATTING RULES:
 
     let groqRes = await tryGroq(MODEL_PRIMARY);
     if (!groqRes) groqRes = await tryGroq(MODEL_FALLBACK);
-    if (!groqRes) groqRes = await tryNVIDIA('meta/llama-3.3-70b-instruct');
-    if (!groqRes) groqRes = await tryNVIDIA('meta/llama-3.1-8b-instruct');
+    if (!groqRes) groqRes = await tryNVIDIA('meta/llama-3.2-11b-vision-instruct');
 
     if (groqRes && groqRes.body) {
       const textStream = createStreamFromGroq(groqRes.body);
