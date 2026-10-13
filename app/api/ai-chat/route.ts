@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/serverAuth';
 import { checkRateLimit } from '@/lib/rateLimiter';
+import { maskAddressNumbers } from '@/lib/utils';
 
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 const NVIDIA_API_KEY = process.env.NVIDIA_NIM_API_KEY;
@@ -74,7 +75,7 @@ ${question}`;
           const data = await groqRes.json();
           const answer = data.choices?.[0]?.message?.content;
           if (answer && !answer.includes("I'm sorry, but I can't help with that")) {
-            return NextResponse.json({ success: true, answer, provider: 'Groq GPT-OSS 120B' });
+            return NextResponse.json({ success: true, answer: maskAddressNumbers(answer) || answer, provider: 'Groq GPT-OSS 120B' });
           }
         }
       } catch (e) {
@@ -106,7 +107,7 @@ ${question}`;
           const data = await nvidRes.json();
           const answer = data.choices?.[0]?.message?.content;
           if (answer) {
-            return NextResponse.json({ success: true, answer, provider: 'NVIDIA NIM Llama 3.2 11B' });
+            return NextResponse.json({ success: true, answer: maskAddressNumbers(answer) || answer, provider: 'NVIDIA NIM Llama 3.2 11B' });
           }
         }
       } catch (e) {
@@ -138,7 +139,7 @@ ${question}`;
           const data = await groqResQwen.json();
           const answer = data.choices?.[0]?.message?.content;
           if (answer) {
-            return NextResponse.json({ success: true, answer, provider: 'Groq Qwen 3.8 27B' });
+            return NextResponse.json({ success: true, answer: maskAddressNumbers(answer) || answer, provider: 'Groq Qwen 3.8 27B' });
           }
         }
       } catch (e) {
@@ -148,7 +149,7 @@ ${question}`;
 
     // ── Fallback Answer Synthesizer ──
     const fallbackAnswer = generateFallbackAnswer(reportData, question);
-    return NextResponse.json({ success: true, answer: fallbackAnswer, provider: 'OSINT Intelligence Engine' });
+    return NextResponse.json({ success: true, answer: maskAddressNumbers(fallbackAnswer) || fallbackAnswer, provider: 'OSINT Intelligence Engine' });
   } catch (err: any) {
     console.error('[ai-chat] Error:', err?.message);
     return NextResponse.json(

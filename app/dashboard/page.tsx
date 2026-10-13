@@ -98,8 +98,8 @@ function AIReportSection({ text }: { text: string }) {
   const lines = text.split('\n');
 
   const renderInline = (content: string) => {
-    // Handle bold **text** and inline `code` — strip ** markers, render plain
-    const parts = content.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
+    // Handle code blocks `...` and markdown bold **word** (where content inside is non-empty and non-star)
+    const parts = content.split(/(`[^`]+`|\*\*[^\s*][^*]*\*\*|\*\*[^\s*]\*\*)/g);
     return parts.map((part, j) => {
       if (part.startsWith('`') && part.endsWith('`')) {
         return (
@@ -108,12 +108,12 @@ function AIReportSection({ text }: { text: string }) {
           </code>
         );
       }
-      if (part.startsWith('**') && part.endsWith('**')) {
-        // Render bold without stars — just plain white text
+      if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+        // Render bold without outer markdown stars
         return <strong key={j} className="text-white font-semibold">{part.slice(2, -2)}</strong>;
       }
-      // Strip any stray single * characters
-      return part.replace(/\*/g, '');
+      // Preserve double asterisks ** for masked numbers (e.g. HOUSE NO ** KHERA)
+      return part;
     });
   };
 
@@ -976,8 +976,9 @@ export default function DashboardPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setAiReport(data.report);
-        if (onComplete) onComplete(data.report);
+        const cleanReport = maskAddressNumbers(data.report) || data.report;
+        setAiReport(cleanReport);
+        if (onComplete) onComplete(cleanReport);
       } else {
         setAiReportError(data.message || 'Failed to generate report.');
       }

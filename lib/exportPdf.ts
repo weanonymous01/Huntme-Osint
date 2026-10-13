@@ -107,8 +107,9 @@ export function exportVehiclePdf(vehicle: any, namePredictions?: string | null, 
 
     doc.setFontSize(8.5);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(50, 50, 60);
-    const cleanReport = aiReport.replace(/###?\s*/g, '').replace(/\*\*/g, '');
+    const cleanReport = (maskAddressNumbers(aiReport) || aiReport)
+      .replace(/###?\s*/g, '')
+      .replace(/\*\*([^\s*][^*]*)\*\*/g, (_m, p) => p);
     const reportLines = doc.splitTextToSize(cleanReport, pageWidth - 28);
     for (const line of reportLines) {
       if (y > 275) { doc.addPage(); y = 20; }
@@ -196,8 +197,9 @@ export function exportPhonePdf(phoneResult: any, aiReport?: string | null) {
 
     doc.setFontSize(8.5);
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(50, 50, 60);
-    const cleanReport = aiReport.replace(/###?\s*/g, '').replace(/\*\*/g, '');
+    const cleanReport = (maskAddressNumbers(aiReport) || aiReport)
+      .replace(/###?\s*/g, '')
+      .replace(/\*\*([^\s*][^*]*)\*\*/g, (_m, p) => p);
     const reportLines = doc.splitTextToSize(cleanReport, pageWidth - 28);
     for (const line of reportLines) {
       if (y > 275) { doc.addPage(); y = 20; }

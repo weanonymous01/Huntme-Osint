@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUser } from '@/lib/serverAuth';
 import { checkRateLimit } from '@/lib/rateLimiter';
+import { maskAddressNumbers } from '@/lib/utils';
 
 const NVIDIA_API_KEY = process.env.NVIDIA_NIM_API_KEY;
 const NVIDIA_API_URL = 'https://integrate.api.nvidia.com/v1/chat/completions';
@@ -38,6 +39,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const maskedAddress = maskAddressNumbers(phoneData.address) || phoneData.address || 'Not available';
+
     const prompt = `You are an elite OSINT intelligence analyst operating with the combined capabilities of PhoneInfoga, PhoneIntel, Moriarty-Project, and X-osint frameworks. Your task is to produce a comprehensive, professional intelligence report from verified phone record data.
 
 Apply the following analysis mechanics in your report:
@@ -59,11 +62,14 @@ VERIFIED RECORD DATA:
   - Secondary Target: ${phoneData.alternativeMobile}
   Apply PhoneInfoga prefix analysis, carrier detection, dork generation, and social platform assessment separately for BOTH numbers. Cross-correlate them to determine relationship (same owner, family member, business number, etc.)` : ''}
 - Carrier / Telecom Circle: ${phoneData.circle || 'Not available'}
-- Registered Address: ${phoneData.address || 'Not available'}
+- Registered Address: ${maskedAddress}
 - National ID / Document Number: ${phoneData.idNumber || 'Not available'}
 - Email on Record: ${phoneData.email || 'Not available'}
 
 ---
+
+CRITICAL PRIVACY DIRECTIVE:
+When referencing the subject's registered address, geographic location, or creating dorks/search queries, ALWAYS ensure house numbers, plot numbers, door numbers, or flat numbers are masked with "**" (e.g. "HOUSE NO ** KHERA", "** Habitpur", "Gali No **"). NEVER reveal exact residential house numbers in the dossier. Keep city, district, state, and postal pincodes intact.
 
 Produce a structured intelligence report with the following sections. Be specific, operational, and professional. Do NOT fabricate — only infer from what the data logically supports.
 
@@ -245,6 +251,11 @@ List 5 specific, actionable follow-up steps ordered by priority. Be precise — 
       reportText = buildSyntheticOsintReport(phoneData);
     }
 
+    // Ensure all premise/house numbers across the entire generated report are masked with **
+    if (reportText) {
+      reportText = maskAddressNumbers(reportText) || reportText;
+    }
+
     return NextResponse.json({ success: true, report: reportText });
   } catch (err: any) {
     console.error('[generate-report] Error:', err?.message);
@@ -262,7 +273,7 @@ function buildSyntheticOsintReport(p: any): string {
   const mobile = p.mobile || 'Not available';
   const alt = p.alternativeMobile;
   const circle = p.circle || 'Telecommunications Circle Index';
-  const address = p.address || 'Registered Circle Zone';
+  const address = maskAddressNumbers(p.address) || p.address || 'Registered Circle Zone';
   const natId = p.idNumber ? `Masked Record: ${p.idNumber}` : 'Standard Identity Verification';
 
   return `## 1. Subject Identity Profile
