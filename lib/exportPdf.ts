@@ -1,4 +1,5 @@
 import jsPDF from 'jspdf';
+import { maskAddressNumbers } from '@/lib/utils';
 
 export function exportVehiclePdf(vehicle: any, namePredictions?: string | null, aiReport?: string | null) {
   const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
@@ -179,7 +180,8 @@ export function exportPhonePdf(phoneResult: any, aiReport?: string | null) {
 
   doc.setFont('helvetica', 'bold'); doc.text('Address:', c1, y + 32);
   doc.setFont('helvetica', 'normal');
-  const addr = doc.splitTextToSize(String(phoneResult.address || 'N/A'), pageWidth - 70);
+  const maskedAddress = maskAddressNumbers(phoneResult.address) || phoneResult.address || 'N/A';
+  const addr = doc.splitTextToSize(String(maskedAddress), pageWidth - 70);
   doc.text(addr, c1 + 32, y + 32);
 
   y += 56;

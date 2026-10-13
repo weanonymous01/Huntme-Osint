@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 
 import { exportVehiclePdf, exportPhonePdf } from '@/lib/exportPdf';
-import { cn } from '@/lib/utils';
+import { cn, maskAddressNumbers } from '@/lib/utils';
 
 function maskWord(w: string): string {
   if (!w || w.length === 0) return '';
@@ -1700,7 +1700,7 @@ export default function DashboardPage() {
                           Registered Address
                         </p>
                         <p className={`text-sm text-zinc-200 leading-relaxed ${isLocked ? 'blur-[1.5px] select-none' : ''}`}>
-                          {r.address ? (isLocked ? maskText(r.address) : r.address) : 'No registered address on file.'}
+                          {r.address ? (isLocked ? maskText(r.address) : (maskAddressNumbers(r.address) || r.address)) : 'No registered address on file.'}
                         </p>
                       </div>
                     </div>

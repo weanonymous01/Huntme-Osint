@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabaseClient';
 import { decodeLocalPhone } from '@/lib/rtoDecoder';
 import { getAuthenticatedUser, hasSufficientCredits, deductUserCreditsServer } from '@/lib/serverAuth';
 import { checkRateLimit } from '@/lib/rateLimiter';
+import { maskAddressNumbers } from '@/lib/utils';
 
 export async function POST(req: NextRequest) {
   try {
@@ -225,7 +226,8 @@ export async function POST(req: NextRequest) {
                     deduped.push(part);
                   }
                 }
-                cleanAddress = deduped.join(', ').trim() || null;
+                const rawJoined = deduped.join(', ').trim();
+                cleanAddress = maskAddressNumbers(rawJoined) || null;
               }
 
               let idNum = item.id || item['id number'] || item.idNumber || null;
